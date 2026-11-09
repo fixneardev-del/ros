@@ -10,6 +10,8 @@ Architecture decisions that should not be re-litigated without a reason. Product
 - **Providers are independent.** The platform does not guarantee qualifications, insurance or checks unless a profile says so.
 - **Money is integer pence.** A null price means "Quote on inspection".
 - **Closed and removed jobs are terminal.** So are accepted, declined and withdrawn offers.
+- **Provider applications need 1–6 photos.** The wizard and the server both enforce it; the cap is `MAX_PROVIDER_PHOTOS`.
+- **Key provider changes go back to review.** With `reapprove_on_key_change` on (the seeded default), changing the display name or provider type returns an approved profile to `pending` until an admin approves it again.
 
 ## Architecture
 
@@ -42,7 +44,7 @@ Architecture decisions that should not be re-litigated without a reason. Product
 - **Status transitions are enforced in SQL triggers.** A provider cannot approve themselves; a customer cannot change moderation fields or `accepted_offer_id` directly.
 - **Providers may delete their own pending profile.** This supports cleanup when an application fails part-way. Cascades remove services and photos.
 - **Storage buckets are public for provider photos and private for job photos.** Storage policies mirror the table policies.
-- **The first admin is promoted server-side.** The profile trigger creates customer profiles, so promotion must bypass the trigger or use the service role.
+- **The first admin is promoted server-side.** The owner is the account whose email is `ADMIN_NOTIFICATION_EMAIL`. The profile trigger creates customer profiles, so promotion must bypass the trigger or use the service role.
 - **The migration states its own grants.** Supabase grants table access by project default, but the migration grants explicitly so it behaves the same on a clean project. The three RPCs are revoked from `public` and `anon` and granted only to `authenticated`.
 - **The accept bypass is scoped to one call.** `accept_offer` sets a trigger bypass so it can update offers and the job in one transaction, then clears it. Without the reset, a customer could repoint `accepted_offer_id` later in the same transaction.
 

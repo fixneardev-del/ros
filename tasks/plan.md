@@ -77,13 +77,13 @@ Foundation is necessarily horizontal (schema, auth, tokens, shared libraries). E
 #### T03 — Project-owned repository and CI baseline
 **Description:** Separate the project from the home-directory git repo and add CI.
 **Acceptance:**
-- [x] Project has its own git repository, with the scaffold committed. A remote is still to be added at handover.
+- [ ] Project has its own git repository and remote, with the scaffold committed. The repo exists and is committed; the remote is still to be added.
 - [x] CI runs install, lint, typecheck and unit tests on push/PR.
 - [x] A separate Playwright job is defined but may be gated until the app runs.
 **Verify:** push a branch; CI green.
 **Depends:** T01
 **Files:** `.github/workflows/ci.yml`, `.gitignore`, `README.md`
-**Scope:** S (3 files). **Resolved on 2026-11-09** with the owner's approval.
+**Scope:** S (3 files). Repo approved and initialised on 2026-11-09; add a remote and run CI at handover.
 
 ---
 
@@ -948,10 +948,7 @@ T63/T64/T65/T66 → T68 → T69
 
 | Question | Blocks |
 |---|---|
-| Approve the design-system proposal or supply brand assets | T15, T16 |
-| Confirm Next 16 `cacheComponents` / `partialPrefetching` | T04, T15 |
-| Confirm 1-photo minimum for provider applications | T31, T34 |
-| Confirm `reapprove_on_key_change = true` | T37, T52 |
+| Supply brand assets (the design-system direction is approved) | T15, T16 |
 | Supply legal copy | T60, T68, T69 |
 | Confirm sender domain and DNS access | T56–T59 |
 | Confirm warranty length and Supabase plan | T67, T69 |
@@ -959,11 +956,13 @@ T63/T64/T65/T66 → T68 → T69
 Resolved on 2026-11-09: own git repository and CI; pilot districts
 `G12`/`G11`/`G3`/`G4`; the seven starter categories and flags; the first admin
 is `ADMIN_NOTIFICATION_EMAIL`; first-party cookie-free analytics, so no consent
-banner.
+banner; provider applications need 1–6 photos; key provider changes return to
+review (`reapprove_on_key_change = true`); `cacheComponents` and
+`partialPrefetching` stay enabled.
 
 Non-blocking for Phase 1: legal copy, sender DNS, warranty and the Supabase
-plan. Phase 1 is otherwise unblocked; brand approval, the 1-photo minimum and
-`reapprove_on_key_change` are the remaining product answers.
+plan. Phase 1 is otherwise unblocked; brand assets are the only remaining
+product answer.
 
 ---
 

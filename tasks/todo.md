@@ -9,19 +9,19 @@ Checkboxes are acceptance gates. They stay open until the task's verification is
 
 ## Current gate
 
-Foundation checkpoint. Lint, typecheck, unit tests and the production build pass. RLS tests, E2E tests and live Supabase/Resend flows have not run because credentials are absent.
+Foundation checkpoint. Lint, typecheck, unit tests, the production build, the RLS suite and the E2E suite pass. Live Supabase/Resend flows have not run because credentials are absent.
 
 | Phase | Code | Acceptance |
 |---|---|---|
-| 0. Guardrails | Done | Unit harness verified; own repo and CI baseline in place |
-| 1. Foundation | Done | RLS and auth E2E pending |
-| 2. Discovery | Done | E2E and accessibility pending |
-| 3. Provider onboarding | Done | E2E pending |
+| 0. Guardrails | Done | Unit harness verified; own repo and CI workflow in place, remote push pending |
+| 1. Foundation | Done | Live auth E2E pending |
+| 2. Discovery | Done | Lighthouse and responsive checks pass; two-account E2E pending |
+| 3. Provider onboarding | Done | Live E2E pending |
 | 4. Marketplace | Done | Two-account E2E pending |
-| 5. Admin | Done | E2E pending |
+| 5. Admin | Done | Signed-in admin E2E pending |
 | 6. Notifications | Done | Live send and retry pending |
-| 7. Legal and analytics | Partial | Client copy and tool choice pending |
-| 8. Hardening and launch | Partial | Regression, CI and deployment pending |
+| 7. Legal and analytics | Partial | Client copy pending; no consent banner needed |
+| 8. Hardening and launch | Partial | Remote/CI, admin a11y and deployment pending |
 
 Tick a task only when its acceptance criteria and verification are complete.
 
@@ -31,7 +31,7 @@ Tick a task only when its acceptance criteria and verification are complete.
 
 - [x] T01 — Test and script harness (`package.json`, `vitest.config.mts`, `tests/setup.ts`)
 - [x] T02 — Environment contract (`.env.example`, `lib/env.ts`, `tests/unit/env.test.ts`)
-- [x] T03 — Project-owned repository and CI baseline (own repo initialised; `.github/workflows/ci.yml` present)
+- [ ] T03 — Project-owned repository and CI baseline (repo initialised and committed; CI workflow ready; remote push and first CI run pending)
 
 ## Phase 1 — Foundation
 
@@ -64,7 +64,7 @@ Tick a task only when its acceptance criteria and verification are complete.
 - [x] `npm run test:rls` passes against a real Postgres with the Supabase schemas stubbed
 - [ ] Register, confirm, log in, reset password and edit account work (needs live Supabase Auth)
 - [x] Tokens and fonts match the design system at 375/768/1280
-- [ ] Lighthouse accessibility score 90 or more (not measured yet)
+- [x] Lighthouse accessibility score 90 or more (mobile: 100 accessibility on the six public pages; performance 90–92)
 - [ ] Human review before Phase 2
 
 ## Phase 2 — Discovery
@@ -176,16 +176,16 @@ Tick a task only when its acceptance criteria and verification are complete.
 
 ## Blockers
 
-Resolved on 2026-11-09: the project is its own git repository; pilot districts
-`G12`, `G11`, `G3` and `G4` are final; the seven starter categories and their
-flags are final; the first admin is the account whose email is
-`ADMIN_NOTIFICATION_EMAIL`.
-
 - All live verification — Supabase URL, anon key and service-role key are absent; RLS, auth, storage and email flows cannot run.
-- T15, T16 — brand assets or approval of the design-system proposal
-- T31, T34 — confirm 1-photo minimum
-- T37, T52 — confirm `reapprove_on_key_change`
+- T03, T65, T69 — add a git remote and run CI
+- T15, T16 — brand assets (the design-system direction is approved)
 - T60, T68, T69 — client legal copy
 - T61 — a hosted analytics tool, if the client prefers one to the first party collector
 - T56–T59 — sender domain and DNS
 - T67, T69 — warranty length and Supabase plan
+
+Resolved on 2026-11-09: the project is its own git repository; pilot districts
+`G12`, `G11`, `G3` and `G4` are final; the seven starter categories and their
+flags are final; the first admin is the account whose email is
+`ADMIN_NOTIFICATION_EMAIL`; provider applications need 1–6 photos; key provider
+changes return to review (`reapprove_on_key_change = true`).

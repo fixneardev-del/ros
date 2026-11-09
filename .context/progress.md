@@ -9,7 +9,7 @@ Current gate: **Foundation checkpoint** — code is in place; live verification 
 
 | Phase | Status | Notes |
 |---|---|---|
-| 0. Guardrails | Code complete | Scripts, env contract and unit harness in place. Project-owned repo and CI (T03) are in place. |
+| 0. Guardrails | Code complete | Scripts, env contract and unit harness in place. Project-owned repo and CI workflow are in place; the remote and first CI run are pending. |
 | 1. Foundation | Code complete, verification pending | Schema, RLS, clients, tokens, auth pages and account page written. RLS suite passes against Postgres. Live Supabase Auth still untested. |
 | 2. Discovery | Code complete, verification pending | Landing page, search, provider profile, legal shells and waitlist written. E2E smoke suite passes. |
 | 3. Provider onboarding | Code complete, verification pending | Application wizard, dashboard, profile edit and photo upload written. E2E covers the public entry points. |
@@ -209,8 +209,8 @@ The build emits one benign font warning: Turbopack cannot generate fallback metr
 ## Blockers and open questions
 
 1. **Supabase credentials are absent.** Auth, storage and email flows cannot be run end to end. Docker Desktop is also unavailable, so `npx supabase start` cannot run locally either.
-2. **Brand assets or design approval.** The proposal palette ships behind CSS variables.
-3. **Confirmation of the 1-photo minimum.**
+2. **Git remote and first CI run.** The repo is initialised and committed, but no remote exists yet, so the CI workflow has not run (T03, T65, T69).
+3. **Brand assets.** The design-system direction is approved; a logo file is still optional.
 4. **Legal copy.** Pages are clearly marked pilot copy.
 5. **Sender domain and DNS for Resend.**
 6. **Warranty length and Supabase plan.**
@@ -219,7 +219,8 @@ Resolved on 2026-11-09: the project is its own git repository; pilot districts
 `G12`, `G11`, `G3` and `G4` are final; the seven starter categories and their
 flags are final; the first admin is the account whose email is
 `ADMIN_NOTIFICATION_EMAIL`; analytics are first party and cookie free, so no
-consent banner is needed.
+consent banner is needed; provider applications need 1–6 photos; key provider
+changes return to review (`reapprove_on_key_change = true`).
 
 ---
 
@@ -256,3 +257,4 @@ consent banner is needed.
 | 2026-11-09 | Project separated into its own git repository at `repairs-and-other-services` and committed as `Initial commit: Repairs and Other Services pilot MVP`. `.env.example` is now tracked (the `.env*` ignore has an exception) and its admin field is documented as the first admin owner. Phase 1 answers recorded: districts `G12`/`G11`/`G3`/`G4`, the seven starter categories, and `ADMIN_NOTIFICATION_EMAIL` as the handover owner. |
 | 2026-11-09 | Mobile Lighthouse measured against the production build. `/`, `/search`, `/login`, `/privacy`, `/terms` and `/cookies` score 90–92 performance, 100 accessibility, 100 best practices and 100 SEO. Admin pages still need a signed-in account. |
 | 2026-11-09 | Waitlist signups were captured but never readable, so admins could only see them in notification emails. Added `getInterestSignups`, a `waitlist` CSV export and an **Export waitlist** button on the admin overview. Documented in the admin guide. |
+| 2026-11-09 | Product answers recorded: provider applications require 1–6 photos (already enforced in the wizard and the action), and key provider changes return an approved profile to review (seeded `reapprove_on_key_change = true`). No code change was needed. |
