@@ -4,6 +4,7 @@ import {
   getAdminJobs,
   getAdminOffers,
   getAdminProviders,
+  getInterestSignups,
 } from "@/lib/data/admin";
 
 type Params = Promise<{ type: string }>;
@@ -121,6 +122,19 @@ export async function GET(_request: Request, { params }: { params: Params }) {
       ]),
     ];
     return csvResponse(`offers-${stamp}.csv`, toCsv(rows));
+  }
+
+  if (type === "waitlist") {
+    const signups = await getInterestSignups();
+    const rows: Array<Array<unknown>> = [
+      ["email", "postcode", "created_at"],
+      ...signups.map((signup) => [
+        signup.email,
+        signup.postcode,
+        signup.created_at,
+      ]),
+    ];
+    return csvResponse(`waitlist-${stamp}.csv`, toCsv(rows));
   }
 
   return NextResponse.json({ error: "Unknown export type" }, { status: 404 });

@@ -12,6 +12,22 @@ import type {
   ServiceCategory,
 } from "@/lib/types";
 
+export async function getInterestSignups() {
+  if (!isSupabaseConfigured()) return [];
+
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("interest_signups")
+    .select("email, postcode, created_at")
+    .order("created_at", { ascending: false });
+
+  return (data ?? []) as Array<{
+    email: string;
+    postcode: string;
+    created_at: string;
+  }>;
+}
+
 export async function getAdminCounts() {
   if (!isSupabaseConfigured()) {
     return {

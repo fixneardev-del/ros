@@ -160,7 +160,7 @@ The build emits one benign font warning: Turbopack cannot generate fallback metr
 - User suspension and reinstatement.
 - Reports queue.
 - Analytics page showing page views, searches, jobs posted and provider applications.
-- CSV export route: `/api/admin/export/[type]` for providers, jobs and offers.
+- CSV export route: `/api/admin/export/[type]` for providers, jobs, offers and waitlist signups.
 - Notification retry route: `/api/notifications/retry` (admin session or `CRON_SECRET`).
 - A signed-in non-admin gets a 403 on every admin route. The role is resolved in `proxy.ts`, before anything renders, and the request is rewritten to `/admin-denied`, which calls `forbidden()`. The admin layout and every admin action still check the role, so the proxy is the front door rather than the only defence. An anonymous visitor gets a 307 to `/login`, also from the proxy.
 - Every approve, reject, suspend and remove records the actor and the time on the row itself, not only in the audit log.
@@ -255,3 +255,4 @@ flags are final; the first admin is the account whose email is
 | 2026-11-09 | Docs 01–07 audit. Landing district chips now read enabled `locations` rows with the placeholder list as fallback; the accepted provider sees the full postcode after acceptance. Confirmed already present: owner-only job edit and close, offer edit and withdraw while submitted, provider photo alt text, the extra-checks flag in admin review, and the 6-photo / 5 MB / JPEG-PNG-WebP limits. Full pass: lint, typecheck, 35 unit tests, 35-route build, 19 Playwright tests, 5 RLS files. |
 | 2026-11-09 | Project separated into its own git repository at `repairs-and-other-services` and committed as `Initial commit: Repairs and Other Services pilot MVP`. `.env.example` is now tracked (the `.env*` ignore has an exception) and its admin field is documented as the first admin owner. Phase 1 answers recorded: districts `G12`/`G11`/`G3`/`G4`, the seven starter categories, and `ADMIN_NOTIFICATION_EMAIL` as the handover owner. |
 | 2026-11-09 | Mobile Lighthouse measured against the production build. `/`, `/search`, `/login`, `/privacy`, `/terms` and `/cookies` score 90–92 performance, 100 accessibility, 100 best practices and 100 SEO. Admin pages still need a signed-in account. |
+| 2026-11-09 | Waitlist signups were captured but never readable, so admins could only see them in notification emails. Added `getInterestSignups`, a `waitlist` CSV export and an **Export waitlist** button on the admin overview. Documented in the admin guide. |

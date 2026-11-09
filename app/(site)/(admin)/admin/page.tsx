@@ -65,6 +65,9 @@ async function AdminContent({ searchParams }: { searchParams: SearchParams }) {
           <ButtonLink href="/api/admin/export/jobs" variant="secondary">
             Export jobs
           </ButtonLink>
+          <ButtonLink href="/api/admin/export/waitlist" variant="secondary">
+            Export waitlist
+          </ButtonLink>
         </div>
       </div>
 

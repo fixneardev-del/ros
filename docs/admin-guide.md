@@ -101,9 +101,12 @@ provider to `first-party` on the overview page.
 
 ### CSV export
 
-Use the **Export providers** and **Export jobs** buttons on the overview, or
-the **Export CSV** buttons on the provider and job lists. The same files are
-available at `/api/admin/export/providers` and `/api/admin/export/jobs`.
+Use the **Export providers**, **Export jobs** and **Export waitlist** buttons on
+the overview, or the **Export CSV** buttons on the provider, job and offer lists.
+The same files are available at `/api/admin/export/providers`,
+`/api/admin/export/jobs`, `/api/admin/export/offers` and
+`/api/admin/export/waitlist`. The waitlist file lists the email, postcode and
+date of every interest signup.
 
 ## Making the site public
 
