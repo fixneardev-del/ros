@@ -116,6 +116,8 @@ The first admin is promoted with one SQL update, covered in
 ## Status
 
 Foundation, discovery, provider onboarding, marketplace, admin, notification,
-legal and analytics code is in place. Verification is pending on a live Supabase
-project, end-to-end tests and final legal copy. See `.context/progress.md` for
-the current gate and blockers.
+legal and analytics code is in place. Lint, typecheck, unit tests, the production
+build, the RLS suite, the public Playwright suite and mobile Lighthouse pass.
+Live Supabase/Resend flows, the two-account marketplace flow, signed-in admin
+E2E, a git remote and final legal copy are still pending. See
+`.context/progress.md` for the current gate and blockers.

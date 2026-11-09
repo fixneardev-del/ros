@@ -74,12 +74,13 @@ Three packages named in the approved spec are not installed. None of them is imp
 
 - **React Hook Form and `@hookform/resolvers` removed.** Forms use React 19's `useActionState` with a Server Action, which is the native path for server-driven forms and removes a second source of form state. The typed `ActionResult` shape already carries field-level errors, so a resolver library added nothing.
 - **`@react-email/components` removed.** Email templates are built as HTML and text strings in `lib/emails/templates.ts`. The package was unused and pulled in four low-severity advisories through `html-to-text` and `deepmerge`. Templates live in one file, so switching to react-email later is a single-file change.
+- **shadcn was not installed.** The core primitives are small, project-owned components in `components/ui/` styled with the design tokens. The generator would have added a second theme layer and a `components.json` contract for no gain on this surface area.
 - **`npm audit --omit=dev` is clean.**
 
 ## Known gaps
 
-- The project is not its own git repository yet. It sits inside `/Users/oladimeji`.
+- The project is its own git repository, but no remote has been added yet, so CI has not run.
 - Supabase credentials are absent, so auth, storage, email and signed-in marketplace flows have not run end to end. The schema and RLS rules are verified against a real Postgres, and the public browser suite passes.
 - Legal pages are clearly marked pilot copy. The client supplies approved legal text.
-- Analytics tool choice and consent requirements are unresolved.
+- Playwright 1.65 cannot run Firefox or WebKit on macOS 13 ARM. CI runs all three browsers; local runs use Chromium.
 - The public, auth and job pages use the landing visual system; the signed-in dashboards use the mending system. Opening a job from `/jobs` switches chrome. That is the intended edge of the scope.
