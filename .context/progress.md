@@ -212,14 +212,14 @@ The build emits one benign font warning: Turbopack cannot generate fallback metr
 2. **Brand assets or design approval.** The proposal palette ships behind CSS variables.
 3. **Confirmation of the 1-photo minimum.**
 4. **Legal copy.** Pages are clearly marked pilot copy.
-5. **Analytics tool and consent choice.**
-6. **Sender domain and DNS for Resend.**
-7. **Warranty length and Supabase plan.**
+5. **Sender domain and DNS for Resend.**
+6. **Warranty length and Supabase plan.**
 
 Resolved on 2026-11-09: the project is its own git repository; pilot districts
 `G12`, `G11`, `G3` and `G4` are final; the seven starter categories and their
 flags are final; the first admin is the account whose email is
-`ADMIN_NOTIFICATION_EMAIL`.
+`ADMIN_NOTIFICATION_EMAIL`; analytics are first party and cookie free, so no
+consent banner is needed.
 
 ---
 

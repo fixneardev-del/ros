@@ -149,7 +149,7 @@ Tick a task only when its acceptance criteria and verification are complete.
 
 - [ ] T60 — Legal content and consent (legal copy still on the client; pages are marked pilot copy)
 - [x] T61 — Analytics events (first party and cookie free, off by default)
-- [ ] T62 — Consent banner (only needed if the chosen tool sets cookies)
+- [x] T62 — Consent banner (not needed: the first-party analytics are cookie free and off until an admin opts in)
 
 ### Checkpoint: Legal and analytics
 - [ ] Legal pages are final and linked everywhere

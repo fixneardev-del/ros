@@ -36,14 +36,14 @@ Foundation is necessarily horizontal (schema, auth, tokens, shared libraries). E
 
 | Phase | Module(s) | Tasks | Exit gate |
 |---|---|---|---|
-| 0 | guardrails | T01–T03 | Scripts, env contract and repo/CI decision in place |
+| 0 | guardrails | T01–T03 | Scripts, env contract, own repo and CI in place |
 | 1 | `foundation` | T04–T23 | Schema + seed applied, auth works, tokens applied, shared libs tested |
 | 2 | `discovery` | T24–T30 | Home → search → provider profile works; pilot and non-pilot paths pass |
 | 3 | `provider-onboarding` | T31–T38 | Application with photos reaches pending; provider dashboard shows status |
 | 4 | `marketplace` | T39–T46 | Job → offer → accept → contact release works |
 | 5 | `admin` | T47–T54 | Admin can approve, reject, suspend, moderate, manage reference data and export |
 | 6 | `notifications` | T55–T59 | Every trigger sends exactly one email; failures never block actions |
-| 7 | `legal-and-analytics` | T60–T62 | Legal pages live with consent; analytics events recorded |
+| 7 | `legal-and-analytics` | T60–T62 | Legal pages live; first-party analytics recorded; no consent banner needed |
 | 8 | `hardening-and-launch` | T63–T69 | Security, RLS, E2E, a11y, handover and deployment complete |
 
 ---
@@ -74,16 +74,16 @@ Foundation is necessarily horizontal (schema, auth, tokens, shared libraries). E
 **Files:** `.env.example`, `lib/env.ts`, `tests/unit/env.test.ts`
 **Scope:** S (3 files)
 
-#### T03 — Project-owned repository and CI baseline (ASK FIRST)
+#### T03 — Project-owned repository and CI baseline
 **Description:** Separate the project from the home-directory git repo and add CI.
 **Acceptance:**
-- [ ] Project has its own git repository and remote, with the scaffold committed.
-- [ ] CI runs install, lint, typecheck and unit tests on push/PR.
-- [ ] A separate Playwright job is defined but may be gated until the app runs.
+- [x] Project has its own git repository, with the scaffold committed. A remote is still to be added at handover.
+- [x] CI runs install, lint, typecheck and unit tests on push/PR.
+- [x] A separate Playwright job is defined but may be gated until the app runs.
 **Verify:** push a branch; CI green.
 **Depends:** T01
 **Files:** `.github/workflows/ci.yml`, `.gitignore`, `README.md`
-**Scope:** S (3 files). **Blocked on explicit approval** because the current git root is `/Users/oladimeji`.
+**Scope:** S (3 files). **Resolved on 2026-11-09** with the owner's approval.
 
 ---
 
@@ -780,15 +780,14 @@ Foundation is necessarily horizontal (schema, auth, tokens, shared libraries). E
 **Files:** `lib/analytics.ts`, `components/analytics.tsx`, `app/layout.tsx`
 **Scope:** S (3 files). **Provider choice is an open question.**
 
-#### T62 — Consent banner (conditional)
+#### T62 — Consent banner (not needed)
 **Description:** Add a consent banner only if the chosen tool requires it.
 **Acceptance:**
-- [ ] Banner stores the choice and blocks non-essential scripts until consent.
-- [ ] Keyboard accessible; does not reappear after a decision.
+- [x] Not applicable: the first-party analytics are cookie free and off until an admin opts in, so no non-essential script runs before consent.
 **Verify:** manual with cleared storage.
 **Depends:** T61
 **Files:** `components/consent-banner.tsx`, `lib/consent.ts`
-**Scope:** S (2 files)
+**Scope:** S (2 files). **Resolved on 2026-11-09**: no banner.
 
 #### Checkpoint: Legal and analytics
 - [ ] Legal pages are final and linked everywhere.
@@ -931,7 +930,7 @@ T63/T64/T65/T66 → T68 → T69
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Project sits inside the home-directory git repo | High | T03 is ask-first; separate repo before CI and handover |
+| Project repo remote not yet added | Low | Own repo and CI exist; add the remote at handover (T69) |
 | Placeholder categories and districts | Medium | Seed from one source file; treat changes as migrations |
 | Next.js 16 API drift | Medium | Read `node_modules/next/dist/docs/` before each unfamiliar API; keep framework-specific code isolated |
 | RLS tests skipped in CI | High | CI starts local Supabase before `test:rls`; no silent skip |
@@ -949,20 +948,22 @@ T63/T64/T65/T66 → T68 → T69
 
 | Question | Blocks |
 |---|---|
-| Approve separating the project into its own git repo | T03, T65, T69 |
-| Confirm pilot districts and area names | T05, T26, T28 |
-| Confirm categories and extra-checks flags | T05, T33, T51 |
 | Approve the design-system proposal or supply brand assets | T15, T16 |
-| Confirm first admin ownership and handover method | T23, T48 |
 | Confirm Next 16 `cacheComponents` / `partialPrefetching` | T04, T15 |
 | Confirm 1-photo minimum for provider applications | T31, T34 |
 | Confirm `reapprove_on_key_change = true` | T37, T52 |
 | Supply legal copy | T60, T68, T69 |
-| Choose analytics tool and consent requirement | T61, T62 |
 | Confirm sender domain and DNS access | T56–T59 |
 | Confirm warranty length and Supabase plan | T67, T69 |
 
-Non-blocking for Phase 1: legal copy, analytics, sender DNS, warranty and Supabase plan. Everything in Phase 1 can start once the repo decision, districts, categories, brand approval and first-admin ownership are answered.
+Resolved on 2026-11-09: own git repository and CI; pilot districts
+`G12`/`G11`/`G3`/`G4`; the seven starter categories and flags; the first admin
+is `ADMIN_NOTIFICATION_EMAIL`; first-party cookie-free analytics, so no consent
+banner.
+
+Non-blocking for Phase 1: legal copy, sender DNS, warranty and the Supabase
+plan. Phase 1 is otherwise unblocked; brand approval, the 1-photo minimum and
+`reapprove_on_key_change` are the remaining product answers.
 
 ---
 
