@@ -34,7 +34,7 @@ Run on 2026-11-09:
 | `npm test` | Pass — 6 files, 35 tests |
 | `npm run test:coverage` | Pass — 100% statements, branches, functions and lines on `lib/postcode.ts`, `lib/transitions.ts`, `lib/format.ts`, `lib/next-path.ts` |
 | `npm run build` | Pass — 35 routes generated |
-| `npm run test:e2e` | Pass — 19 Playwright tests in Chromium |
+| `npm run test:e2e` | Pass — 19 Playwright tests locally in Chromium; CI runs the same 19 in Chromium, Firefox and WebKit |
 | `npm run test:rls` | Pass — 5 SQL files, run against a real Postgres with the Supabase `auth` and `storage` schemas stubbed |
 | `npm audit --omit=dev` | Clean, 0 vulnerabilities |
 | Visual pass at 375 / 768 / 1280 | Landing, search, register, login, legal, provider profile, 404 and 403 checked in a real browser |
@@ -44,7 +44,7 @@ The Playwright suite covers the public pages, the hero search handing its values
 
 `npm run test:e2e` reuses the dev server on port 3001 when one is already running. Next.js only allows one dev server per project directory, so a separate test port cannot be started alongside it. Set `E2E_PORT` to override the port.
 
-Playwright 1.65 no longer installs its own Chromium on macOS 13. On this machine the suite runs with `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` pointing at an existing Chromium build. CI installs its own browser normally.
+Playwright 1.65 no longer installs its own Chromium on macOS 13. On this machine the suite runs with `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` pointing at an existing Chromium build. CI installs its own browsers normally. Playwright 1.65 also refuses Firefox and WebKit on macOS 13 ARM, so local runs default to Chromium; CI runs Chromium, Firefox and WebKit (set `E2E_ALL_BROWSERS=1` on a supported machine to run all three locally).
 
 Visual pass findings and fixes:
 
@@ -258,3 +258,4 @@ changes return to review (`reapprove_on_key_change = true`).
 | 2026-11-09 | Mobile Lighthouse measured against the production build. `/`, `/search`, `/login`, `/privacy`, `/terms` and `/cookies` score 90–92 performance, 100 accessibility, 100 best practices and 100 SEO. Admin pages still need a signed-in account. |
 | 2026-11-09 | Waitlist signups were captured but never readable, so admins could only see them in notification emails. Added `getInterestSignups`, a `waitlist` CSV export and an **Export waitlist** button on the admin overview. Documented in the admin guide. |
 | 2026-11-09 | Product answers recorded: provider applications require 1–6 photos (already enforced in the wizard and the action), and key provider changes return an approved profile to review (seeded `reapprove_on_key_change = true`). No code change was needed. |
+| 2026-11-09 | Cross-browser coverage added to CI. `playwright.config.ts` adds Firefox and WebKit projects when `CI` is set (or `E2E_ALL_BROWSERS=1`), and the CI job installs all three browsers. Local runs stay on Chromium because Playwright 1.65 does not support Firefox or WebKit on macOS 13 ARM. |

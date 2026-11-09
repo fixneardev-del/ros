@@ -13,6 +13,14 @@ const baseURL = `http://127.0.0.1:${PORT}`;
  */
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
 
+/**
+ * Playwright 1.65 does not support Firefox or WebKit on macOS 13 ARM. CI runs
+ * all three browsers; locally we default to Chromium and opt in with
+ * E2E_ALL_BROWSERS=1 on a supported machine.
+ */
+const allBrowsers =
+  Boolean(process.env.CI) || process.env.E2E_ALL_BROWSERS === "1";
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
@@ -23,13 +31,21 @@ export default defineConfig({
   use: {
     baseURL,
     trace: "on-first-retry",
-    launchOptions: executablePath ? { executablePath } : undefined,
   },
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        ...(executablePath ? { launchOptions: { executablePath } } : {}),
+      },
     },
+    ...(allBrowsers
+      ? [
+          { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+          { name: "webkit", use: { ...devices["Desktop Safari"] } },
+        ]
+      : []),
   ],
   webServer: {
     command: `npm run dev -- --port ${PORT}`,
