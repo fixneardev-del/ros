@@ -9,7 +9,7 @@ Current gate: **Foundation checkpoint** — code is in place; live verification 
 
 | Phase | Status | Notes |
 |---|---|---|
-| 0. Guardrails | Code complete | Scripts, env contract and unit harness in place. Project-owned repo/CI (T03) still ask-first. |
+| 0. Guardrails | Code complete | Scripts, env contract and unit harness in place. Project-owned repo and CI (T03) are in place. |
 | 1. Foundation | Code complete, verification pending | Schema, RLS, clients, tokens, auth pages and account page written. RLS suite passes against Postgres. Live Supabase Auth still untested. |
 | 2. Discovery | Code complete, verification pending | Landing page, search, provider profile, legal shells and waitlist written. E2E smoke suite passes. |
 | 3. Provider onboarding | Code complete, verification pending | Application wizard, dashboard, profile edit and photo upload written. E2E covers the public entry points. |
@@ -17,7 +17,7 @@ Current gate: **Foundation checkpoint** — code is in place; live verification 
 | 5. Admin | Code complete, verification pending | Review queue, moderation, reference data, users, reports, CSV export, analytics and audit fields written. E2E covers the anonymous redirect only. |
 | 6. Notifications | Code complete, verification pending | Outbox, templates, event wiring and retry route written. No live email send yet. |
 | 7. Legal and analytics | Partial | Legal pages are clearly marked pilot copy. Analytics are first party and cookie free, off by default. Client legal copy still needed. |
-| 8. Hardening and launch | Partial | Rate limiting, security-oriented SQL, security headers and CI exist. Lint, types, unit, build, E2E and RLS all pass. The Lighthouse accessibility target and deployment are not done. |
+| 8. Hardening and launch | Partial | Rate limiting, security-oriented SQL, security headers and CI exist. Lint, types, unit, build, E2E, RLS and mobile Lighthouse all pass. Deployment is not done. |
 
 The Foundation checkpoint in `tasks/plan.md` says to stop for human review before discovery. Discovery and later modules have been implemented ahead of that gate. The database rules are now proven by the RLS suite, but no flow has run through the live Supabase stack.
 
@@ -38,6 +38,7 @@ Run on 2026-11-09:
 | `npm run test:rls` | Pass — 5 SQL files, run against a real Postgres with the Supabase `auth` and `storage` schemas stubbed |
 | `npm audit --omit=dev` | Clean, 0 vulnerabilities |
 | Visual pass at 375 / 768 / 1280 | Landing, search, register, login, legal, provider profile, 404 and 403 checked in a real browser |
+| Lighthouse (mobile) | `/`, `/search`, `/login`, `/privacy`, `/terms`, `/cookies`: performance 90–92, accessibility 100, best practices 100, SEO 100 |
 
 The Playwright suite covers the public pages, the hero search handing its values to `/search`, the pilot checks, the legal pages, the 404 page, the register terms gate, the `next` parameter surviving the login and register round trip, the mobile menu, the skip link, the anonymous admin redirect and the security headers.
 
@@ -55,7 +56,7 @@ Visual pass findings and fixes:
 
 Checked and found clean: no horizontal overflow at 375px on ten pages, no console errors in a clean browser, auth-protected routes redirect to `/login`, the mobile menu opens with all links, and the 404 page renders.
 
-One note: the design system asks for a Lighthouse accessibility score of 90 or more. That has not been measured yet.
+One note: the design system asks for a Lighthouse accessibility score of 90 or more. Mobile Lighthouse on the six public pages scores 100 for accessibility and 90–92 for performance. Admin pages are not measured because they need a signed-in account.
 
 The RLS suite applies the migration and seed to a scratch database, then exercises the rules: profile creation, role escalation denial, suspension blocking job posts, provider application, self-approval denial, admin approval, provider withdrawal, job visibility by district and service, offer permissions, offer acceptance declining the losers, the accept bypass not leaking, contact release only for the accepted parties, and the admin-only capabilities.
 
@@ -253,3 +254,4 @@ flags are final; the first admin is the account whose email is
 | 2026-11-09 | Studio theme applied to every public, auth and job page, plus the 404 and 403. `app/globals.css` moved to `@theme`; `app/design-system.css` is shared; `app/studio.css` remaps the theme inside `.studio`. Route groups own their chrome through `components/shells/studio-shell.tsx` and `app-shell.tsx`. Dashboards keep the original tokens. Verified at 375 and 1280 with zero horizontal overflow and no console errors. |
 | 2026-11-09 | Docs 01–07 audit. Landing district chips now read enabled `locations` rows with the placeholder list as fallback; the accepted provider sees the full postcode after acceptance. Confirmed already present: owner-only job edit and close, offer edit and withdraw while submitted, provider photo alt text, the extra-checks flag in admin review, and the 6-photo / 5 MB / JPEG-PNG-WebP limits. Full pass: lint, typecheck, 35 unit tests, 35-route build, 19 Playwright tests, 5 RLS files. |
 | 2026-11-09 | Project separated into its own git repository at `repairs-and-other-services` and committed as `Initial commit: Repairs and Other Services pilot MVP`. `.env.example` is now tracked (the `.env*` ignore has an exception) and its admin field is documented as the first admin owner. Phase 1 answers recorded: districts `G12`/`G11`/`G3`/`G4`, the seven starter categories, and `ADMIN_NOTIFICATION_EMAIL` as the handover owner. |
+| 2026-11-09 | Mobile Lighthouse measured against the production build. `/`, `/search`, `/login`, `/privacy`, `/terms` and `/cookies` score 90–92 performance, 100 accessibility, 100 best practices and 100 SEO. Admin pages still need a signed-in account. |

@@ -161,7 +161,7 @@ Tick a task only when its acceptance criteria and verification are complete.
 - [x] T63 — Security headers and rate limiting
 - [x] T64 — RLS and permission regression (5 SQL files, including admin capabilities)
 - [x] T65 — Full E2E, mobile viewports and CI (19 Playwright tests pass; signed-in flows wait on credentials)
-- [ ] T66 — Accessibility and responsive pass (studio pages checked at 375/1280 with zero horizontal overflow; Lighthouse score not measured)
+- [x] T66 — Accessibility and responsive pass (studio pages checked at 375/1280 with zero horizontal overflow; Lighthouse on `/`, `/search`, `/login`, `/privacy`, `/terms` and `/cookies`: performance 90–92, accessibility 100, best practices 100, SEO 100)
 - [x] T67 — Handover documentation and admin guide
 - [x] T68 — Manual test script and acceptance run
 - [ ] T69 — Staging and production deployment
