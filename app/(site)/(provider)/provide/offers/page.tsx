@@ -1,0 +1,138 @@
+import { Suspense } from "react";
+import Link from "next/link";
+import type { Metadata } from "next";
+import { requireApprovedProvider } from "@/lib/permissions";
+import { getProviderOffers } from "@/lib/data/jobs";
+import { OfferCard } from "@/components/mend/offer-card";
+import { EmptyState, StitchLine } from "@/components/mend/tag";
+import { ActionForm } from "@/components/forms/action-form";
+import { EditOfferForm } from "@/components/forms/offer-forms";
+import { withdrawOffer } from "@/lib/actions/offers";
+import { ButtonLink } from "@/components/ui/button";
+
+export const metadata: Metadata = { title: "My offers" };
+
+async function OffersContent() {
+  const context = await requireApprovedProvider();
+  const offers = await getProviderOffers(context.user.id);
+
+  const counts = offers.reduce(
+    (totals, offer) => {
+      totals[offer.status] = (totals[offer.status] ?? 0) + 1;
+      return totals;
+    },
+    {} as Record<string, number>,
+  );
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
+            Provider offers
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-extrabold md:text-5xl">
+            My offers
+          </h1>
+          <StitchLine className="mt-4 w-20" />
+          <p className="mt-3 text-muted">
+            Track the offers you have sent. You can edit or withdraw an offer
+            while it is still submitted.
+          </p>
+        </div>
+        <ButtonLink href="/provide/jobs">Find more jobs</ButtonLink>
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-2 text-sm">
+        {[
+          ["submitted", "Submitted"],
+          ["accepted", "Accepted"],
+          ["declined", "Declined"],
+          ["withdrawn", "Withdrawn"],
+        ].map(([key, label]) => (
+          <span
+            key={key}
+            className="rounded-full border border-line-strong bg-surface px-3 py-1 font-bold"
+          >
+            {label}: {counts[key] ?? 0}
+          </span>
+        ))}
+      </div>
+
+      {offers.length > 0 ? (
+        <div className="mt-8 space-y-6">
+          {offers.map((offer) => (
+            <div key={offer.id}>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <Link
+                  href={`/jobs/${offer.job_id}`}
+                  className="font-bold text-primary underline underline-offset-4"
+                >
+                  {offer.job_requests?.title ?? "Job"}
+                </Link>
+                {offer.job_requests ? (
+                  <span className="text-sm text-muted">
+                    {offer.job_requests.postcode_district}
+                    {offer.job_requests.service_categories
+                      ? ` · ${offer.job_requests.service_categories.name}`
+                      : ""}
+                  </span>
+                ) : null}
+              </div>
+              <OfferCard
+                offer={offer}
+                title="Your offer"
+                actions={
+                  offer.status === "submitted" ? (
+                    <ActionForm
+                      action={withdrawOffer}
+                      fields={{ id: offer.id }}
+                      label="Withdraw offer"
+                      variant="destructive"
+                      confirmMessage="Withdraw this offer? You cannot send another offer for this job."
+                      successMessage="Offer withdrawn."
+                    />
+                  ) : null
+                }
+              />
+              {offer.status === "submitted" ? (
+                <details className="mt-2 rounded-surface border border-line bg-surface p-5">
+                  <summary className="cursor-pointer font-bold text-primary">
+                    Edit this offer
+                  </summary>
+                  <div className="mt-5">
+                    <EditOfferForm offer={offer} />
+                  </div>
+                </details>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title="No offers yet"
+          description="When you send an offer for a matching job, it will appear here with its status."
+          action={<ButtonLink href="/provide/jobs">Find matching jobs</ButtonLink>}
+        />
+      )}
+    </div>
+  );
+}
+
+export default function ProviderOffersPage() {
+  return (
+    <div className="mx-auto max-w-[1200px] px-4 py-10 md:px-8 lg:px-12">
+      <Suspense
+        fallback={
+          <div className="space-y-4" aria-hidden>
+            <div className="h-12 w-64 rounded bg-slate-100" />
+            <div className="h-48 rounded-surface bg-slate-100" />
+            <div className="h-48 rounded-surface bg-slate-100" />
+          </div>
+        }
+      >
+        <OffersContent />
+      </Suspense>
+    </div>
+  );
+}

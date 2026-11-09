@@ -1,0 +1,85 @@
+import { Suspense } from "react";
+import Link from "next/link";
+import type { Metadata } from "next";
+import { requireApprovedProvider } from "@/lib/permissions";
+import { getMatchingJobs } from "@/lib/data/jobs";
+import { JobCard } from "@/components/mend/job-card";
+import { EmptyState, StitchLine } from "@/components/mend/tag";
+import { ButtonLink } from "@/components/ui/button";
+
+export const metadata: Metadata = { title: "Matching jobs" };
+
+async function JobsContent() {
+  const context = await requireApprovedProvider();
+  const jobs = await getMatchingJobs(context.user.id);
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
+            Provider jobs
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-extrabold md:text-5xl">
+            Jobs that fit your services
+          </h1>
+          <StitchLine className="mt-4 w-20" />
+          <p className="mt-3 text-muted">
+            Open jobs in your pilot areas and services. Jobs you have already
+            offered on are not shown here.
+          </p>
+        </div>
+        <ButtonLink href="/provide/offers" variant="secondary">
+          My offers
+        </ButtonLink>
+      </div>
+
+      {jobs.length > 0 ? (
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          {jobs.map((job) => (
+            <JobCard
+              key={job.id}
+              job={job}
+              action={
+                <Link
+                  href={`/jobs/${job.id}`}
+                  className="inline-flex min-h-10 items-center rounded-control bg-primary px-4 text-sm font-bold text-primary-fg hover:bg-primary-hover"
+                >
+                  View and offer
+                </Link>
+              }
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title="No matching jobs right now"
+          description="We will show open jobs here when they match your services and pilot areas. Check back soon."
+          action={
+            <ButtonLink href="/provide" variant="secondary">
+              Update your profile
+            </ButtonLink>
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+export default function ProviderJobsPage() {
+  return (
+    <div className="mx-auto max-w-[1200px] px-4 py-10 md:px-8 lg:px-12">
+      <Suspense
+        fallback={
+          <div className="space-y-4" aria-hidden>
+            <div className="h-12 w-72 rounded bg-slate-100" />
+            <div className="h-40 rounded-surface bg-slate-100" />
+            <div className="h-40 rounded-surface bg-slate-100" />
+          </div>
+        }
+      >
+        <JobsContent />
+      </Suspense>
+    </div>
+  );
+}

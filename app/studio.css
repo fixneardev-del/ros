@@ -1,0 +1,568 @@
+/*
+ * Studio theme.
+ *
+ * The public, auth and job pages render inside a `.studio` wrapper. It remaps
+ * the application tokens to the landing design system and adds the shape
+ * language (2px ink outlines, hard offset shadows, pill controls). The signed
+ * in dashboards sit outside this wrapper, so they keep the original tokens.
+ *
+ * The shared `.l-*` classes and `--l-*` tokens live in app/design-system.css,
+ * which the studio layouts import alongside this file.
+ */
+
+.studio {
+  /* Landing tokens, repeated here so the shared .l-* classes work in this
+     scope as well as on the landing page. */
+  --l-bg: #fcfcf8;
+  --l-ink: #111111;
+  --l-mut: #666666;
+  --l-teal: #0f766e;
+  --l-line: #e7e7e0;
+  --l-yellow: #facc15;
+  --l-brown: #bc7f4a;
+
+  --l-blue: #1e2a9c;
+  --l-orange: #e94e1b;
+  --l-green: #2fae6b;
+  --l-red: #e91e4d;
+  --l-purple: #5b21b6;
+
+  --l-radius-pill: 999px;
+  --l-radius-card: 18px;
+  --l-radius-panel: 14px;
+
+  /* Application tokens used by Tailwind utilities and the shared components. */
+  --color-paper: #fcfcf8;
+  --color-ink: #111111;
+  --color-surface: #ffffff;
+
+  --color-line: #e7e7e0;
+  --color-line-strong: #111111;
+  --color-muted: #666666;
+
+  --color-primary: #0f766e;
+  --color-primary-hover: #0b5c56;
+  --color-primary-fg: #ffffff;
+  --color-accent: #facc15;
+  --color-accent-fg: #111111;
+
+  --color-success: #2fae6b;
+  --color-success-bg: #eaf8f0;
+  --color-success-fg: #14643c;
+  --color-danger: #e91e4d;
+  --color-danger-bg: #fdecef;
+  --color-danger-fg: #8f0f30;
+  --color-warning-bg: #fef6d8;
+  --color-warning-fg: #7a5a00;
+  --color-info-bg: #e8f4f3;
+  --color-info-fg: #0b5c56;
+
+  --color-slate-100: #f2f2ec;
+  --color-slate-200: #e7e7e0;
+  --color-slate-400: #a3a39b;
+  --color-slate-500: #7a7a73;
+  --color-slate-600: #666666;
+
+  /* Older aliases still referenced by a few components. */
+  --color-denim-700: #0f766e;
+  --color-denim-800: #0b5c56;
+  --color-thread-100: #fef6d8;
+  --color-thread-400: #facc15;
+  --color-thread-700: #7a5a00;
+  --color-mend-100: #eaf8f0;
+  --color-mend-600: #2fae6b;
+  --color-mend-800: #14643c;
+  --color-patch-100: #fdecef;
+  --color-patch-600: #e91e4d;
+  --color-patch-800: #8f0f30;
+  --color-info-100: #e8f4f3;
+
+  --font-display: var(--font-studio-sans), system-ui, sans-serif;
+  --font-sans: var(--font-studio-sans), system-ui, sans-serif;
+
+  --radius-control: 999px;
+  --radius-surface: 18px;
+  --radius-photo: 12px;
+
+  --shadow-overlay: 0 12px 32px rgb(17 17 17 / 0.14);
+
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.studio ::selection {
+  background: var(--color-accent);
+  color: var(--color-ink);
+}
+
+.studio :focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+/* Typography ----------------------------------------------------------- */
+
+.studio h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 4vw, 3.25rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.studio h2,
+.studio h3,
+.studio h4 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.studio p {
+  text-wrap: pretty;
+}
+
+/* Page frame ----------------------------------------------------------- */
+
+.studio .s-page {
+  padding-block: 44px 56px;
+}
+
+.studio .s-page-narrow {
+  max-width: 860px;
+}
+
+.studio .s-section-title {
+  font-size: clamp(1.5rem, 2.4vw, 2.125rem);
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
+}
+
+.studio .s-muted {
+  color: var(--color-muted);
+}
+
+/* Cards and panels ----------------------------------------------------- */
+
+.studio .panel,
+.studio .s-panel {
+  background: var(--color-surface);
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-surface);
+  padding: 18px;
+}
+
+.studio .tag {
+  background: var(--color-surface);
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-surface);
+  padding: 18px;
+  box-shadow: 5px 5px 0 var(--color-ink);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+/* The punched hole belongs to the old tag motif, not this system. */
+.studio .tag::after {
+  display: none;
+}
+
+.studio a.tag:hover {
+  transform: translateY(-4px);
+  box-shadow: 7px 9px 0 var(--color-ink);
+}
+
+.studio .tag:focus-within {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.studio .s-alert {
+  border: 1.5px solid currentColor;
+  border-radius: 14px;
+}
+
+.studio .s-media {
+  overflow: hidden;
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-surface);
+  background: var(--color-surface);
+}
+
+.studio .s-thumb {
+  border: 1.5px solid var(--color-ink);
+  border-radius: var(--radius-photo);
+}
+
+/* Rows and list items that use rounded-control but are not controls. */
+.studio .s-row {
+  border-radius: 10px;
+}
+
+.studio a.panel {
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease;
+}
+
+.studio a.panel:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-primary);
+}
+
+/* Buttons -------------------------------------------------------------- */
+
+.studio .btn {
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-control);
+  box-shadow: 0 3px 0 var(--color-primary);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.studio .btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 var(--color-primary);
+}
+
+.studio .btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 var(--color-primary);
+}
+
+.studio .btn[data-variant="primary"] {
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
+  box-shadow: 0 3px 0 var(--color-ink);
+}
+
+.studio .btn[data-variant="primary"]:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  box-shadow: 0 5px 0 var(--color-ink);
+}
+
+.studio .btn[data-variant="primary"]:active:not(:disabled) {
+  box-shadow: 0 1px 0 var(--color-ink);
+}
+
+.studio .btn[data-variant="accent"] {
+  background: var(--color-accent);
+  color: var(--color-accent-fg);
+  box-shadow: 0 3px 0 var(--color-ink);
+}
+
+.studio .btn[data-variant="accent"]:hover:not(:disabled) {
+  background: #f5c000;
+  box-shadow: 0 5px 0 var(--color-ink);
+}
+
+.studio .btn[data-variant="secondary"] {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: 0 3px 0 var(--color-primary);
+}
+
+.studio .btn[data-variant="secondary"]:hover:not(:disabled) {
+  background: var(--color-info-bg);
+  color: var(--color-ink);
+}
+
+.studio .btn[data-variant="destructive"] {
+  background: var(--color-danger);
+  color: #ffffff;
+  box-shadow: 0 3px 0 var(--color-ink);
+}
+
+.studio .btn[data-variant="destructive"]:hover:not(:disabled) {
+  background: var(--color-danger-fg);
+  box-shadow: 0 5px 0 var(--color-ink);
+}
+
+.studio .btn[data-variant="quiet"] {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-primary);
+  box-shadow: none;
+}
+
+.studio .btn[data-variant="quiet"]:hover:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+  color: var(--color-primary-hover);
+}
+
+.studio .btn:disabled {
+  border-color: var(--color-slate-400);
+  background: var(--color-slate-200);
+  color: var(--color-slate-500);
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+
+/* Form controls -------------------------------------------------------- */
+
+.studio input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.studio select,
+.studio textarea {
+  border: 1.5px solid var(--color-ink);
+  border-radius: 10px;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 14px;
+}
+
+.studio select {
+  appearance: none;
+  padding-right: 34px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--color-ink) 50%),
+    linear-gradient(135deg, var(--color-ink) 50%, transparent 50%);
+  background-position:
+    calc(100% - 17px) calc(50% + 1px),
+    calc(100% - 12px) calc(50% + 1px);
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+}
+
+.studio input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+.studio select:focus-visible,
+.studio textarea:focus-visible {
+  border-color: var(--color-primary);
+  outline: 3px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.studio input[aria-invalid="true"],
+.studio select[aria-invalid="true"],
+.studio textarea[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+
+.studio input:disabled,
+.studio select:disabled,
+.studio textarea:disabled {
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-500);
+}
+
+.studio input::placeholder,
+.studio textarea::placeholder {
+  color: var(--color-slate-500);
+}
+
+.studio label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.studio input[type="checkbox"],
+.studio input[type="radio"] {
+  accent-color: var(--color-primary);
+}
+
+/* Status badges -------------------------------------------------------- */
+
+.studio .badge {
+  border: 1.5px solid currentColor;
+}
+
+/* Messages ------------------------------------------------------------- */
+
+.studio [role="alert"] {
+  border: 1.5px solid var(--color-danger);
+  border-radius: 12px;
+}
+
+.studio [role="status"] {
+  border: 1.5px solid var(--color-success);
+  border-radius: 12px;
+}
+
+/* Stitch motifs -------------------------------------------------------- */
+
+.studio .stitch-x {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-primary) 0 8px,
+    transparent 8px 14px
+  );
+}
+
+.studio .stitch-box {
+  border: 2px solid var(--color-primary);
+  background: #f2fbfa;
+  color: var(--color-info-fg);
+}
+
+/* Auth pages ----------------------------------------------------------- */
+
+.studio .l-auth {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 34px;
+  align-items: start;
+  max-width: 980px;
+  margin-inline: auto;
+  padding-block: 56px 40px;
+}
+
+.studio .l-auth-aside {
+  padding-top: 10px;
+}
+
+.studio .l-auth-title {
+  margin-top: 12px;
+  font-size: clamp(2rem, 3.4vw, 2.75rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.98;
+}
+
+.studio .l-auth-description {
+  margin-top: 16px;
+  max-width: 40ch;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.studio .l-auth-card {
+  background: var(--color-surface);
+  border: 2px solid var(--color-ink);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 6px 6px 0 var(--color-ink);
+}
+
+.studio .l-auth-footer {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.studio .l-auth-footer a {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+@media (max-width: 900px) {
+  .studio .l-auth {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    padding-block: 36px 32px;
+  }
+
+  .studio .l-auth-aside {
+    padding-top: 0;
+  }
+
+  .studio .l-auth-description {
+    max-width: none;
+  }
+}
+
+/* Legal pages ---------------------------------------------------------- */
+
+.studio .l-legal-updated {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.studio .l-notice {
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--color-warning-fg);
+  border-radius: 14px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-fg);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.studio .l-prose {
+  margin-top: 30px;
+  max-width: 68ch;
+}
+
+.studio .l-prose h2 {
+  margin-top: 34px;
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.studio .l-prose h3 {
+  margin-top: 24px;
+  margin-bottom: 8px;
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.studio .l-prose p,
+.studio .l-prose ul,
+.studio .l-prose ol {
+  margin-bottom: 14px;
+}
+
+.studio .l-prose li {
+  margin-bottom: 6px;
+}
+
+.studio .l-prose a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+/* Tables --------------------------------------------------------------- */
+
+.studio table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.studio th {
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--color-ink);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.studio td {
+  padding: 12px;
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: top;
+}
+
+@media (max-width: 640px) {
+  .studio .s-page {
+    padding-block: 30px 44px;
+  }
+
+  .studio .l-auth-card {
+    padding: 18px;
+    box-shadow: 4px 4px 0 var(--color-ink);
+  }
+}

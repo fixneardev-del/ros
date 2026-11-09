@@ -1,0 +1,228 @@
+@import "tailwindcss";
+
+/*
+ * The theme is intentionally not "inline": utilities compile to
+ * `var(--color-*)`, which lets the `.studio` scope in app/studio.css remap the
+ * palette for the public, auth and job pages without touching the dashboards.
+ */
+@theme {
+  --color-paper: #f3f6f8;
+  --color-ink: #14253f;
+  --color-surface: #ffffff;
+
+  --color-denim-700: #1f3a5f;
+  --color-denim-800: #172d4b;
+  --color-thread-100: #fdf1d3;
+  --color-thread-400: #f2b01e;
+  --color-thread-700: #7a4e00;
+  --color-mend-100: #e1f2ec;
+  --color-mend-600: #1b6f5a;
+  --color-mend-800: #14503f;
+  --color-patch-100: #fbe6e4;
+  --color-patch-600: #b8322a;
+  --color-patch-800: #8f241e;
+  --color-info-100: #e3ecf8;
+
+  --color-slate-100: #e4eaef;
+  --color-slate-200: #cbd5dd;
+  --color-slate-400: #7f90a0;
+  --color-slate-500: #5e7081;
+  --color-slate-600: #475666;
+
+  --color-line: #cbd5dd;
+  --color-line-strong: #7f90a0;
+  --color-muted: #475666;
+
+  --color-primary: #1f3a5f;
+  --color-primary-hover: #172d4b;
+  --color-primary-fg: #ffffff;
+  --color-accent: #f2b01e;
+  --color-accent-fg: #14253f;
+
+  --color-success: #1b6f5a;
+  --color-success-bg: #e1f2ec;
+  --color-success-fg: #14503f;
+  --color-danger: #b8322a;
+  --color-danger-bg: #fbe6e4;
+  --color-danger-fg: #8f241e;
+  --color-warning-bg: #fdf1d3;
+  --color-warning-fg: #7a4e00;
+  --color-info-bg: #e3ecf8;
+  --color-info-fg: #1f3a5f;
+
+  --font-display: var(--font-archivo), "Arial Narrow", Arial, sans-serif;
+  --font-sans: var(--font-atkinson), "Atkinson Hyperlegible", system-ui, sans-serif;
+
+  --radius-control: 6px;
+  --radius-surface: 14px;
+  --radius-photo: 4px;
+
+  --shadow-overlay: 0 8px 24px rgba(20, 37, 63, 0.18);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.625;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--color-surface);
+  }
+
+  ::selection {
+    background: var(--color-thread-400);
+    color: var(--color-ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .skip-link {
+    position: absolute;
+    left: 16px;
+    top: -100px;
+    z-index: 100;
+    background: var(--color-surface);
+    color: var(--color-ink);
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-control);
+    padding: 12px 16px;
+    font-weight: 700;
+  }
+
+  .skip-link:focus {
+    top: 16px;
+  }
+
+  /* A repair tag is a listing panel with one punched hole. It is reserved for
+     provider cards and job cards. Everything else uses a flat panel. */
+  .tag,
+  .panel {
+    position: relative;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-surface);
+    padding: 16px;
+  }
+
+  .tag::after {
+    content: "";
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: var(--color-paper);
+    border: 1px solid var(--color-line-strong);
+  }
+
+  .stitch-x {
+    height: 2px;
+    background-image: repeating-linear-gradient(
+      90deg,
+      var(--stitch-color, var(--color-thread-400)) 0 8px,
+      transparent 8px 14px
+    );
+  }
+
+  .stitch-box {
+    border: 2px dashed var(--stitch-color, var(--color-thread-400));
+    border-radius: var(--radius-surface);
+  }
+
+  .stitch-draw {
+    transform-origin: left center;
+    animation: stitch-draw 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 1 both;
+  }
+
+  .prose-mend {
+    max-width: 66ch;
+  }
+
+  .prose-mend h2 {
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.5rem;
+  }
+
+  .prose-mend h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+  }
+
+  .prose-mend p,
+  .prose-mend ul,
+  .prose-mend ol {
+    margin-bottom: 1rem;
+  }
+
+  .prose-mend ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+  }
+
+  .prose-mend ol {
+    list-style: decimal;
+    padding-left: 1.5rem;
+  }
+
+  .prose-mend a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+@keyframes stitch-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
