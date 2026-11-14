@@ -1,10 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Next.js only allows one dev server per project directory, so the tests use
- * the same port as `npm run dev` and reuse it when it is already running.
+ * The end-to-end suite runs against a production build on its own port, so
+ * it never collides with a development server and never overwrites the build
+ * that server is using.
  */
-const PORT = Number(process.env.E2E_PORT || 3001);
+const PORT = Number(process.env.E2E_PORT || 3005);
 const baseURL = `http://127.0.0.1:${PORT}`;
 
 /**
@@ -27,30 +28,55 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: "list",
+  reporter: process.env.CI
+    ? [["list"], ["html", { open: "never" }]]
+    : "list",
+  globalSetup: "./tests/e2e/global-setup.ts",
   use: {
     baseURL,
     trace: "on-first-retry",
   },
   projects: [
+    // Signs each role in once and saves the session for the tests below.
+    {
+      name: "setup",
+      testMatch: /auth\.setup\.ts/,
+      use: {
+        ...(executablePath ? { launchOptions: { executablePath } } : {}),
+      },
+    },
     {
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
         ...(executablePath ? { launchOptions: { executablePath } } : {}),
       },
+      dependencies: ["setup"],
     },
     ...(allBrowsers
       ? [
-          { name: "firefox", use: { ...devices["Desktop Firefox"] } },
-          { name: "webkit", use: { ...devices["Desktop Safari"] } },
+          {
+            name: "firefox",
+            use: { ...devices["Desktop Firefox"] },
+            dependencies: ["setup"],
+          },
+          {
+            name: "webkit",
+            use: { ...devices["Desktop Safari"] },
+            dependencies: ["setup"],
+          },
         ]
       : []),
   ],
   webServer: {
-    command: `npm run dev -- --port ${PORT}`,
+    // The server script starts the local Supabase stack, builds the app and
+    // hands its keys to Next.js, so the signed-in tests always have a real
+    // database and the app behaves exactly as it will in production.
+    command: `node scripts/e2e-server.mjs --port ${PORT}`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    reuseExistingServer: false,
+    timeout: 300_000,
+    stdout: "pipe",
+    stderr: "pipe",
   },
 });

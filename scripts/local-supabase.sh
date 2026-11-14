@@ -44,6 +44,27 @@ PGCTL="${PGCTL:-$(command -v pg_ctl || echo /opt/homebrew/bin/pg_ctl)}"
 JWT_SECRET="local-development-secret-at-least-32-characters-long"
 ANON_KEY_JWT_ROLE=authenticated
 
+# The local keys are signed with the fixed secret above, so they stay valid
+# across restarts and can be handed to a test runner as environment
+# variables instead of being written to a file.
+anon_key() {
+  node -e "
+const b=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url');
+const p=Buffer.from(JSON.stringify({iss:'supabase-local',ref:'anon',role:'anon',iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+31536000})).toString('base64url');
+const s=require('crypto').createHmac('sha256','${JWT_SECRET}').update(b+'.'+p).digest('base64url');
+console.log(b+'.'+p+'.'+s);
+"
+}
+
+service_role_key() {
+  node -e "
+const b=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url');
+const p=Buffer.from(JSON.stringify({iss:'supabase-local',ref:'service_role',role:'service_role',iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+31536000})).toString('base64url');
+const s=require('crypto').createHmac('sha256','${JWT_SECRET}').update(b+'.'+p).digest('base64url');
+console.log(b+'.'+p+'.'+s);
+"
+}
+
 if [ ! -x "$PSQL" ] || [ ! -x "$INITDB" ]; then
   echo "PostgreSQL client tools are required. Install them and try again." >&2
   exit 1
@@ -319,25 +340,23 @@ print_url() {
 Add these to .env.local:
 
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:${GATEWAY_PORT}
-NEXT_PUBLIC_SUPABASE_ANON_KEY=$(node -e "
-const h=require('crypto').createHash('sha256').update('local-anon-key').digest('hex');
-const b=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url');
-const p=Buffer.from(JSON.stringify({iss:'supabase-local',ref:'anon',role:'anon',iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+31536000})).toString('base64url');
-const s=require('crypto').createHmac('sha256','${JWT_SECRET}').update(b+'.'+p).digest('base64url');
-console.log(b+'.'+p+'.'+s);
-")
-SUPABASE_SERVICE_ROLE_KEY=$(node -e "
-const h=require('crypto').createHash('sha256').update('local-service-role-key').digest('hex');
-const b=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url');
-const p=Buffer.from(JSON.stringify({iss:'supabase-local',ref:'service_role',role:'service_role',iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+31536000})).toString('base64url');
-const s=require('crypto').createHmac('sha256','${JWT_SECRET}').update(b+'.'+p).digest('base64url');
-console.log(b+'.'+p+'.'+s);
-")
+NEXT_PUBLIC_SUPABASE_ANON_KEY=$(anon_key)
+SUPABASE_SERVICE_ROLE_KEY=$(service_role_key)
 
 Then sign in with:
   admin@example.com / password123     (the site owner)
   customer@example.com / password123  (a customer)
   provider@example.com / password123  (a provider)
+EOF
+}
+
+# The same keys, as shell assignments. Used by the test runner, which starts
+# the app with them rather than writing a file.
+print_env() {
+  cat <<EOF
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:${GATEWAY_PORT}
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$(anon_key)
+SUPABASE_SECRET_KEY=$(service_role_key)
 EOF
 }
 
@@ -352,11 +371,29 @@ case "${1:-start}" in
     echo "The local Supabase stack is running."
     print_url
     ;;
+  ensure)
+    # Starts everything and loads the schema only if it is not there yet.
+    # Unlike `start`, this never drops an existing database, so it is safe
+    # to call while a development server is using it.
+    install_binaries
+    start_postgres
+    write_roles
+    write_rest_config
+    if ! psql_run -d "$DB" -tAc "select 1 from service_categories limit 1" >/dev/null 2>&1; then
+      load_schema
+    fi
+    start_services
+    echo "The local Supabase stack is running."
+    ;;
   reset)
     write_rest_config
     load_schema
     start_services
+    echo "The local Supabase stack is running."
     print_url
+    ;;
+  env)
+    print_env
     ;;
   stop)
     stop_services
@@ -365,7 +402,7 @@ case "${1:-start}" in
     print_url
     ;;
   *)
-    echo "Usage: $0 {start|stop|reset|url}" >&2
+    echo "Usage: $0 {start|ensure|reset|env|stop|url}" >&2
     exit 1
     ;;
 esac

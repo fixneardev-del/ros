@@ -56,3 +56,9 @@ node_modules/
 /.gstack-shots/
 /.gstack/
 .gstack/
+
+# The end-to-end suite builds here so it never disturbs the dev server.
+.next-e2e
+
+# Saved sign-in sessions for the end-to-end suite.
+tests/e2e/.auth

@@ -71,6 +71,9 @@ function securityHeaders(): Array<{ key: string; value: string }> {
 }
 
 const nextConfig: NextConfig = {
+  // The end-to-end suite builds into its own directory, so a test run never
+  // overwrites the build a development server is using.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   cacheComponents: true,
   partialPrefetching: true,
   experimental: {

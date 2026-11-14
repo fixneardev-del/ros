@@ -7,7 +7,7 @@
 set -euo pipefail
 
 PGPORT="${PGPORT:-55433}"
-DB=app
+DB="${DB:-app}"
 PSQL="${PSQL:-$(command -v psql || echo /opt/homebrew/bin/psql)}"
 
 psql_run() {
@@ -19,6 +19,34 @@ psql_run() {
 category_id() {
   psql_run -tAc "select id from service_categories where slug = '$1';" | head -1
 }
+
+# The accounts are created here rather than assumed. GoTrue stores a bcrypt
+# hash in `encrypted_password`, so a row inserted directly signs in exactly
+# like one it created itself. That keeps this script working on the local
+# stack and on the Supabase CLI containers a CI run uses.
+#
+# The ids are only used when the account is missing, so a database that
+# already has them keeps whatever ids GoTrue gave them.
+psql_run <<'SQL'
+insert into auth.users (id, instance_id, email, role, aud, encrypted_password,
+                        email_confirmed_at, confirmation_token, recovery_token,
+                        email_change_token_new, email_change, raw_app_meta_data,
+                        raw_user_meta_data, created_at, updated_at)
+select v.id, '00000000-0000-0000-0000-000000000000'::uuid, v.email,
+       'authenticated', 'authenticated',
+       crypt('password123', gen_salt('bf')), now(),
+       '', '', '', '',
+       '{"provider":"email","providers":["email"]}'::jsonb,
+       jsonb_build_object('full_name', v.full_name), now(), now()
+from (values
+  ('bbbbbbbb-0000-4000-8000-000000000001'::uuid, 'customer@example.com', 'Nina Customer'),
+  ('bbbbbbbb-0000-4000-8000-000000000002'::uuid, 'callum@example.com', 'Callum Customer'),
+  ('bbbbbbbb-0000-4000-8000-000000000003'::uuid, 'pending@example.com', 'Pau Pending'),
+  ('bbbbbbbb-0000-4000-8000-000000000004'::uuid, 'provider@example.com', 'Petra Provider'),
+  ('bbbbbbbb-0000-4000-8000-000000000005'::uuid, 'admin@example.com', 'Admin Person')
+) as v(id, email, full_name)
+where not exists (select 1 from auth.users where email = v.email);
+SQL
 
 # The auth trigger creates the profile row, so the ids are read back rather
 # than assumed. psql separates columns with a pipe, so the output is read the
@@ -39,26 +67,15 @@ HEMMING="$(category_id zip-seam-repairs)"
 SMALL_FIXES="$(category_id small-home-fixes)"
 ALTERATIONS="$(category_id clothing-alterations)"
 
-if [ -z "$CUSTOMER" ] || [ -z "$PROVIDER" ]; then
-  echo "The local accounts are missing. Run scripts/local-supabase.sh start first." >&2
+if [ -z "$CUSTOMER" ] || [ -z "$PROVIDER" ] || [ -z "$ADMIN" ]; then
+  echo "The demo accounts could not be created." >&2
   exit 1
 fi
 
-psql_run <<SQL
--- A second customer so the job list is not empty. GoTrue only lists users in
--- its default instance, so instance_id must be set or the admin API cannot
--- find the account.
-insert into auth.users (id, instance_id, email, role, aud, encrypted_password, email_confirmed_at,
-                        confirmation_token, recovery_token, email_change_token_new, email_change,
-                        raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
-values ('bbbbbbbb-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000000',
-        'callum@example.com', 'authenticated', 'authenticated',
-        crypt('password123', gen_salt('bf')), now(),
-        '', '', '', '',
-        '{"provider":"email","providers":["email"]}'::jsonb,
-        '{"full_name":"Callum Customer"}'::jsonb, now(), now())
-on conflict (id) do update set instance_id = excluded.instance_id;
+# The site owner is the only account with the admin role.
+psql_run -c "update public.profiles set role = 'admin' where id = '${ADMIN}'::uuid;" >/dev/null
 
+psql_run <<SQL
 -- An approved provider with services.
 insert into provider_profiles (
   user_id, provider_type, display_name, bio, service_districts, status,
@@ -75,17 +92,6 @@ values ('${PROVIDER}', '${FURNITURE}'),
 on conflict do nothing;
 
 -- A pending application so the admin review queue has work in it.
-insert into auth.users (id, instance_id, email, role, aud, encrypted_password, email_confirmed_at,
-                        confirmation_token, recovery_token, email_change_token_new, email_change,
-                        raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
-values ('bbbbbbbb-0000-4000-8000-000000000003', '00000000-0000-0000-0000-000000000000',
-        'pending@example.com', 'authenticated', 'authenticated',
-        crypt('password123', gen_salt('bf')), now(),
-        '', '', '', '',
-        '{"provider":"email","providers":["email"]}'::jsonb,
-        '{"full_name":"Pau Pending"}'::jsonb, now(), now())
-on conflict (id) do update set instance_id = excluded.instance_id;
-
 insert into provider_profiles (
   user_id, provider_type, display_name, bio, service_districts, status,
   declaration_accepted_at, created_at, updated_at)
