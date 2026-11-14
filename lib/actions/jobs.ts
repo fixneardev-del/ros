@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/permissions";
 import { jobSchema, jobUpdateSchema } from "@/lib/schemas/job";
 import { reportSchema } from "@/lib/schemas/search";
@@ -9,6 +10,7 @@ import { fail, fromZodError, ok } from "@/lib/actions/result";
 import type { ActionResult } from "@/lib/actions/result";
 import { MAX_JOB_PHOTOS, photoFiles, validatePhoto } from "@/lib/uploads";
 import { emit } from "@/lib/events";
+import { recordEvent } from "@/lib/analytics-server";
 import { getServerEnv } from "@/lib/env";
 import { writeAudit } from "@/lib/audit";
 
@@ -61,8 +63,7 @@ export async function createJob(
   try {
     for (const item of validated) {
       const path = `${context.user.id}/${jobId}/${crypto.randomUUID()}.${item.extension}`;
-      const { error } = await context.supabase.storage
-        .from("job-photos")
+      const { error } = await context.supabase.storage        .from("job-photos")
         .upload(path, item.file, { contentType: item.file.type, upsert: false });
 
       if (error) {
@@ -115,15 +116,19 @@ export async function createJob(
       district: postcode.data.district,
     });
 
-    revalidatePath("/jobs");
-    revalidatePath("/provide/jobs");
-    revalidatePath("/admin/jobs");
-
-    return ok({ id: jobId });
+    await recordEvent("job_posted", "/post-job", { district: postcode.data.district });
   } catch {
     await context.supabase.storage.from("job-photos").remove(uploaded);
     return fail("CREATE_FAILED", "We couldn't post that job. Check your connection and try again.");
   }
+
+  revalidatePath("/jobs");
+  revalidatePath("/provide/jobs");
+  revalidatePath("/admin/jobs");
+
+  // The redirect happens on the server, so it does not depend on the browser
+  // being ready to navigate.
+  redirect(`/jobs/${jobId}?created=1`);
 }
 
 export async function updateJob(

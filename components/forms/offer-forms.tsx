@@ -21,15 +21,7 @@ export function CreateOfferForm({
   jobId: string;
   jobTitle: string;
 }) {
-  const router = useRouter();
   const [state, action] = useActionState(createOffer, null);
-
-  useEffect(() => {
-    if (state?.ok) {
-      router.push(`/jobs/${state.data.jobId}?offer=sent`);
-      router.refresh();
-    }
-  }, [state, router]);
 
   return (
     <form action={action} className="space-y-5" noValidate>

@@ -1,7 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useActionState } from "react";
 import Link from "next/link";
 import {
   signIn,
@@ -18,15 +17,7 @@ function fieldsFrom(state: { ok: boolean; error?: { fields?: Record<string, stri
 }
 
 export function RegisterForm({ next }: { next: string }) {
-  const router = useRouter();
   const [state, action] = useActionState(registerUser, null);
-
-  useEffect(() => {
-    if (state?.ok) {
-      router.push(state.data.next);
-      router.refresh();
-    }
-  }, [state, router]);
 
   return (
     <form action={action} className="space-y-5" noValidate>
@@ -77,15 +68,7 @@ export function RegisterForm({ next }: { next: string }) {
 }
 
 export function LoginForm({ next }: { next: string }) {
-  const router = useRouter();
   const [state, action] = useActionState(signIn, null);
-
-  useEffect(() => {
-    if (state?.ok) {
-      router.push(state.data.next);
-      router.refresh();
-    }
-  }, [state, router]);
 
   return (
     <form action={action} className="space-y-5" noValidate>
@@ -139,15 +122,7 @@ export function ForgotPasswordForm() {
 }
 
 export function ResetPasswordForm() {
-  const router = useRouter();
   const [state, action] = useActionState(resetPassword, null);
-
-  useEffect(() => {
-    if (state?.ok) {
-      router.push(state.data.next);
-      router.refresh();
-    }
-  }, [state, router]);
 
   return (
     <form action={action} className="space-y-5" noValidate>

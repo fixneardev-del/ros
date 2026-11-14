@@ -61,16 +61,14 @@ export async function registerUser(
       }
       return fail("SIGN_UP_FAILED", "We couldn't create your account. Check your details and try again.");
     }
-
-    // The person is sent to sign in, then carried on to where they were
-    // heading before they were asked to register.
-    const next = safeNextPath(formData.get("next")?.toString(), "/account");
-    return ok({
-      next: `/login?registered=1&next=${encodeURIComponent(next)}`,
-    });
   } catch (error) {
     return fail("SIGN_UP_FAILED", errorMessage(error, "We couldn't create your account."));
   }
+
+  // The person is sent to sign in, then carried on to where they were
+  // heading before they were asked to register.
+  const next = safeNextPath(formData.get("next")?.toString(), "/account");
+  redirect(`/login?registered=1&next=${encodeURIComponent(next)}`);
 }
 
 export async function signIn(
@@ -93,6 +91,8 @@ export async function signIn(
     return fail("RATE_LIMITED", "Too many sign-in attempts. Wait a few minutes and try again.");
   }
 
+  let next: string;
+
   try {
     const supabase = await createServerSupabase();
     const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
@@ -112,16 +112,19 @@ export async function signIn(
     // provider dashboard, whatever page asked them to sign in.
     const account = await getAccountState(data.user.id);
 
-    return ok({
-      next: landingPath({
-        role: account.role,
-        isProvider: account.isProvider,
-        requested: formData.get("next")?.toString(),
-      }),
+    next = landingPath({
+      role: account.role,
+      isProvider: account.isProvider,
+      requested: formData.get("next")?.toString(),
     });
   } catch (error) {
     return fail("SIGN_IN_FAILED", errorMessage(error, "We couldn't sign you in."));
   }
+
+  // The redirect happens on the server, so it does not depend on the browser
+  // being ready to navigate. The client-side version raced with the refresh
+  // that followed it and sometimes left people on the sign-in page.
+  redirect(next);
 }
 
 export async function signOut() {
@@ -189,9 +192,9 @@ export async function resetPassword(
         "That reset link has expired. Request a new link and try again.",
       );
     }
-
-    return ok({ next: "/account?password=updated" });
   } catch (error) {
     return fail("RESET_FAILED", errorMessage(error, "We couldn't update your password."));
   }
+
+  redirect("/account?password=updated");
 }

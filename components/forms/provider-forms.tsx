@@ -20,7 +20,6 @@ import { FormMessage } from "@/components/mend/form-message";
 import { PhotoInput } from "@/components/mend/photo-input";
 import { SubmitButton } from "@/components/mend/submit-button";
 import { Stepper } from "@/components/mend/tag";
-import { trackEvent } from "@/components/mend/analytics";
 
 const STEPS = ["About you", "Your services", "Photos", "Review"];
 
@@ -136,18 +135,9 @@ export function ProviderApplicationForm({
   categories: ServiceCategory[];
   districts: LocationRow[];
 }) {
-  const router = useRouter();
   const [step, setStep] = useState(0);
   const [dismissedError, setDismissedError] = useState<unknown>(null);
   const [state, action] = useActionState(submitProviderApplication, null);
-
-  useEffect(() => {
-    if (state?.ok) {
-      void trackEvent("provider_applied");
-      router.push(state.data.next);
-      router.refresh();
-    }
-  }, [state, router]);
 
   const errorStep =
     state && !state.ok && state !== dismissedError ? stepForError(state) : null;

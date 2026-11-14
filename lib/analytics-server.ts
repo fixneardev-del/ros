@@ -1,5 +1,6 @@
 import { isSupabaseConfigured } from "@/lib/env";
 import { createServerSupabase } from "@/lib/supabase/server";
+import type { AnalyticsEvent } from "@/lib/analytics";
 
 const CACHE_TTL_MS = 60_000;
 
@@ -25,4 +26,27 @@ export async function isAnalyticsEnabled() {
   cached = { value, expiresAt: Date.now() + CACHE_TTL_MS };
 
   return value;
+}
+
+/**
+ * Records an event from a server action.
+ *
+ * The collector in the browser cannot be used when the action redirects, so
+ * the events that follow a write are recorded here instead. The rules match
+ * the collector: first party, no cookie, no IP address, no user id.
+ */
+export async function recordEvent(
+  event: AnalyticsEvent,
+  path?: string,
+  props: Record<string, unknown> = {},
+) {
+  if (!isSupabaseConfigured()) return;
+  if (!(await isAnalyticsEnabled())) return;
+
+  const supabase = await createServerSupabase();
+  await supabase.from("analytics_events").insert({
+    event,
+    path: path ?? null,
+    props,
+  });
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireApprovedProvider, requireUser } from "@/lib/permissions";
 import { offerSchema, parsePricePence } from "@/lib/schemas/offer";
 import { fail, fromZodError, ok } from "@/lib/actions/result";
@@ -131,7 +132,9 @@ export async function createOffer(
   revalidatePath("/provide/offers");
   revalidatePath("/admin/offers");
 
-  return ok({ jobId });
+  // The redirect happens on the server, so it does not depend on the browser
+  // being ready to navigate.
+  redirect(`/jobs/${jobId}?offer=sent`);
 }
 
 export async function updateOffer(

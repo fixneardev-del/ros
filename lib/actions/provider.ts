@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireProvider, requireUser } from "@/lib/permissions";
 import {
   providerApplicationSchema,
@@ -14,6 +15,7 @@ import {
   validatePhoto,
 } from "@/lib/uploads";
 import { emit } from "@/lib/events";
+import { recordEvent } from "@/lib/analytics-server";
 import { getServerEnv } from "@/lib/env";
 import { writeAudit } from "@/lib/audit";
 
@@ -184,15 +186,19 @@ export async function submitProviderApplication(
       adminEmail: getServerEnv().adminEmail,
     });
 
-    revalidatePath("/provide");
-    revalidatePath("/admin/providers");
-    revalidatePath("/search");
-
-    return ok({ next: "/provide?applied=1" });
+    await recordEvent("provider_applied", "/provide/apply");
   } catch {
     await context.supabase.storage.from("provider-photos").remove(uploaded);
     return fail("APPLY_FAILED", "We couldn't send your application. Check your connection and try again.");
   }
+
+  revalidatePath("/provide");
+  revalidatePath("/admin/providers");
+  revalidatePath("/search");
+
+  // The redirect happens on the server, so it does not depend on the browser
+  // being ready to navigate.
+  redirect("/provide?applied=1");
 }
 
 export async function updateProviderProfile(

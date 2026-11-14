@@ -10,7 +10,6 @@ import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { FormMessage } from "@/components/mend/form-message";
 import { SubmitButton } from "@/components/mend/submit-button";
 import { PhotoInput } from "@/components/mend/photo-input";
-import { trackEvent } from "@/components/mend/analytics";
 import { MAX_JOB_PHOTOS } from "@/lib/uploads";
 
 function fieldsFrom(
@@ -60,16 +59,7 @@ function TimeframeSelect({ defaultValue }: { defaultValue?: string }) {
 }
 
 export function CreateJobForm({ categories }: { categories: ServiceCategory[] }) {
-  const router = useRouter();
   const [state, action] = useActionState(createJob, null);
-
-  useEffect(() => {
-    if (state?.ok) {
-      void trackEvent("job_posted");
-      router.push(`/jobs/${state.data.id}?created=1`);
-      router.refresh();
-    }
-  }, [state, router]);
 
   return (
     <form action={action} className="space-y-5" noValidate>
