@@ -1,7 +1,7 @@
 # Progress: Repairs and Other Services MVP
 
-Last updated: 2026-11-09
-Current gate: **Foundation checkpoint** — code is in place; live verification is blocked on Supabase credentials. The browser suites now run.
+Last updated: 2026-11-11
+Current gate: **Foundation checkpoint** — code is in place and the core flows have now been run end to end against the local Supabase stack. The hosted project still needs its schema and secret key, and the repo still needs a remote so CI can run.
 
 ---
 
@@ -13,9 +13,9 @@ Current gate: **Foundation checkpoint** — code is in place; live verification 
 | 1. Foundation | Code complete, verification pending | Schema, RLS, clients, tokens, auth pages and account page written. RLS suite passes against Postgres. Live Supabase Auth still untested. |
 | 2. Discovery | Code complete, verification pending | Landing page, search, provider profile, legal shells and waitlist written. E2E smoke suite passes. |
 | 3. Provider onboarding | Code complete, verification pending | Application wizard, dashboard, profile edit and photo upload written. E2E covers the public entry points. |
-| 4. Marketplace | Code complete, verification pending | Jobs, offers, accept/decline, contact release and reports written. Two-account E2E is still needed. |
-| 5. Admin | Code complete, verification pending | Review queue, moderation, reference data, users, reports, CSV export, analytics and audit fields written. E2E covers the anonymous redirect only. |
-| 6. Notifications | Code complete, verification pending | Outbox, templates, event wiring and retry route written. No live email send yet. |
+| 4. Marketplace | Code complete, verification pending | Jobs, offers, accept/decline, contact release and reports written. The job, offer, accept and decline paths were run end to end against the local stack. |
+| 5. Admin | Code complete, verification pending | Review queue, moderation, reference data, users, reports, CSV export, analytics and audit fields written. Restyled with the Movexa dashboard theme. Approve, request more info, suspend and reinstate were run end to end. |
+| 6. Notifications | Code complete, verification pending | Outbox, templates, event wiring and retry route written. The outbox was proven against the local stack; no live email has been sent because there is no Resend key. |
 | 7. Legal and analytics | Partial | Legal pages are clearly marked pilot copy. Analytics are first party and cookie free, off by default. Client legal copy still needed. |
 | 8. Hardening and launch | Partial | Rate limiting, security-oriented SQL, security headers and CI exist. Lint, types, unit, build, E2E, RLS and mobile Lighthouse all pass. Deployment is not done. |
 
@@ -33,11 +33,12 @@ Run on 2026-11-09:
 | `npm run typecheck` | Pass |
 | `npm test` | Pass — 6 files, 35 tests |
 | `npm run test:coverage` | Pass — 100% statements, branches, functions and lines on `lib/postcode.ts`, `lib/transitions.ts`, `lib/format.ts`, `lib/next-path.ts` |
-| `npm run build` | Pass — 35 routes generated |
+| `npm run build` | Pass — 35 routes generated, both with and without Supabase configured |
 | `npm run test:e2e` | Pass — 19 Playwright tests locally in Chromium; CI runs the same 19 in Chromium, Firefox and WebKit |
 | `npm run test:rls` | Pass — 5 SQL files, run against a real Postgres with the Supabase `auth` and `storage` schemas stubbed |
 | `npm audit --omit=dev` | Clean, 0 vulnerabilities |
 | Visual pass at 375 / 768 / 1280 | Landing, search, register, login, legal, provider profile, 404 and 403 checked in a real browser |
+| Signed-in visual pass at 375 / 1440 | Customer account, customer jobs and every admin page checked in a real browser against a live database, including the admin review queue and the settings forms |
 | Lighthouse (mobile) | `/`, `/search`, `/login`, `/privacy`, `/terms`, `/cookies`: performance 90–92, accessibility 100, best practices 100, SEO 100 |
 
 The Playwright suite covers the public pages, the hero search handing its values to `/search`, the pilot checks, the legal pages, the 404 page, the register terms gate, the `next` parameter surviving the login and register round trip, the mobile menu, the skip link, the anonymous admin redirect and the security headers.
@@ -62,9 +63,9 @@ The RLS suite applies the migration and seed to a scratch database, then exercis
 
 Not run yet:
 
-- Auth, storage and email flows — need live Supabase and Resend credentials.
-- The full Supabase stack (PostgREST, GoTrue, Storage) — Docker Desktop is not installed on this machine, so `npx supabase start` cannot run. The SQL was verified against plain Postgres 14 with the Supabase schemas stubbed.
-- A two-account marketplace run through the app.
+- Auth, storage and email flows against hosted Supabase — the hosted schema is empty and there is no Resend key, so the local stack stands in. The local stack does run real GoTrue, PostgREST and Storage.
+- The full hosted Supabase stack — `scripts/local-supabase.sh` covers it locally without Docker.
+- A two-account marketplace run against the hosted project (T46, T54). The same flow has been run against the local stack.
 
 `scripts/local-postgres.sh` starts a throwaway Postgres and loads the migration and seed, so `npm run test:rls` can run without Docker:
 
@@ -113,15 +114,34 @@ The build emits one benign font warning: Turbopack cannot generate fallback metr
 
 ### Studio theme
 
-- The landing design system now covers every public, auth and job page, plus the 404 and 403 pages. The signed-in dashboards are untouched.
+- The landing design system now covers every public, auth and job page, plus the 404 and 403 pages. The provider dashboard is untouched.
 - `app/globals.css` uses `@theme` rather than `@theme inline`, so utilities emit `var(--color-*)`. A `.studio` wrapper in `app/studio.css` remaps those variables to the landing palette, typography and radii.
 - `app/design-system.css` is the shared landing/studio stylesheet. It is imported by `app/(landing)/layout.tsx`, the studio group layouts, `app/not-found.tsx` and `app/forbidden.tsx`.
-- Chrome lives in `components/shells/`: `studio-shell.tsx` renders the landing header and footer with Inter and Instrument Serif; `app-shell.tsx` renders the original site header and footer for dashboards.
-- Route groups own their chrome: `(public)`, `(auth)` and `(studio)` use `StudioShell`; `(customer)`, `(provider)` and `(admin)` use `AppShell`. URLs are unchanged.
+- Chrome lives in `components/shells/`: `studio-shell.tsx` renders the landing header and footer with Inter and Instrument Serif; `dash-shell.tsx` renders the Movexa dashboard shell for the customer, provider and admin dashboards.
+- Route groups own their chrome: `(studio)` and `(auth)` use `StudioShell`; `(customer)`, `(provider)` and `(admin)` use `DashShell`. URLs are unchanged.
 - `post-job`, `jobs/[id]` and `provide/apply` moved into `app/(site)/(studio)/`. The `/jobs` list stays in `(customer)`.
-- `Button`/`ButtonLink` carry an inert `btn` class and `data-variant`; `StatusBadge` carries `badge`. Outside `.studio` they change nothing, so the dashboards keep their original look.
+- `Button`/`ButtonLink` carry an inert `btn` class and `data-variant`; `StatusBadge` carries `badge`. Outside `.studio` and `.dash` they change nothing, so the provider dashboard keeps its original look.
 - `lib/fonts.ts` holds the shared Inter and Instrument Serif font instances used by the studio shell, the landing layout, the 404 and the 403.
 - Auth pages hide the header's "Log in"/"Create account" links via a `hideAuthLinks` prop, so the `next` parameter cannot be dropped.
+
+### Dashboard theme
+
+- The customer and admin dashboards now use the Movexa design system from `.context/backend/dashboard.md`. The provider dashboard is deliberately left on the original application design.
+- `app/dash.css` is a scoped design system keyed on a `.dash` wrapper, the same pattern as `.studio`. It remaps the Tailwind theme variables to the Movexa palette, typography and radii, then adds the shape language: a floating shell with a 29px top radius, translucent cards, pill controls, tinted icon circles and semantic status chips.
+- The page backdrop behind the shell was removed on request. The canvas is the Movexa warm grey-beige throughout, so there is no darker outer background, and `.context/backend/dashboard.md` no longer lists one.
+- `components/shells/dash-shell.tsx` renders the shell. `components/dash/dash-header.tsx` is the wordmark header with the customer nav, a profile avatar and a sign-out control, and falls back to a `details` menu on narrow screens. `components/dash/dash-nav.tsx` is the admin section bar with the active state.
+- The admin overview is a six-card KPI strip with tinted icons. The admin analytics page adds an "Event mix" bar chart and an "At a glance" card, both built from the real recorded totals. No chart library was added.
+- The customer jobs page has a three-card KPI strip computed from the customer's own jobs. The account page has a profile summary card.
+- Contrast was checked for every text and surface pair. The muted tone was darkened to `#686671` and the success foreground to `#177045` so both clear WCAG AA on their tinted backgrounds.
+- The dashboard theme overrides shared utility classes inside its own scope only. Heading rules are written at element specificity and the text-size overrides use `:where()`, so `h2` keeps the 14px section-heading size.
+
+### Supabase without Docker
+
+- `scripts/local-supabase.sh` runs the whole local stack without Docker, which is not installed on this machine. It downloads PostgREST and GoTrue, starts them against the local Postgres, installs the real `auth` and `storage` schemas, then applies the project migration and seed.
+- `scripts/local-supabase-gateway.mjs` is a small reverse proxy that serves one URL and routes `/auth/v1` to GoTrue and `/rest/v1` to PostgREST, the way Supabase's Kong does. The app uses a single `NEXT_PUBLIC_SUPABASE_URL` in local development and production, with no conditional code.
+- `scripts/local-demo-data.sh` adds sample providers, jobs and offers so the dashboards have something to show. `scripts/hosted-setup.sh` applies the migration and seed to a hosted project and creates the sign-in accounts.
+- The session read calls `await connection()`, because the auth client compares the session expiry against the current time and that value cannot be baked into a static shell.
+- The stack and the RLS scratch database live under `~/.local/share/repairs-and-other-services/`, not in the operating system's temporary folder. macOS purges that folder in the background, which silently emptied `PG_VERSION` and the write-ahead log of a running cluster.
 
 ### Discovery
 
@@ -228,7 +248,7 @@ changes return to review (`reapprove_on_key_change = true`).
 
 - **The SQL runs, but not on real Supabase.** The migration and seed apply cleanly to Postgres 14 and the RLS suite passes, but PostgREST, GoTrue and Storage are untested. The grant block now states Supabase's defaults explicitly to reduce that risk.
 - **The E2E suite is a smoke suite.** It proves the public pages render, the pilot checks work, the redirects and security headers behave, and the `next` parameter survives the auth round trip. It does not exercise a signed-in two-account marketplace flow, which still needs live credentials.
-- **The visual boundary is the dashboard.** Public, auth and job pages use the landing system; `/account`, `/jobs`, `/provide`, `/provide/jobs`, `/provide/offers` and `/admin` keep the mending system. Opening a job from `/jobs` therefore switches chrome, which is the intended edge of the scope.
+- **The visual boundary is between the landing pages and the dashboards.** Public, auth and search pages use the landing system; the customer, provider and admin dashboards use the Movexa system. Opening a job from `/jobs` stays inside the dashboard, and the landing page keeps its own design.
 - **RLS suite needs a database.** `npm run test:rls` fails when no database is reachable. `scripts/local-postgres.sh` covers local runs; CI starts Supabase.
 - **Legal copy is a launch blocker, not a build blocker.**
 - **Foundation is broad.** The Foundation checkpoint is the first real review gate.
@@ -259,3 +279,16 @@ changes return to review (`reapprove_on_key_change = true`).
 | 2026-11-09 | Waitlist signups were captured but never readable, so admins could only see them in notification emails. Added `getInterestSignups`, a `waitlist` CSV export and an **Export waitlist** button on the admin overview. Documented in the admin guide. |
 | 2026-11-09 | Product answers recorded: provider applications require 1–6 photos (already enforced in the wizard and the action), and key provider changes return an approved profile to review (seeded `reapprove_on_key_change = true`). No code change was needed. |
 | 2026-11-09 | Cross-browser coverage added to CI. `playwright.config.ts` adds Firefox and WebKit projects when `CI` is set (or `E2E_ALL_BROWSERS=1`), and the CI job installs all three browsers. Local runs stay on Chromium because Playwright 1.65 does not support Firefox or WebKit on macOS 13 ARM. |
+| 2026-11-09 | Customer and admin dashboards restyled with the Movexa dashboard design system from `.context/backend/dashboard.md`. Added `app/dash.css` as a `.dash` scope, `components/shells/dash-shell.tsx`, and the header and admin nav components. The admin overview is a KPI strip, the analytics page has a CSS event-mix chart and an at-a-glance card, and the customer jobs and account pages have KPI and profile cards. The provider dashboard is deliberately unchanged and still uses `AppShell`. No chart library, global search or other dependency was added. Fixed during the visual pass: the dashboard stylesheet was not loading on routes outside the admin and customer groups, chart bars rendered at zero height because they were inline spans, body links were too hot in orange, the wordmark wrapped at 375px, and the muted and success tones were below WCAG AA on their tinted backgrounds. Full pass: lint, typecheck, 35 unit tests, 35-route build, 19 Playwright tests, 5 RLS files. |
+| 2026-11-09 | Supabase set up locally without Docker, which is not installed on this machine. `scripts/local-supabase.sh` runs PostgREST and GoTrue as standalone binaries against the local Postgres, and `scripts/local-supabase-gateway.mjs` serves one URL for both the way Supabase's Kong does. This unblocked real sign in and a live dashboard. Attaching a real database exposed four bugs that had been invisible: the admin area rendered two shells; six Supabase queries failed because `provider_profiles` has three foreign keys to `profiles` and `job_requests` has two, so PostgREST could not resolve the embeds; the landing page could not be prerendered because its reads sat outside a Suspense boundary; and the admin route could not be prerendered for the same reason. Fixed with an explicit relationship hint on every affected embed, three Suspense boundaries on the landing page, `export const instant = false` on the admin layout and `await connection()` in the session read. The public key is now read as `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and the server key as `SUPABASE_SECRET_KEY`, with the older names still accepted. |
+| 2026-11-09 | The grey page backdrop behind the dashboard shell was removed on request. The canvas is the Movexa warm grey-beige throughout and `.context/backend/dashboard.md` no longer lists a backdrop colour. |
+| 2026-11-11 | Route groups reorganised by chrome. `(site)/(studio)` holds the landing-design pages (`/`, `/post-job`, `/search`, `/providers/[id]`, legal and auth), while `(customer)`, `(provider)` and `(admin)` all use the Movexa `DashShell`. The admin link was removed from the landing header and from every non-admin header, and the dead `AppShell`, `SiteHeader` and `SiteFooter` were deleted. `/jobs/[id]` moved to `(customer)` and `/provide/apply` to `(provider)`. |
+| 2026-11-11 | Job detail, `/provide`, `/provide/jobs` and `/provide/offers` restyled into the dashboard language: `dash-page`, `dash-kicker`, `DashAlert` and the dash card treatment replace the landing `panel`, `s-alert`, `PilotNotice` and `StitchLine` classes. `.dash .tag` now renders as a dash card so job cards match the provider and offer cards. |
+| 2026-11-11 | Notification outbox was empty in local development. Two causes: the demo users were inserted straight into `auth.users` without `instance_id` or the non-null token columns, so GoTrue could not find them and `getUserEmail` returned null; and the `job_requests` embed on `provider_offfers` was ambiguous because `job_requests.accepted_offer_id` also references `provider_offers`. Fixed the demo data script and added the `job_requests!provider_offers_job_id_fkey` hint in the accept, decline, admin offer list and provider offer list queries. |
+| 2026-11-11 | Every CRUD action now writes an audit row. Added the missing audits for job update, close and photo removal, offer update and decline, provider photo add, update and remove, report creation, category activation, district create, update and enable, report resolution and site settings. |
+| 2026-11-11 | Added `provider.suspended` and `provider.reinstated` domain events with email templates, so a suspended provider is told and a reinstated provider is told their profile is live again. |
+| 2026-11-11 | Verified the event flows end to end against the local stack: approve, request more info, suspend, reinstate, job created (admin and customer), offer created, offer accepted and offer declined each wrote a `notifications` row and an `audit_log` row. Contact details were confirmed to release only to the accepted pair, and the accepted provider sees the full postcode. |
+| 2026-11-14 | Signing in with an admin account could land on the provider dashboard, because the page that sent the visitor to sign in decided the destination and `/provide` was a valid one. The landing page is now role-aware: `landingPath` in `lib/next-path.ts` sends an admin to `/admin`, a provider to `/provide` and a customer to `/account`, and never sends an admin to a provider-only path. The role is read with the server key, because the request-scoped client cannot see the session cookie it has just written. `/provide` also redirects an admin who does not offer services, and `requireProvider` sends them to `/admin` rather than the application form. |
+| 2026-11-14 | The local Supabase cluster and the RLS scratch database were both lost to the macOS temporary folder purge, which silently emptied `PG_VERSION` and the write-ahead log. Both scripts now keep their data under `~/.local/share/repairs-and-other-services/`, outside the temporary directory, and the stack was rebuilt and the demo data reloaded. |
+| 2026-11-14 | Contrast audit of every dashboard and studio page with `scripts/contrast-audit.js`. `--d-orange-strong` was darkened from `#c2410c` to `#b93b0a`, because the old value was 4.499:1 on the orange tint and the threshold is 4.5:1. Every page now passes. |
+| 2026-11-14 | The landing service tiles carried the wrong foreground. Blue, purple, brown and the pink tile failed WCAG AA; each tile now uses whichever of ink or white actually clears the threshold, and the pink tile uses ink on a slightly darkened red. |
