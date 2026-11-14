@@ -20,9 +20,11 @@ test.describe("public pages", () => {
 
     const ticket = page.locator(".l-ticket");
 
+    // The service is chosen by slug. The label changes once the database is
+    // seeded, but the slug does not.
     await ticket
       .getByLabel("What do you need help with?")
-      .selectOption({ label: "Furniture repair" });
+      .selectOption("furniture-repair");
     await ticket.getByLabel("Postcode").fill("G12 8QQ");
     await ticket.getByRole("button", { name: "Find local help" }).click();
 
