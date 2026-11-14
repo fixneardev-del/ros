@@ -53,6 +53,25 @@ npx supabase db reset
 
 The first admin must be promoted server-side. The owner is the account whose email is `ADMIN_NOTIFICATION_EMAIL`. The profile trigger creates customer profiles automatically, so promote with SQL that bypasses the trigger or use the service role.
 
+### Running without Docker
+
+Docker Desktop is not required. `scripts/local-supabase.sh` runs Postgres, GoTrue and PostgREST as local processes, and a small gateway serves them from one URL the way Supabase's Kong does.
+
+```bash
+scripts/local-supabase.sh start      # download, start and load the schema
+scripts/local-supabase.sh url        # print the values for .env.local
+scripts/local-supabase.sh stop
+scripts/local-demo-data.sh           # optional sample providers, jobs and offers
+```
+
+The script creates three accounts with the password `password123`: `admin@example.com` (the site owner), `customer@example.com` and `provider@example.com`. `docs/local-development.md` has the full list, the dashboard links and the hosted-project steps.
+
+To use a hosted project instead, apply the schema and create the accounts with the database password:
+
+```bash
+scripts/hosted-setup.sh <database-password>
+```
+
 ## RLS tests
 
 The access rules live in Postgres, so the suite is plain SQL in `tests/rls/`. It runs every file in one transaction and rolls back, so the database is left untouched.
@@ -100,6 +119,7 @@ The suite covers profile creation, role and suspension protection, provider appl
 | `tasks/plan.md` | 69-task delivery plan |
 | `tasks/todo.md` | Task checklist and current gate |
 | `docs/admin-guide.md` | How to run the pilot without touching the database |
+| `docs/local-development.md` | Running the whole stack locally and the sign-in details for each role |
 | `docs/manual-test-script.md` | The acceptance run for features 01 to 11 |
 | `docs/handover.md` | Third party accounts, environment and deployment |
 | `.context/progress.md` | Current state, decisions, risks and log |
