@@ -141,3 +141,4 @@ build, the RLS suite, the public Playwright suite and mobile Lighthouse pass.
 Live Supabase/Resend flows, the two-account marketplace flow, signed-in admin
 E2E, a git remote and final legal copy are still pending. See
 `.context/progress.md` for the current gate and blockers.
+# ros
