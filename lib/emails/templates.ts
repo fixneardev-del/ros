@@ -143,6 +143,44 @@ export function buildEmailMessages(
       break;
     }
 
+    case "provider.suspended": {
+      const email = text("providerEmail");
+      const name = text("providerName");
+      if (!email) break;
+      const heading = "Your provider profile is suspended";
+      const body = `${paragraph(`Your provider profile is suspended, ${name}. You cannot send new offers while it is suspended.`)}${quote(text("reason"))}${paragraph("Contact the administrator to resolve this.")}`;
+      messages.push({
+        template: "provider.suspended",
+        to: email,
+        subject: "Your provider profile is suspended",
+        html: layout(heading, body, { label: "Open your dashboard", url: `${siteUrl}/provide` }),
+        text: textLayout(heading, `Your provider profile is suspended, ${name}. Reason: ${text("reason")}`, {
+          label: "Open your dashboard",
+          url: `${siteUrl}/provide`,
+        }),
+      });
+      break;
+    }
+
+    case "provider.reinstated": {
+      const email = text("providerEmail");
+      const name = text("providerName");
+      if (!email) break;
+      const heading = "Your provider profile is active again";
+      const body = `${paragraph(`Your provider profile is active again, ${name}. You can see matching jobs and send offers.`)}`;
+      messages.push({
+        template: "provider.reinstated",
+        to: email,
+        subject: "Your provider profile is active again",
+        html: layout(heading, body, { label: "See open jobs", url: `${siteUrl}/provide/jobs` }),
+        text: textLayout(heading, `Your provider profile is active again, ${name}.`, {
+          label: "See open jobs",
+          url: `${siteUrl}/provide/jobs`,
+        }),
+      });
+      break;
+    }
+
     case "provider.removed": {
       const email = text("providerEmail");
       const name = text("providerName");

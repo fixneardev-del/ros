@@ -83,13 +83,18 @@ export async function getAdminProviders(status?: string, categoryId?: string) {
 
   // Filtering an embedded table needs the `!inner` modifier, which also drops
   // providers that do not offer the chosen category.
+  // `provider_profiles` has three foreign keys to `profiles` (user, reviewer
+  // and suspender), so the embed has to name the one it means. Without the
+  // hint PostgREST cannot resolve the relationship and the query fails.
   const services = categoryId
     ? "provider_services!inner(category_id, service_categories(id, name, slug))"
     : "provider_services(category_id, service_categories(id, name, slug))";
 
   let query = supabase
     .from("provider_profiles")
-    .select(`*, profiles(full_name), ${services}, provider_photos(*)`);
+    .select(
+      `*, profiles!provider_profiles_user_id_fkey(full_name), ${services}, provider_photos(*)`,
+    );
 
   if (status) query = query.eq("status", status);
   if (categoryId) query = query.eq("provider_services.category_id", categoryId);
@@ -115,7 +120,9 @@ export async function getAdminJobs(status?: string) {
   const query = supabase
     .from("job_requests")
     .select(
-      "*, profiles(full_name), service_categories(id, name, slug), provider_offers(count)",
+      // `job_requests` has two foreign keys to `profiles` (customer and the
+      // moderator who removed it), so the embed names the one it means.
+      "*, profiles!job_requests_customer_id_fkey(full_name), service_categories(id, name, slug), provider_offers!provider_offers_job_id_fkey(count)",
     );
 
   const { data } = status
@@ -138,7 +145,7 @@ export async function getAdminOffers() {
   const { data } = await supabase
     .from("provider_offers")
     .select(
-      "*, provider_profiles(user_id, display_name, provider_type, service_districts, status), job_requests(id, title, status, postcode_district)",
+      "*, provider_profiles(user_id, display_name, provider_type, service_districts, status), job_requests!provider_offers_job_id_fkey(id, title, status, postcode_district)",
     )
     .order("created_at", { ascending: false });
 

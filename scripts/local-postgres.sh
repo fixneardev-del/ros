@@ -15,7 +15,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PGROOT="${PGROOT:-${TMPDIR:-/tmp}/repairs-rls-postgres}"
+# The scratch cluster lives outside the OS temporary directory, because macOS
+# purges that folder in the background and takes the database with it.
+PGROOT="${PGROOT:-${XDG_DATA_HOME:-$HOME/.local/share}/repairs-and-other-services/rls-postgres}"
 PORT="${PGPORT:-55432}"
 PSQL="${PSQL:-$(command -v psql || echo /opt/homebrew/bin/psql)}"
 INITDB="${INITDB:-$(command -v initdb || echo /opt/homebrew/bin/initdb)}"

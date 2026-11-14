@@ -52,15 +52,19 @@ export async function searchProviders(categoryId: string, childIds: string[], di
     }));
 }
 
+// `provider_profiles` has three foreign keys to `profiles` (user, reviewer and
+// suspender), so the embed has to name the one it means. Without the hint
+// PostgREST cannot resolve the relationship and the query fails.
+const providerSelect =
+  "*, profiles!provider_profiles_user_id_fkey(full_name), provider_services(category_id, service_categories(id, name, slug)), provider_photos(*)";
+
 export async function getProviderById(providerId: string) {
   if (!isSupabaseConfigured()) return null;
 
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("provider_profiles")
-    .select(
-      "*, profiles(full_name), provider_services(category_id, service_categories(id, name, slug)), provider_photos(*)",
-    )
+    .select(providerSelect)
     .eq("user_id", providerId)
     .maybeSingle();
 
@@ -73,9 +77,7 @@ export async function getProviderForOwner(providerId: string) {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("provider_profiles")
-    .select(
-      "*, profiles(full_name), provider_services(category_id, service_categories(id, name, slug)), provider_photos(*)",
-    )
+    .select(providerSelect)
     .eq("user_id", providerId)
     .maybeSingle();
 

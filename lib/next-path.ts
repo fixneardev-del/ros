@@ -14,3 +14,30 @@ export function safeNextPath(
   if (value.startsWith("/\\")) return fallback;
   return value;
 }
+
+export type AccountRole = "admin" | "user" | null;
+
+/**
+ * Where a signed-in person should land.
+ *
+ * The requested page is honoured when it suits the role. An admin never lands
+ * on a provider-only page: signing in with an admin account must not drop
+ * someone into the provider dashboard, whichever page sent them to sign in.
+ */
+export function landingPath(input: {
+  role: AccountRole;
+  isProvider: boolean;
+  requested?: string | null;
+}) {
+  const requested = safeNextPath(input.requested, "");
+
+  if (input.role === "admin") {
+    if (!requested || requested.startsWith("/provide")) return "/admin";
+    return requested;
+  }
+
+  if (requested) return requested;
+
+  if (input.isProvider) return "/provide";
+  return "/account";
+}

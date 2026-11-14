@@ -202,6 +202,12 @@ export async function suspendProvider(formData: FormData) {
 
   if (!providerId.success) return errorBack(path, "Choose a provider.");
 
+  const { data: provider } = await context.supabase
+    .from("provider_profiles")
+    .select("display_name")
+    .eq("user_id", providerId.data)
+    .maybeSingle();
+
   const { error } = await context.supabase
     .from("provider_profiles")
     .update({
@@ -222,6 +228,11 @@ export async function suspendProvider(formData: FormData) {
     entityId: providerId.data,
   });
 
+  await emit("provider.suspended", {
+    providerEmail: await getUserEmail(providerId.data),
+    providerName: provider?.display_name ?? "there",
+  });
+
   revalidatePath("/admin/providers");
   revalidatePath(`/admin/providers/${providerId.data}`);
   revalidatePath(`/providers/${providerId.data}`);
@@ -235,6 +246,12 @@ export async function reinstateProvider(formData: FormData) {
   const path = "/admin/providers";
 
   if (!providerId.success) return errorBack(path, "Choose a provider.");
+
+  const { data: provider } = await context.supabase
+    .from("provider_profiles")
+    .select("display_name")
+    .eq("user_id", providerId.data)
+    .maybeSingle();
 
   const { error } = await context.supabase
     .from("provider_profiles")
@@ -254,6 +271,11 @@ export async function reinstateProvider(formData: FormData) {
     action: "provider.reinstated",
     entityType: "provider",
     entityId: providerId.data,
+  });
+
+  await emit("provider.reinstated", {
+    providerEmail: await getUserEmail(providerId.data),
+    providerName: provider?.display_name ?? "there",
   });
 
   revalidatePath("/admin/providers");
@@ -559,6 +581,13 @@ export async function setCategoryActive(formData: FormData) {
 
   if (error) return errorBack(path, "We couldn't update that category. Try again.");
 
+  await writeAudit({
+    actorId: context.user.id,
+    action: active ? "category.activated" : "category.deactivated",
+    entityType: "category",
+    entityId: id.data,
+  });
+
   revalidatePath("/admin/categories");
   revalidatePath("/");
   revalidatePath("/search");
@@ -589,6 +618,14 @@ export async function upsertDistrict(formData: FormData) {
 
   if (error) return errorBack(path, "We couldn't save that district. Try again.");
 
+  await writeAudit({
+    actorId: context.user.id,
+    action: parsed.data.id ? "district.updated" : "district.created",
+    entityType: "location",
+    entityId: parsed.data.id ?? parsed.data.postcodeDistrict,
+    metadata: { postcode_district: parsed.data.postcodeDistrict },
+  });
+
   revalidatePath("/admin/pilot-area");
   revalidatePath("/");
   revalidatePath("/search");
@@ -610,6 +647,13 @@ export async function setDistrictEnabled(formData: FormData) {
     .eq("id", id.data);
 
   if (error) return errorBack(path, "We couldn't update that district. Try again.");
+
+  await writeAudit({
+    actorId: context.user.id,
+    action: enabled ? "district.enabled" : "district.disabled",
+    entityType: "location",
+    entityId: id.data,
+  });
 
   revalidatePath("/admin/pilot-area");
   revalidatePath("/");
@@ -634,6 +678,14 @@ export async function resolveReport(formData: FormData) {
 
   if (error) return errorBack(path, "We couldn't update that report. Try again.");
 
+  await writeAudit({
+    actorId: context.user.id,
+    action: `report.${parsed.data.status}`,
+    entityType: "report",
+    entityId: parsed.data.id,
+    metadata: { status: parsed.data.status },
+  });
+
   revalidatePath("/admin/reports");
   return okBack(path, "Report updated.");
 }
@@ -654,6 +706,13 @@ export async function updateSiteSetting(formData: FormData) {
   });
 
   if (error) return errorBack(path, "We couldn't save that setting. Try again.");
+
+  await writeAudit({
+    actorId: context.user.id,
+    action: "setting.updated",
+    entityType: "site_setting",
+    entityId: parsed.data.key,
+  });
 
   revalidatePath("/");
   revalidatePath("/admin");

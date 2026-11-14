@@ -26,7 +26,9 @@ export async function getCustomerJobs(customerId: string) {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("job_requests")
-    .select("*, service_categories(id, name, slug), provider_offers(count)")
+    .select(
+      "*, service_categories(id, name, slug), provider_offers!provider_offers_job_id_fkey(count)",
+    )
     .eq("customer_id", customerId)
     .order("created_at", { ascending: false });
 
@@ -42,7 +44,7 @@ export async function getJobWithOffers(jobId: string) {
   const { data } = await supabase
     .from("job_requests")
     .select(
-      "*, service_categories(id, name, slug, parent_id), job_photos(*), provider_offers(*, provider_profiles(user_id, display_name, provider_type, service_districts, status))",
+      "*, service_categories(id, name, slug, parent_id), job_photos(*), provider_offers!provider_offers_job_id_fkey(*, provider_profiles(user_id, display_name, provider_type, service_districts, status))",
     )
     .eq("id", jobId)
     .maybeSingle();
@@ -118,7 +120,9 @@ export async function getMatchingJobs(providerId: string) {
 
   const { data } = await supabase
     .from("job_requests")
-    .select("*, service_categories(id, name, slug, parent_id), provider_offers(count)")
+    .select(
+      "*, service_categories(id, name, slug, parent_id), provider_offers!provider_offers_job_id_fkey(count)",
+    )
     .in("status", ["open", "receiving_offers"])
     .in("postcode_district", profile.service_districts)
     .order("created_at", { ascending: false });
@@ -153,7 +157,7 @@ export async function getProviderOffers(providerId: string) {
   const { data } = await supabase
     .from("provider_offers")
     .select(
-      "*, job_requests(id, title, status, postcode_district, service_categories(id, name, slug))",
+      "*, job_requests!provider_offers_job_id_fkey(id, title, status, postcode_district, service_categories(id, name, slug))",
     )
     .eq("provider_id", providerId)
     .order("created_at", { ascending: false });

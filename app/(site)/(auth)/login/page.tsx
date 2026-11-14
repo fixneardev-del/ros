@@ -15,7 +15,10 @@ type SearchParams = Promise<{
 
 async function LoginContent({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const next = safeNextPath(params.next);
+  // The raw requested path is passed through, empty when there is none. The
+  // sign-in action decides the landing page from the role, so it needs to be
+  // able to tell "no destination" from "the account page".
+  const next = params.next ? safeNextPath(params.next) : "";
 
   return (
     <AuthShell
@@ -26,7 +29,9 @@ async function LoginContent({ searchParams }: { searchParams: SearchParams }) {
         <>
           New here?{" "}
           <Link
-            href={`/register?next=${encodeURIComponent(next)}`}
+            href={
+              next ? `/register?next=${encodeURIComponent(next)}` : "/register"
+            }
             className="font-bold text-primary underline"
           >
             Create an account

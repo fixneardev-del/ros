@@ -12,7 +12,8 @@ import {
   resetPasswordSchema,
   resetRequestSchema,
 } from "@/lib/schemas/auth";
-import { safeNextPath } from "@/lib/next-path";
+import { landingPath, safeNextPath } from "@/lib/next-path";
+import { getAccountState } from "@/lib/auth-admin";
 
 export async function registerUser(
   _previous: ActionResult<{ next: string }> | null,
@@ -94,7 +95,7 @@ export async function signIn(
 
   try {
     const supabase = await createServerSupabase();
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
 
     if (error) {
       if (/not confirmed/i.test(error.message)) {
@@ -106,7 +107,18 @@ export async function signIn(
       return fail("SIGN_IN_FAILED", "Email or password is incorrect.");
     }
 
-    return ok({ next: safeNextPath(formData.get("next")?.toString()) });
+    // The landing page depends on the role, so it is resolved here rather than
+    // in the browser. An admin is sent to the admin dashboard, never to the
+    // provider dashboard, whatever page asked them to sign in.
+    const account = await getAccountState(data.user.id);
+
+    return ok({
+      next: landingPath({
+        role: account.role,
+        isProvider: account.isProvider,
+        requested: formData.get("next")?.toString(),
+      }),
+    });
   } catch (error) {
     return fail("SIGN_IN_FAILED", errorMessage(error, "We couldn't sign you in."));
   }

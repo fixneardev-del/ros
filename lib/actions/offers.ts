@@ -181,6 +181,13 @@ export async function updateOffer(
 
   if (error) return fail("SAVE_FAILED", "We couldn't save that offer. Try again.");
 
+  await writeAudit({
+    actorId: context.user.id,
+    action: "offer.updated",
+    entityType: "offer",
+    entityId: id,
+  });
+
   revalidatePath("/provide/offers");
   return ok(undefined);
 }
@@ -238,7 +245,7 @@ export async function acceptOffer(
   const { data: offer } = await context.supabase
     .from("provider_offers")
     .select(
-      "id, job_id, provider_id, status, provider_profiles(display_name), job_requests(id, title, customer_id)",
+      "id, job_id, provider_id, status, provider_profiles(display_name), job_requests!provider_offers_job_id_fkey(id, title, customer_id)",
     )
     .eq("id", offerId)
     .maybeSingle();
@@ -324,7 +331,7 @@ export async function declineOffer(
   const { data: offer } = await context.supabase
     .from("provider_offers")
     .select(
-      "id, job_id, provider_id, status, provider_profiles(display_name), job_requests(id, title, customer_id)",
+      "id, job_id, provider_id, status, provider_profiles(display_name), job_requests!provider_offers_job_id_fkey(id, title, customer_id)",
     )
     .eq("id", offerId)
     .maybeSingle();
@@ -346,6 +353,14 @@ export async function declineOffer(
     .eq("id", offerId);
 
   if (error) return fail("SAVE_FAILED", "We couldn't decline that offer. Try again.");
+
+  await writeAudit({
+    actorId: context.user.id,
+    action: "offer.declined",
+    entityType: "offer",
+    entityId: offerId,
+    metadata: { job_id: offer.job_id },
+  });
 
   await emit("offer.declined", {
     providerEmail: await getUserEmail(offer.provider_id),

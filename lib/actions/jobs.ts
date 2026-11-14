@@ -166,6 +166,13 @@ export async function updateJob(
 
   if (error) return fail("SAVE_FAILED", "We couldn't save that job. Try again.");
 
+  await writeAudit({
+    actorId: context.user.id,
+    action: "job.updated",
+    entityType: "job",
+    entityId: id,
+  });
+
   revalidatePath(`/jobs/${id}`);
   revalidatePath("/jobs");
   return ok(undefined);
@@ -200,6 +207,13 @@ export async function closeJob(
     .eq("id", id);
 
   if (error) return fail("SAVE_FAILED", "We couldn't close that job. Try again.");
+
+  await writeAudit({
+    actorId: context.user.id,
+    action: "job.closed",
+    entityType: "job",
+    entityId: id,
+  });
 
   revalidatePath(`/jobs/${id}`);
   revalidatePath("/jobs");
@@ -237,6 +251,14 @@ export async function deleteJobPhoto(
   await context.supabase.storage.from("job-photos").remove([photo.storage_path]);
   await context.supabase.from("job_photos").delete().eq("id", photoId);
 
+  await writeAudit({
+    actorId: context.user.id,
+    action: "job.photo_removed",
+    entityType: "job",
+    entityId: photo.job_id,
+    metadata: { photo_id: photoId },
+  });
+
   revalidatePath(`/jobs/${photo.job_id}`);
   return ok(undefined);
 }
@@ -262,6 +284,13 @@ export async function reportContent(
   });
 
   if (error) return fail("REPORT_FAILED", "We couldn't send that report. Try again.");
+
+  await writeAudit({
+    actorId: context.user.id,
+    action: "report.created",
+    entityType: parsed.data.targetType,
+    entityId: parsed.data.targetId,
+  });
 
   await emit("report.created", {
     adminEmail: getServerEnv().adminEmail,

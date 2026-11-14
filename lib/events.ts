@@ -9,6 +9,8 @@ export type DomainEvent =
   | "provider.approved"
   | "provider.rejected"
   | "provider.more_info_requested"
+  | "provider.suspended"
+  | "provider.reinstated"
   | "provider.removed"
   | "job.created"
   | "offer.created"

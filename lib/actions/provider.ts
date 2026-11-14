@@ -320,6 +320,13 @@ export async function addProviderPhoto(
     return fail("PHOTO", "We couldn't add that photo. Try again.");
   }
 
+  await writeAudit({
+    actorId: context.user.id,
+    action: "provider.photo_added",
+    entityType: "provider",
+    entityId: context.user.id,
+  });
+
   revalidatePath("/provide");
   revalidatePath(`/providers/${context.user.id}`);
   revalidatePath(`/admin/providers/${context.user.id}`);
@@ -355,6 +362,14 @@ export async function updateProviderPhoto(
 
   if (error) return fail("SAVE_FAILED", "We couldn't save that photo. Try again.");
 
+  await writeAudit({
+    actorId: context.user.id,
+    action: "provider.photo_updated",
+    entityType: "provider",
+    entityId: context.user.id,
+    metadata: { photo_id: photoId },
+  });
+
   revalidatePath("/provide");
   revalidatePath(`/providers/${context.user.id}`);
   return ok(undefined);
@@ -383,6 +398,14 @@ export async function deleteProviderPhoto(
   const { error } = await context.supabase.from("provider_photos").delete().eq("id", photoId);
 
   if (error) return fail("DELETE_FAILED", "We couldn't remove that photo. Try again.");
+
+  await writeAudit({
+    actorId: context.user.id,
+    action: "provider.photo_removed",
+    entityType: "provider",
+    entityId: context.user.id,
+    metadata: { photo_id: photoId },
+  });
 
   revalidatePath("/provide");
   revalidatePath(`/providers/${context.user.id}`);

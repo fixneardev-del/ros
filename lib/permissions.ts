@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { forbidden, redirect } from "next/navigation";
+import { connection } from "next/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createServerSupabase } from "@/lib/supabase/server";
 import type { Profile, ProviderProfile } from "@/lib/types";
@@ -9,8 +10,14 @@ type ServerSupabase = Awaited<ReturnType<typeof createServerSupabase>>;
 /**
  * The session is read once per request. The layout and the page both need it,
  * and React's cache keeps that to a single round trip.
+ *
+ * `connection()` stops the prerender here. The auth client checks the session
+ * expiry against the current time, and a value that changes between renders
+ * cannot be baked into a static shell.
  */
 export const getSessionContext = cache(async () => {
+  await connection();
+
   const supabase = isSupabaseConfigured()
     ? await createServerSupabase()
     : (null as unknown as ServerSupabase);
@@ -78,6 +85,11 @@ export async function requireProvider() {
   const context = await requireUser("/provide");
 
   if (!context.providerProfile) {
+    // An admin who does not offer services has no provider dashboard. The
+    // application form is not a sensible place to send them either.
+    if (context.profile.role === "admin") {
+      redirect("/admin");
+    }
     redirect("/provide/apply");
   }
 
