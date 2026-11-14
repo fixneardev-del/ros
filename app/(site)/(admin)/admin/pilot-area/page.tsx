@@ -2,11 +2,11 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/permissions";
 import { getDistricts } from "@/lib/data/locations";
-import { StitchLine } from "@/components/mend/tag";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { setDistrictEnabled, upsertDistrict } from "@/lib/actions/admin";
 import type { LocationRow } from "@/lib/types";
+import { DashAlert } from "@/components/dash/dash-alert";
 
 export const metadata: Metadata = { title: "Admin pilot area" };
 
@@ -60,10 +60,9 @@ async function PilotAreaContent({ searchParams }: { searchParams: SearchParams }
   return (
     <div>
       <div>
-        <h1 className="font-display text-3xl font-extrabold md:text-5xl">
+        <h1>
           Pilot area
         </h1>
-        <StitchLine className="mt-4 w-20" />
         <p className="mt-3 text-muted">
           Only enabled postcode districts can post jobs, appear in search and be
           selected by providers. Disabling a district does not remove existing
@@ -71,19 +70,11 @@ async function PilotAreaContent({ searchParams }: { searchParams: SearchParams }
         </p>
       </div>
 
-      {params.ok ? (
-        <p className="mt-6 rounded-control bg-success-bg p-4 text-sm font-bold text-success-fg">
-          {params.ok}
-        </p>
-      ) : null}
-      {params.error ? (
-        <p className="mt-6 rounded-control bg-danger-bg p-4 text-sm font-bold text-danger-fg">
-          {params.error}
-        </p>
-      ) : null}
+      {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
+      {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
 
       <section className="mt-8 rounded-surface border border-line bg-surface p-5 md:p-6">
-        <h2 className="text-xl font-bold">Add a district</h2>
+        <h2>Add a district</h2>
         <form action={upsertDistrict} className="mt-4 space-y-4">
           <DistrictFields />
           <Button type="submit">Add district</Button>
@@ -98,7 +89,7 @@ async function PilotAreaContent({ searchParams }: { searchParams: SearchParams }
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-bold">{district.postcode_district}</h2>
+                <h2>{district.postcode_district}</h2>
                 <p className="mt-1 text-sm text-muted">{district.area_name}</p>
               </div>
               <span

@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { requireApprovedProvider } from "@/lib/permissions";
 import { getMatchingJobs } from "@/lib/data/jobs";
 import { JobCard } from "@/components/mend/job-card";
-import { EmptyState, StitchLine } from "@/components/mend/tag";
+import { EmptyState } from "@/components/mend/tag";
 import { ButtonLink } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Matching jobs" };
@@ -17,14 +17,9 @@ async function JobsContent() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
-            Provider jobs
-          </p>
-          <h1 className="mt-2 font-display text-3xl font-extrabold md:text-5xl">
-            Jobs that fit your services
-          </h1>
-          <StitchLine className="mt-4 w-20" />
-          <p className="mt-3 text-muted">
+          <p className="dash-kicker">Provider jobs</p>
+          <h1 className="mt-2">Jobs that fit your services</h1>
+          <p className="mt-3 text-sm text-muted">
             Open jobs in your pilot areas and services. Jobs you have already
             offered on are not shown here.
           </p>
@@ -35,7 +30,7 @@ async function JobsContent() {
       </div>
 
       {jobs.length > 0 ? (
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
           {jobs.map((job) => (
             <JobCard
               key={job.id}
@@ -52,15 +47,17 @@ async function JobsContent() {
           ))}
         </div>
       ) : (
-        <EmptyState
-          title="No matching jobs right now"
-          description="We will show open jobs here when they match your services and pilot areas. Check back soon."
-          action={
-            <ButtonLink href="/provide" variant="secondary">
-              Update your profile
-            </ButtonLink>
-          }
-        />
+        <div className="mt-6 rounded-surface border border-line bg-surface p-5">
+          <EmptyState
+            title="No matching jobs right now"
+            description="We will show open jobs here when they match your services and pilot areas. Check back soon."
+            action={
+              <ButtonLink href="/provide" variant="secondary">
+                Update your profile
+              </ButtonLink>
+            }
+          />
+        </div>
       )}
     </div>
   );
@@ -68,7 +65,7 @@ async function JobsContent() {
 
 export default function ProviderJobsPage() {
   return (
-    <div className="mx-auto max-w-[1200px] px-4 py-10 md:px-8 lg:px-12">
+    <div className="dash-page">
       <Suspense
         fallback={
           <div className="space-y-4" aria-hidden>

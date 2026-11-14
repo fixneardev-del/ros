@@ -27,7 +27,6 @@ Token	Value	Intended use
 --purple	#9969F6	Analytics category accent
 --amber	#EE9B17	Attention and waiting state
 --dark	#18181D	Dark buttons and selected controls
-Body backdrop	#D8D8D8	Outer page background
 
 
 Supporting colour treatments
@@ -84,7 +83,7 @@ Application shell
 - Desktop padding: 22px 41px 46px.
 - Minimum height: viewport height minus 50px.
 - Warm grey-beige surface with a translucent white border.
-- Large rounded top corners; the shell reads as a floating workspace against a darker neutral page backdrop.
+- Large rounded top corners; the shell reads as a floating workspace against the canvas.
 Global header
 - Horizontal flex layout with left-aligned wordmark and right-aligned action/profile controls.
 - Search control is centred independently using absolute positioning.

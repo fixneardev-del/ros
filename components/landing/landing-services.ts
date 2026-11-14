@@ -59,6 +59,11 @@ export const starterServices: LandingService[] = [
 /**
  * Each tile carries its own foreground colour. White fails contrast on the
  * lighter backgrounds, so those tiles use ink instead.
+ *
+ * The hair braiding tile uses a slightly deeper red than the brand red. On
+ * the brand red, ink reaches 4.28:1 and white 4.41:1, so neither clears the
+ * 4.5:1 needed for small text. The deeper red clears it with white at 4.71:1
+ * and is the same hue to the eye.
  */
 export const serviceStyles: Record<
   string,
@@ -95,8 +100,8 @@ export const serviceStyles: Record<
     Icon: GraduationCap,
   },
   "hair-braiding": {
-    background: "var(--l-red)",
-    foreground: "var(--l-ink)",
+    background: "#e2184a",
+    foreground: "#ffffff",
     Icon: Brush,
   },
 };

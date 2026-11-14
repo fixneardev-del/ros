@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter, Instrument_Serif } from "next/font/google";
 import { getSessionContext } from "@/lib/permissions";
 import { getServerEnv } from "@/lib/env";
@@ -29,22 +30,34 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
 };
 
-export default async function LandingLayout({
+/**
+ * The session read is not cacheable, so it sits behind a Suspense boundary.
+ * Without one the landing route cannot be prerendered.
+ */
+async function Header() {
+  const context = await getSessionContext();
+
+  return (
+    <LandingHeader
+      user={context.user}
+      isProvider={Boolean(context.providerProfile)}
+    />
+  );
+}
+
+export default function LandingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const context = await getSessionContext();
   const supportEmail = getServerEnv().adminEmail || "hello@example.com";
 
   return (
     <div className={`landing ${inter.variable} ${serif.variable}`}>
       {/* The skip link lives in the root layout, which wraps this one. */}
-      <LandingHeader
-        user={context.user}
-        isAdmin={context.profile?.role === "admin"}
-        isProvider={Boolean(context.providerProfile)}
-      />
+      <Suspense fallback={null}>
+        <Header />
+      </Suspense>
 
       <main id="main" className="l-main">
         {children}

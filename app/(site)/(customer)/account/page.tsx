@@ -5,12 +5,21 @@ import { ShieldAlert } from "lucide-react";
 import { requireUser } from "@/lib/permissions";
 import { signOut } from "@/lib/actions/auth";
 import { AccountForm, PasswordForm } from "@/components/forms/account-forms";
-import { StitchLine } from "@/components/mend/tag";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "My account" };
 
 type SearchParams = Promise<{ error?: string }>;
+
+function initials(name?: string | null, email?: string | null) {
+  const source = name?.trim() || email?.split("@")[0] || "You";
+  const parts = source.split(/[\s._-]+/).filter(Boolean);
+  return (parts
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("") || "Y"
+  ).toUpperCase();
+}
 
 async function AccountContent({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
@@ -19,14 +28,24 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
       <div>
-        <h1 className="font-display text-3xl font-extrabold md:text-5xl">
-          My account
-        </h1>
-        <StitchLine className="mt-4 w-20" />
-        <p className="mt-3 text-muted">
-          Signed in as {context.user.email}. Keep your contact details up to
-          date so a provider can reach you after you accept an offer.
+        <h1>My account</h1>
+        <p className="mt-2 text-muted">
+          Keep your contact details up to date so a provider can reach you after
+          you accept an offer.
         </p>
+
+        <section className="dash-profile-card mt-6">
+          <span className="dash-avatar-lg" aria-hidden>
+            {initials(context.profile.full_name, context.user.email)}
+          </span>
+          <div className="dash-profile-copy">
+            <h2>{context.profile.full_name || "Your account"}</h2>
+            <p>{context.user.email}</p>
+          </div>
+          <span className="dash-chip">
+            {context.profile.role === "admin" ? "Admin" : "Customer"}
+          </span>
+        </section>
 
         {params.error === "suspended" ? (
           <div className="mt-6 flex gap-3 rounded-surface bg-danger-bg p-5 text-danger-fg">
@@ -52,7 +71,7 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
 
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           <section className="rounded-surface border border-line bg-surface p-5 md:p-6">
-            <h2 className="text-xl font-bold">Your details</h2>
+            <h2>Your details</h2>
             <p className="mt-1 text-sm text-muted">
               Your name is shown to the other party after an offer is accepted.
             </p>
@@ -62,7 +81,7 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
           </section>
 
           <section className="rounded-surface border border-line bg-surface p-5 md:p-6">
-            <h2 className="text-xl font-bold">Password</h2>
+            <h2>Password</h2>
             <p className="mt-1 text-sm text-muted">
               Choose a new password if you need to. You will stay signed in.
             </p>
@@ -73,7 +92,7 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
         </div>
 
         <section className="mt-8 rounded-surface border border-line bg-surface p-5 md:p-6">
-          <h2 className="text-xl font-bold">Sign out</h2>
+          <h2>Sign out</h2>
           <p className="mt-1 text-sm text-muted">
             Sign out on this device. You can log back in at any time.
           </p>
@@ -87,7 +106,7 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
 
       <aside className="space-y-4">
         <div className="rounded-surface border border-line bg-surface p-5">
-          <h2 className="text-lg font-bold">Your marketplace</h2>
+          <h2>Your marketplace</h2>
           <div className="mt-3 flex flex-col gap-3 text-sm">
             <Link
               href="/jobs"
@@ -152,7 +171,7 @@ export default function AccountPage({
   searchParams: SearchParams;
 }) {
   return (
-    <div className="mx-auto max-w-[1200px] px-4 py-10 md:px-8 lg:px-12">
+    <div className="dash-page">
       <Suspense
         fallback={
           <div className="grid gap-8 lg:grid-cols-[1fr_360px]" aria-hidden>

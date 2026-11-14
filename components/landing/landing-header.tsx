@@ -8,20 +8,18 @@ import { signOut } from "@/lib/actions/auth";
  */
 export function LandingHeader({
   user,
-  isAdmin,
   isProvider,
   hideAuthLinks,
 }: {
   user: { email?: string | null } | null;
-  isAdmin?: boolean;
   isProvider?: boolean;
   hideAuthLinks?: boolean;
 }) {
+  // The admin area has its own navigation. It is not part of the public menu.
   const links = [
     { href: "/search", label: "Find help" },
     { href: "/post-job", label: "Post a job" },
     { href: "/provide/apply", label: "Offer your services" },
-    ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
   ];
 
   const accountLinks = user

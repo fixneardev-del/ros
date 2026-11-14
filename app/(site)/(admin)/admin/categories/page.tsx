@@ -2,11 +2,11 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/permissions";
 import { getCategories } from "@/lib/data/categories";
-import { StitchLine } from "@/components/mend/tag";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { setCategoryActive, moveCategory, upsertCategory } from "@/lib/actions/admin";
 import type { ServiceCategory } from "@/lib/types";
+import { DashAlert } from "@/components/dash/dash-alert";
 
 export const metadata: Metadata = { title: "Admin categories" };
 
@@ -115,29 +115,20 @@ async function CategoriesContent({ searchParams }: { searchParams: SearchParams 
   return (
     <div>
       <div>
-        <h1 className="font-display text-3xl font-extrabold md:text-5xl">
+        <h1>
           Categories
         </h1>
-        <StitchLine className="mt-4 w-20" />
         <p className="mt-3 text-muted">
           Categories drive search, job posting and provider services. Deactivate
           a category to hide it from new jobs and applications.
         </p>
       </div>
 
-      {params.ok ? (
-        <p className="mt-6 rounded-control bg-success-bg p-4 text-sm font-bold text-success-fg">
-          {params.ok}
-        </p>
-      ) : null}
-      {params.error ? (
-        <p className="mt-6 rounded-control bg-danger-bg p-4 text-sm font-bold text-danger-fg">
-          {params.error}
-        </p>
-      ) : null}
+      {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
+      {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
 
       <section className="mt-8 rounded-surface border border-line bg-surface p-5 md:p-6">
-        <h2 className="text-xl font-bold">Add a category</h2>
+        <h2>Add a category</h2>
         <form action={upsertCategory} className="mt-4 space-y-4">
           <CategoryFields parents={parents} />
           <Button type="submit">Add category</Button>
@@ -152,7 +143,7 @@ async function CategoriesContent({ searchParams }: { searchParams: SearchParams 
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-bold">
+                <h2>
                   {category.parent_id ? "↳ " : ""}
                   {category.name}
                 </h2>

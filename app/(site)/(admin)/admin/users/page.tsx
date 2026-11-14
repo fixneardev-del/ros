@@ -4,9 +4,9 @@ import { requireAdmin } from "@/lib/permissions";
 import { getAdminUsers } from "@/lib/data/admin";
 import { getUserEmails } from "@/lib/auth-admin";
 import { formatDate } from "@/lib/format";
-import { StitchLine } from "@/components/mend/tag";
 import { Button } from "@/components/ui/button";
 import { suspendUser, unsuspendUser } from "@/lib/actions/admin";
+import { DashAlert } from "@/components/dash/dash-alert";
 
 export const metadata: Metadata = { title: "Admin users" };
 
@@ -21,24 +21,15 @@ async function UsersContent({ searchParams }: { searchParams: SearchParams }) {
   return (
     <div>
       <div>
-        <h1 className="font-display text-3xl font-extrabold md:text-5xl">Users</h1>
-        <StitchLine className="mt-4 w-20" />
+        <h1>Users</h1>
         <p className="mt-3 text-muted">
           Suspend an account to block posting jobs, sending offers and accessing
           admin areas. Suspension does not delete data.
         </p>
       </div>
 
-      {params.ok ? (
-        <p className="mt-6 rounded-control bg-success-bg p-4 text-sm font-bold text-success-fg">
-          {params.ok}
-        </p>
-      ) : null}
-      {params.error ? (
-        <p className="mt-6 rounded-control bg-danger-bg p-4 text-sm font-bold text-danger-fg">
-          {params.error}
-        </p>
-      ) : null}
+      {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
+      {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
 
       <div className="mt-6 space-y-3">
         {users.map((user) => (
@@ -48,7 +39,7 @@ async function UsersContent({ searchParams }: { searchParams: SearchParams }) {
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-bold">{user.full_name}</h2>
+                <h2>{user.full_name}</h2>
                 <p className="mt-1 text-sm text-muted">
                   {emails.get(user.id) ?? "Email unavailable"} · joined{" "}
                   {formatDate(user.created_at)}

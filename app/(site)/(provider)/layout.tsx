@@ -1,9 +1,9 @@
-import { AppShell } from "@/components/shells/app-shell";
+import { DashShell } from "@/components/shells/dash-shell";
 
 export default function ProviderLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <AppShell>{children}</AppShell>;
+  return <DashShell variant="provider">{children}</DashShell>;
 }

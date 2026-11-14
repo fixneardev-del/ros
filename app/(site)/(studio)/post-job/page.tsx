@@ -16,9 +16,7 @@ async function PostJobContent() {
     <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
       <div>
         <p className="l-kicker">New request</p>
-        <h1 className="mt-2">
-          Post a job
-        </h1>
+        <h1 className="mt-2">Post a job</h1>
         <StitchLine className="mt-4 w-24" />
         <p className="l-lead mt-4">
           Describe what you need. Approved providers who cover your area and

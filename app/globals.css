@@ -2,8 +2,9 @@
 
 /*
  * The theme is intentionally not "inline": utilities compile to
- * `var(--color-*)`, which lets the `.studio` scope in app/studio.css remap the
- * palette for the public, auth and job pages without touching the dashboards.
+ * `var(--color-*)`, which lets the `.studio` scope in app/studio.css and the
+ * `.dash` scope in app/dash.css remap the palette for their route groups
+ * without touching the other surfaces.
  */
 @theme {
   --color-paper: #f3f6f8;

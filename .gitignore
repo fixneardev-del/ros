@@ -54,3 +54,5 @@ node_modules/
 
 # Local design review artefacts
 /.gstack-shots/
+/.gstack/
+.gstack/

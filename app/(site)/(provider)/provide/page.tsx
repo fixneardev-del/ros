@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { CheckCircle2, Info, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import { requireUser } from "@/lib/permissions";
 import { getCategories } from "@/lib/data/categories";
 import { getDistricts } from "@/lib/data/locations";
@@ -10,7 +11,7 @@ import { getProviderById } from "@/lib/data/providers";
 import { providerPhotoUrl } from "@/lib/storage";
 import { getProviderServices } from "@/lib/data/jobs";
 import { StatusBadge } from "@/components/mend/status-badge";
-import { StitchLine } from "@/components/mend/tag";
+import { DashAlert } from "@/components/dash/dash-alert";
 import { ActionForm } from "@/components/forms/action-form";
 import {
   AddProviderPhotoForm,
@@ -22,6 +23,8 @@ import { ButtonLink } from "@/components/ui/button";
 export const metadata: Metadata = { title: "Provider dashboard" };
 
 type SearchParams = Promise<{ applied?: string; error?: string }>;
+
+const card = "rounded-surface border border-line bg-surface p-5";
 
 function statusCopy(status: string) {
   if (status === "approved") {
@@ -40,24 +43,25 @@ async function ProvideContent({ searchParams }: { searchParams: SearchParams }) 
   const params = await searchParams;
   const context = await requireUser("/provide");
 
+  // An admin who does not offer services has no provider dashboard to open.
+  // Send them to the one they do have.
+  if (context.profile.role === "admin" && !context.providerProfile) {
+    redirect("/admin");
+  }
+
   // A customer can land here from the header. Explain what a provider profile
   // is rather than dropping them straight into the application form.
   if (!context.providerProfile) {
     return (
-      <div className="mx-auto max-w-2xl">
-        <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
-          Offer your services
-        </p>
-        <h1 className="mt-2 font-display text-3xl font-extrabold md:text-5xl">
-          Good with your hands?
-        </h1>
-        <StitchLine className="mt-4 w-24" />
-        <p className="mt-4 text-lg text-muted">
+      <div className="max-w-2xl">
+        <p className="dash-kicker">Offer your services</p>
+        <h1 className="mt-2">Good with your hands?</h1>
+        <p className="mt-4 text-sm text-muted">
           Apply to join the marketplace. Tell us what you do, which services
           you offer, the areas you cover and add photos of your work. An admin
           reviews every application before you appear in search.
         </p>
-        <ul className="mt-6 space-y-2 text-muted">
+        <ul className="mt-6 space-y-2 text-sm text-muted">
           <li>You choose your own services and postcode areas.</li>
           <li>You send offers and agree the work directly with the customer.</li>
           <li>There is no commission and no subscription.</li>
@@ -80,9 +84,9 @@ async function ProvideContent({ searchParams }: { searchParams: SearchParams }) 
 
   if (!provider) {
     return (
-      <div className="rounded-surface bg-danger-bg p-5 text-danger-fg">
+      <DashAlert tone="danger">
         We could not load your provider profile. Refresh and try again.
-      </div>
+      </DashAlert>
     );
   }
 
@@ -100,13 +104,8 @@ async function ProvideContent({ searchParams }: { searchParams: SearchParams }) 
     <div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
-            Provider dashboard
-          </p>
-          <h1 className="mt-2 font-display text-3xl font-extrabold md:text-5xl">
-            {provider.display_name}
-          </h1>
-          <StitchLine className="mt-4 w-20" />
+          <p className="dash-kicker">Provider dashboard</p>
+          <h1 className="mt-2">{provider.display_name}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <StatusBadge kind="provider" status={provider.status} />
             <span className="text-sm text-muted">
@@ -133,25 +132,23 @@ async function ProvideContent({ searchParams }: { searchParams: SearchParams }) 
       </div>
 
       {params.applied ? (
-        <div className="mt-6 flex gap-3 rounded-surface bg-success-bg p-5 text-success-fg">
-          <CheckCircle2 className="mt-0.5 size-5 shrink-0" aria-hidden />
-          <p className="text-sm font-bold">
+        <div className="mt-6">
+          <DashAlert tone="success">
             Application sent. We will email you when the admin has reviewed it.
-          </p>
+          </DashAlert>
         </div>
       ) : null}
 
       {params.error === "not-approved" ? (
-        <div className="mt-6 flex gap-3 rounded-surface bg-warning-bg p-5 text-warning-fg">
-          <Info className="mt-0.5 size-5 shrink-0" aria-hidden />
-          <p className="text-sm font-bold">
+        <div className="mt-6">
+          <DashAlert tone="warning">
             You need an approved provider profile to browse matching jobs or send
             offers.
-          </p>
+          </DashAlert>
         </div>
       ) : null}
 
-      <div className="mt-6 rounded-surface border border-line bg-surface p-5">
+      <div className={`${card} mt-6`}>
         <p className="font-bold">{statusCopy(provider.status)}</p>
         {provider.needs_more_info_note ? (
           <p className="mt-2 rounded-control bg-warning-bg p-3 text-sm text-warning-fg">
@@ -171,10 +168,10 @@ async function ProvideContent({ searchParams }: { searchParams: SearchParams }) 
         ) : null}
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div>
-          <section className="rounded-surface border border-line bg-surface p-5 md:p-6">
-            <h2 className="text-2xl font-bold">Profile</h2>
+          <section className={card}>
+            <h2>Profile</h2>
             <p className="mt-1 text-sm text-muted">
               Keep your services, areas and photos accurate. Changing your name
               or provider type may send your profile back for review.
@@ -189,8 +186,8 @@ async function ProvideContent({ searchParams }: { searchParams: SearchParams }) 
             </div>
           </section>
 
-          <section className="mt-6 rounded-surface border border-line bg-surface p-5 md:p-6">
-            <h2 className="text-2xl font-bold">Photos</h2>
+          <section className={`${card} mt-6`}>
+            <h2>Photos</h2>
             <p className="mt-1 text-sm text-muted">
               Add 1 to 6 photos. The first photo is used on your public profile.
             </p>
@@ -233,7 +230,7 @@ async function ProvideContent({ searchParams }: { searchParams: SearchParams }) 
                 })}
               </div>
             ) : (
-              <p className="mt-4 text-muted">No photos yet.</p>
+              <p className="mt-4 text-sm text-muted">No photos yet.</p>
             )}
 
             {photos.length < 6 ? (
@@ -249,8 +246,8 @@ async function ProvideContent({ searchParams }: { searchParams: SearchParams }) 
         </div>
 
         <aside className="space-y-4">
-          <div className="rounded-surface border border-line bg-surface p-5">
-            <h2 className="text-lg font-bold">Your services</h2>
+          <div className={card}>
+            <h2>Your services</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {provider.provider_services.map((service) =>
                 service.service_categories ? (
@@ -265,14 +262,14 @@ async function ProvideContent({ searchParams }: { searchParams: SearchParams }) 
             </div>
           </div>
 
-          <div className="rounded-surface border border-line bg-surface p-5">
-            <h2 className="text-lg font-bold">Your pilot areas</h2>
+          <div className={card}>
+            <h2>Your pilot areas</h2>
             <p className="mt-2 text-sm text-muted">
               {provider.service_districts.join(", ") || "No areas selected."}
             </p>
           </div>
 
-          <div className="rounded-surface border border-line bg-surface p-5 text-sm">
+          <div className={`${card} text-sm`}>
             <p className="font-bold">Need help?</p>
             <p className="mt-1 text-muted">
               Read the provider guidance in the{" "}
@@ -297,10 +294,10 @@ export default function ProvidePage({
   searchParams: SearchParams;
 }) {
   return (
-    <div className="mx-auto max-w-[1200px] px-4 py-10 md:px-8 lg:px-12">
+    <div className="dash-page">
       <Suspense
         fallback={
-          <div className="grid gap-8 lg:grid-cols-[1fr_360px]" aria-hidden>
+          <div className="grid gap-6 lg:grid-cols-[1fr_360px]" aria-hidden>
             <div className="h-96 rounded-surface bg-slate-100" />
             <div className="h-64 rounded-surface bg-slate-100" />
           </div>

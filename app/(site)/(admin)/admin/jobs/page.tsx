@@ -5,9 +5,9 @@ import { requireAdmin } from "@/lib/permissions";
 import { getAdminJobs } from "@/lib/data/admin";
 import { formatDate } from "@/lib/format";
 import { StatusBadge } from "@/components/mend/status-badge";
-import { StitchLine } from "@/components/mend/tag";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { removeJob } from "@/lib/actions/admin";
+import { DashAlert } from "@/components/dash/dash-alert";
 
 export const metadata: Metadata = { title: "Admin jobs" };
 
@@ -31,10 +31,9 @@ async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-extrabold md:text-5xl">
+          <h1>
             Jobs
           </h1>
-          <StitchLine className="mt-4 w-20" />
           <p className="mt-3 text-muted">
             Moderate job requests. Removing a job hides it from providers and
             emails the customer.
@@ -45,18 +44,10 @@ async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
         </ButtonLink>
       </div>
 
-      {params.ok ? (
-        <p className="mt-6 rounded-control bg-success-bg p-4 text-sm font-bold text-success-fg">
-          {params.ok}
-        </p>
-      ) : null}
-      {params.error ? (
-        <p className="mt-6 rounded-control bg-danger-bg p-4 text-sm font-bold text-danger-fg">
-          {params.error}
-        </p>
-      ) : null}
+      {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
+      {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
 
-      <nav aria-label="Filter jobs" className="mt-6 flex flex-wrap gap-2">
+      <nav aria-label="Filter jobs" className="dash-pills mt-6">
         {filters.map((filter) => {
           const active = status === filter.value;
           const href = filter.value
@@ -67,11 +58,6 @@ async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
               key={filter.label}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={
-                active
-                  ? "inline-flex min-h-10 items-center rounded-control bg-primary px-3 text-sm font-bold text-primary-fg"
-                  : "inline-flex min-h-10 items-center rounded-control border border-line-strong bg-surface px-3 text-sm font-bold hover:border-primary hover:text-primary"
-              }
             >
               {filter.label}
             </Link>

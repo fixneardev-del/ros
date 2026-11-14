@@ -1,0 +1,1390 @@
+/*
+ * Dashboard theme.
+ *
+ * The customer and admin dashboards render inside a `.dash` wrapper. It
+ * remaps the application tokens to the Movexa dashboard design system and
+ * adds the shape language: a floating warm-grey shell, translucent cards,
+ * compact pills and soft semantic tints.
+ *
+ * The provider dashboard still uses AppShell and the original tokens. Like
+ * `.studio`, this file is intentionally unlayered so it can override the
+ * Tailwind utilities emitted from app/globals.css.
+ */
+
+.dash {
+  /* Movexa tokens. */
+  --d-bg: #f1efee;
+  --d-card: #f8f7f6;
+  --d-card-translucent: rgb(248 247 246 / 0.88);
+  --d-ink: #17171b;
+  --d-muted: #686671;
+  --d-muted-soft: #6f6d78;
+  --d-line: #ffffff;
+  --d-track: #e7e6e6;
+  --d-inset: #f0eeee;
+  --d-control: #fafafa;
+  --d-dark: #18181d;
+
+  --d-orange: #ff7446;
+  /* The wordmark accent is text, so it needs 3:1 against the canvas. This is
+     the brand orange darkened just enough to clear it. */
+  --d-orange-brand: #e85d2a;
+  /* Text orange. It sits on the orange tint at 10–11px in the icon circles
+     and quiet buttons, so it needs 4.5:1 against that tint, not 3:1. */
+  --d-orange-strong: #b93b0a;
+  --d-orange-tint: #ffebe3;
+  --d-blue: #4b8ff7;
+  --d-blue-strong: #2563b8;
+  --d-blue-tint: #e3ebfb;
+  --d-green: #27ae68;
+  --d-green-strong: #177045;
+  --d-green-tint: #dfeee6;
+  --d-purple: #9969f6;
+  --d-purple-strong: #6d3fc4;
+  --d-purple-tint: #eee7fd;
+  --d-amber: #ee9b17;
+  --d-amber-strong: #8a5a0c;
+  --d-amber-tint: #f9edda;
+  --d-red: #d94a3a;
+  --d-red-strong: #9e2f22;
+  --d-red-tint: #fbe4e0;
+
+  /* Application tokens used by Tailwind utilities and shared components. */
+  --color-paper: var(--d-bg);
+  --color-ink: var(--d-ink);
+  --color-surface: var(--d-card);
+
+  /* `--color-line` is the divider colour. Card outlines use `--d-line`
+     directly so they stay white while dividers stay visible. */
+  --color-line: var(--d-track);
+  --color-line-strong: #dedcd9;
+  --color-muted: var(--d-muted);
+
+  /* Body links use the dark ink so the orange stays reserved for brand
+     moments and emphasis, as the design system intends. */
+  --color-primary: var(--d-dark);
+  --color-primary-hover: #2a2a31;
+  --color-primary-fg: #ffffff;
+  --color-accent: var(--d-orange);
+  --color-accent-fg: var(--d-ink);
+
+  --color-success: var(--d-green);
+  --color-success-bg: var(--d-green-tint);
+  --color-success-fg: var(--d-green-strong);
+  --color-danger: var(--d-red);
+  --color-danger-bg: var(--d-red-tint);
+  --color-danger-fg: var(--d-red-strong);
+  --color-warning-bg: var(--d-amber-tint);
+  --color-warning-fg: var(--d-amber-strong);
+  --color-info-bg: var(--d-blue-tint);
+  --color-info-fg: var(--d-blue-strong);
+
+  --color-slate-100: var(--d-inset);
+  --color-slate-200: var(--d-track);
+  --color-slate-400: #a9a7ae;
+  --color-slate-500: var(--d-muted-soft);
+  --color-slate-600: #5f5d66;
+
+  /* Older aliases still referenced by a few shared components. */
+  --color-denim-700: var(--d-dark);
+  --color-denim-800: var(--d-dark);
+  --color-thread-100: var(--d-amber-tint);
+  --color-thread-400: var(--d-amber);
+  --color-thread-700: var(--d-amber-strong);
+  --color-mend-100: var(--d-green-tint);
+  --color-mend-600: var(--d-green);
+  --color-mend-800: var(--d-green-strong);
+  --color-patch-100: var(--d-red-tint);
+  --color-patch-600: var(--d-red);
+  --color-patch-800: var(--d-red-strong);
+  --color-info-100: var(--d-blue-tint);
+
+  --font-display: var(--font-studio-sans), Inter, system-ui, sans-serif;
+  --font-sans: var(--font-studio-sans), Inter, system-ui, sans-serif;
+
+  --radius-control: 999px;
+  --radius-surface: 22px;
+  --radius-photo: 15px;
+
+  --shadow-overlay: 0 18px 50px rgb(23 23 27 / 0.14);
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--d-bg);
+  color: var(--d-ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dash ::selection {
+  background: var(--d-orange-tint);
+  color: var(--d-ink);
+}
+
+.dash :focus-visible {
+  outline: 2px solid var(--d-blue);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+/* Typography ----------------------------------------------------------- */
+
+.dash h1 {
+  font-family: var(--font-sans);
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.dash h2 {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.dash h3 {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.dash h4 {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.dash p {
+  text-wrap: pretty;
+}
+
+/* The application body is 16px. The dashboard is deliberately compact, so the
+   shared size utilities are remapped. `:where()` keeps their specificity below
+   the heading rules above, so an `h2` with `text-xl` still renders at the
+   14px section heading size rather than the 16px utility size. */
+.dash :where(.text-sm) {
+  font-size: 12px;
+}
+
+.dash :where(.text-base) {
+  font-size: 13px;
+}
+
+.dash :where(.text-lg) {
+  font-size: 15px;
+}
+
+.dash :where(.text-xl) {
+  font-size: 16px;
+}
+
+.dash :where(.text-2xl) {
+  font-size: 18px;
+}
+
+.dash :where(.text-3xl),
+.dash :where(.text-4xl),
+.dash :where(.text-5xl) {
+  font-size: 25px;
+}
+
+.dash .mt-8 {
+  margin-top: 20px;
+}
+
+.dash .mt-6 {
+  margin-top: 16px;
+}
+
+.dash .gap-8 {
+  gap: 20px;
+}
+
+.dash .gap-6 {
+  gap: 16px;
+}
+
+/* Shell ---------------------------------------------------------------- */
+
+/* The shell fills the viewport. There is no floating frame around the
+   dashboard, so the content starts at the top of the window. */
+.dash-shell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100dvh;
+}
+
+/* The content keeps a maximum width so it stays readable on a wide screen. */
+.dash-inner {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1390px;
+  margin: 0 auto;
+  padding: 26px 41px 40px;
+}
+
+.dash-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.dash-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.dash-content {
+  min-width: 0;
+}
+
+.dash-page-top {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dash-kicker {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--d-muted);
+}
+
+.dash-loading {
+  font-size: 11px;
+  color: var(--d-muted);
+}
+
+/* Header --------------------------------------------------------------- */
+
+.dash-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 27px;
+}
+
+.dash-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--d-ink);
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -1.9px;
+  line-height: 1.1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* The nav sits in the normal flow and is centred by auto margins, so it
+   centres in the space between the wordmark and the actions when there is
+   room and can never overlap them. Below 1100px the menu takes over. */
+.dash-header-nav {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  margin-inline: auto;
+}
+
+.dash-brand-accent {
+  color: var(--d-orange-brand);
+}
+
+.dash-brand-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 7px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--d-dark);
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.dash-header-nav a {
+  padding: 8px 13px;
+  border-radius: 999px;
+  color: var(--d-muted);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.dash-header-nav a:hover {
+  background: var(--d-control);
+  color: var(--d-ink);
+}
+
+.dash-header-nav a[aria-current="page"] {
+  background: var(--d-dark);
+  color: #ffffff;
+}
+
+.dash-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-action-dark,
+.dash-action-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 34px;
+  padding: 0 13px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.dash-action-dark {
+  background: var(--d-dark);
+  color: #ffffff;
+}
+
+.dash-action-dark:hover {
+  background: #2a2a31;
+}
+
+.dash-action-light {
+  background: var(--d-control);
+  color: var(--d-ink);
+  border: 1px solid var(--d-track);
+}
+
+.dash-action-light:hover {
+  background: #ffffff;
+}
+
+.dash-avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--d-orange-tint);
+  color: var(--d-orange-strong);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+.dash-avatar:hover {
+  background: var(--d-orange);
+  color: #ffffff;
+}
+
+.dash-icon-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border: 1px solid var(--d-track);
+  border-radius: 50%;
+  background: var(--d-control);
+  color: var(--d-muted);
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.dash-icon-button:hover {
+  background: #ffffff;
+  color: var(--d-ink);
+}
+
+.dash-menu {
+  display: none;
+  position: relative;
+}
+
+.dash-menu summary {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--d-track);
+  border-radius: 50%;
+  background: var(--d-control);
+  color: var(--d-ink);
+  cursor: pointer;
+  list-style: none;
+}
+
+.dash-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.dash-menu[open] .dash-menu-icon-open,
+.dash-menu:not([open]) .dash-menu-icon-close {
+  display: none;
+}
+
+.dash-menu-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  min-width: 230px;
+  padding: 8px;
+  border: 1px solid var(--d-line);
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgb(23 23 27 / 0.14);
+}
+
+.dash-menu-panel nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-menu-panel a,
+.dash-menu-panel button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  color: var(--d-ink);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+}
+
+.dash-menu-panel a:hover,
+.dash-menu-panel button:hover {
+  background: var(--d-inset);
+}
+
+.dash-menu-panel .dash-menu-signout {
+  color: var(--d-muted);
+}
+
+/* Footer --------------------------------------------------------------- */
+
+.dash-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 34px;
+  padding-top: 15px;
+  border-top: 1px solid var(--d-track);
+  color: var(--d-muted);
+  font-size: 10px;
+}
+
+.dash-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.dash-footer a {
+  color: var(--d-muted);
+  text-decoration: none;
+}
+
+.dash-footer a:hover {
+  color: var(--d-ink);
+}
+
+/* Cards ---------------------------------------------------------------- */
+
+.dash .panel,
+.dash .s-panel,
+.dash .dash-card,
+.dash .tag,
+.dash .rounded-surface.bg-surface {
+  background: var(--d-card-translucent);
+  border: 1px solid var(--d-line);
+  border-radius: 22px;
+  box-shadow: 0 4px 10px rgb(0 0 0 / 0.03);
+}
+
+.dash .panel,
+.dash .s-panel,
+.dash .dash-card,
+.dash .tag,
+.dash .rounded-surface.bg-surface {
+  padding: 18px;
+}
+
+.dash .tag::after {
+  display: none;
+}
+
+.dash a.tag,
+.dash a.rounded-surface.bg-surface,
+.dash a.dash-card {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.dash a.tag:hover,
+.dash a.rounded-surface.bg-surface:hover,
+.dash a.dash-card:hover {
+  transform: translateY(-2px);
+  border-color: #ffffff;
+  box-shadow: 0 12px 26px rgb(0 0 0 / 0.06);
+}
+
+.dash .rounded-photo,
+.dash .s-thumb {
+  border-radius: 15px;
+  border-color: var(--d-track);
+}
+
+.dash .s-thumb {
+  overflow: hidden;
+  background: var(--d-inset);
+}
+
+.dash .divide-line > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--d-track);
+}
+
+.dash .stitch-x {
+  display: none;
+}
+
+/* Alerts --------------------------------------------------------------- */
+
+.dash .rounded-control.bg-success-bg,
+.dash .rounded-control.bg-danger-bg,
+.dash .rounded-control.bg-warning-bg,
+.dash .rounded-control.bg-info-bg {
+  border-radius: 15px;
+}
+
+.dash-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--d-track);
+  border-radius: 15px;
+  background: var(--d-blue-tint);
+  color: var(--d-blue-strong);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dash-alert strong {
+  font-weight: 600;
+}
+
+.dash-alert-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.dash-alert-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--d-blue-strong);
+}
+
+.dash-alert-success {
+  border-color: var(--d-track);
+  background: var(--d-green-tint);
+  color: var(--d-green-strong);
+}
+
+.dash-alert-success .dash-alert-icon {
+  color: var(--d-green-strong);
+}
+
+.dash-alert-warning {
+  border-color: var(--d-track);
+  background: var(--d-amber-tint);
+  color: var(--d-amber-strong);
+}
+
+.dash-alert-warning .dash-alert-icon {
+  color: var(--d-amber-strong);
+}
+
+.dash-alert-danger {
+  border-color: var(--d-track);
+  background: var(--d-red-tint);
+  color: var(--d-red-strong);
+}
+
+.dash-alert-danger .dash-alert-icon {
+  color: var(--d-red-strong);
+}
+
+.dash-alert a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* KPI cards ------------------------------------------------------------ */
+
+.dash-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dash-kpi-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dash-kpi-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dash-kpi {
+  display: flex;
+  min-width: 0;
+  min-height: 115px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 15px 16px;
+  border: 1px solid var(--d-line);
+  border-radius: 22px;
+  background: var(--d-card-translucent);
+  box-shadow: 0 4px 10px rgb(0 0 0 / 0.03);
+  color: var(--d-ink);
+  text-decoration: none;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+a.dash-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgb(0 0 0 / 0.06);
+}
+
+.dash-kpi-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dash-kpi-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--d-muted);
+}
+
+.dash-kpi-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+}
+
+.dash-kpi-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.dash-kpi-value {
+  margin-top: 10px;
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: -0.7px;
+  line-height: 1;
+}
+
+.dash-kpi-meta {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 7px;
+  font-size: 9px;
+  color: var(--d-muted);
+}
+
+.dash-kpi-orange .dash-kpi-icon {
+  background: var(--d-orange-tint);
+  color: var(--d-orange-strong);
+}
+
+.dash-kpi-blue .dash-kpi-icon {
+  background: var(--d-blue-tint);
+  color: var(--d-blue-strong);
+}
+
+.dash-kpi-green .dash-kpi-icon {
+  background: var(--d-green-tint);
+  color: var(--d-green-strong);
+}
+
+.dash-kpi-purple .dash-kpi-icon {
+  background: var(--d-purple-tint);
+  color: var(--d-purple-strong);
+}
+
+.dash-kpi-amber .dash-kpi-icon {
+  background: var(--d-amber-tint);
+  color: var(--d-amber-strong);
+}
+
+.dash-kpi-neutral .dash-kpi-icon {
+  background: var(--d-inset);
+  color: #5f5d66;
+}
+
+/* Admin tabs ----------------------------------------------------------- */
+
+.dash-tabs {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.dash-tabs a {
+  position: relative;
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: var(--d-muted);
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+/* Enlarge the tap target without changing the visual scale. */
+.dash-tabs a::after {
+  content: "";
+  position: absolute;
+  inset: -7px 0;
+}
+
+.dash-tabs a:hover {
+  background: var(--d-control);
+  color: var(--d-ink);
+}
+
+.dash-tabs a[aria-current="page"] {
+  background: var(--d-dark);
+  color: #ffffff;
+}
+
+.dash-tabs svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Filter pills --------------------------------------------------------- */
+
+.dash-pills {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--d-control);
+}
+
+.dash-pills a {
+  position: relative;
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: var(--d-muted);
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+/* The pills stay visually compact, but the tap target is enlarged so they
+   remain comfortable on a touch screen. */
+.dash-pills a::after {
+  content: "";
+  position: absolute;
+  inset: -7px 0;
+}
+
+.dash-pills a:hover {
+  background: #ffffff;
+  color: var(--d-ink);
+}
+
+.dash-pills a[aria-current="page"] {
+  background: var(--d-dark);
+  color: #ffffff;
+}
+
+/* Profile summary ------------------------------------------------------ */
+
+.dash-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--d-line);
+  border-radius: 22px;
+  background: var(--d-card-translucent);
+  box-shadow: 0 4px 10px rgb(0 0 0 / 0.03);
+}
+
+.dash-avatar-lg {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--d-orange-tint);
+  color: var(--d-orange-strong);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dash-profile-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.dash-profile-copy h2 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dash-profile-copy p {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--d-muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dash-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--d-inset);
+  color: #5f5d66;
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Analytics ------------------------------------------------------------ */
+
+.dash-analytics-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 15px;
+}
+
+.dash-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.dash-bar-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 150px) minmax(0, 1fr) 38px;
+  align-items: center;
+  gap: 10px;
+}
+
+.dash-bar-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--d-muted);
+  font-size: 11px;
+}
+
+.dash-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 2px;
+}
+
+.dash-dot-blue {
+  background: var(--d-blue);
+}
+
+.dash-dot-purple {
+  background: var(--d-purple);
+}
+
+.dash-dot-orange {
+  background: var(--d-orange);
+}
+
+.dash-dot-green {
+  background: var(--d-green);
+}
+
+.dash-dot-amber {
+  background: var(--d-amber);
+}
+
+.dash-bar-track {
+  display: block;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--d-track);
+}
+
+.dash-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+
+.dash-bar-blue {
+  background: var(--d-blue);
+}
+
+.dash-bar-purple {
+  background: var(--d-purple);
+}
+
+.dash-bar-orange {
+  background: var(--d-orange);
+}
+
+.dash-bar-green {
+  background: var(--d-green);
+}
+
+.dash-bar-amber {
+  background: var(--d-amber);
+}
+
+.dash-bar-value {
+  color: var(--d-ink);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.dash-stat-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  margin-top: 16px;
+}
+
+.dash-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid var(--d-track);
+}
+
+.dash-stat:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.dash-stat span {
+  color: var(--d-muted);
+  font-size: 11px;
+}
+
+.dash-stat strong {
+  color: var(--d-ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Buttons -------------------------------------------------------------- */
+
+.dash .btn {
+  min-height: 38px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    filter 180ms ease;
+}
+
+.dash .btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.dash .btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.dash .btn[data-variant="primary"] {
+  background: var(--d-dark);
+  color: #ffffff;
+}
+
+.dash .btn[data-variant="primary"]:hover:not(:disabled) {
+  background: #2a2a31;
+}
+
+.dash .btn[data-variant="secondary"] {
+  border: 1px solid var(--d-track);
+  background: var(--d-control);
+  color: var(--d-ink);
+}
+
+.dash .btn[data-variant="secondary"]:hover:not(:disabled) {
+  background: #ffffff;
+}
+
+.dash .btn[data-variant="accent"] {
+  background: var(--d-orange);
+  color: var(--d-ink);
+}
+
+.dash .btn[data-variant="accent"]:hover:not(:disabled) {
+  background: #ff8a63;
+}
+
+.dash .btn[data-variant="destructive"] {
+  background: #b8322a;
+  color: #ffffff;
+}
+
+.dash .btn[data-variant="destructive"]:hover:not(:disabled) {
+  background: var(--d-red-strong);
+}
+
+.dash .btn[data-variant="quiet"] {
+  background: transparent;
+  color: var(--d-orange-strong);
+}
+
+.dash .btn[data-variant="quiet"]:hover:not(:disabled) {
+  background: var(--d-orange-tint);
+  color: var(--d-orange-strong);
+}
+
+.dash .btn:disabled {
+  background: var(--d-inset);
+  color: var(--d-muted);
+  cursor: not-allowed;
+}
+
+/* Badges --------------------------------------------------------------- */
+
+.dash .badge {
+  gap: 5px;
+  padding: 4px 9px;
+  border: 0;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.dash .badge svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Forms ---------------------------------------------------------------- */
+
+.dash input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.dash select,
+.dash textarea {
+  min-height: 38px;
+  border: 1px solid var(--d-track);
+  border-radius: 12px;
+  background-color: var(--d-control);
+  color: var(--d-ink);
+  font-size: 12px;
+}
+
+.dash textarea {
+  padding-top: 9px;
+  padding-bottom: 9px;
+  border-radius: 15px;
+}
+
+.dash select {
+  padding-right: 34px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--d-muted) 50%),
+    linear-gradient(135deg, var(--d-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 17px) calc(50% + 1px),
+    calc(100% - 12px) calc(50% + 1px);
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+  appearance: none;
+}
+
+.dash input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+.dash select:focus-visible,
+.dash textarea:focus-visible {
+  border-color: var(--d-blue);
+  outline: 2px solid var(--d-blue);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.dash input[aria-invalid="true"],
+.dash select[aria-invalid="true"],
+.dash textarea[aria-invalid="true"] {
+  border-color: var(--d-red);
+}
+
+.dash input::placeholder,
+.dash textarea::placeholder {
+  color: var(--d-muted);
+}
+
+.dash label {
+  color: #5f5d66;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.dash input[type="checkbox"],
+.dash input[type="radio"] {
+  accent-color: var(--d-orange-strong);
+}
+
+/* Tables --------------------------------------------------------------- */
+
+.dash table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.dash th {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--d-track);
+  color: var(--d-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.dash td {
+  padding: 12px;
+  border-bottom: 1px solid var(--d-track);
+  vertical-align: top;
+}
+
+.dash tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Responsive ----------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+  .dash-inner {
+    padding: 22px;
+  }
+
+  .dash-header-nav {
+    display: none;
+  }
+
+  .dash-menu {
+    display: block;
+  }
+
+  .dash-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dash-kpi-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dash-kpi-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dash-analytics-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .dash-inner {
+    padding: 18px 14px 32px;
+  }
+
+  .dash-header {
+    gap: 12px;
+    padding-bottom: 20px;
+  }
+
+  .dash-brand {
+    font-size: 24px;
+    letter-spacing: -1.6px;
+    white-space: nowrap;
+  }
+
+  /* The "Administration" kicker below the header says this already, and the
+     chip pushes the wordmark onto a second line at narrow widths. */
+  .dash-brand-chip {
+    display: none;
+  }
+
+  .dash-header-actions > :not(.dash-menu) {
+    display: none;
+  }
+
+  .dash-kpi-grid,
+  .dash-kpi-grid-3,
+  .dash-kpi-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  /* The design has the final KPI span both columns when the row count is
+     odd, so the strip never ends with a half-width gap. */
+  .dash-kpi-grid > :last-child:nth-child(odd),
+  .dash-kpi-grid-3 > :last-child:nth-child(odd),
+  .dash-kpi-grid-4 > :last-child:nth-child(odd) {
+    grid-column: span 2;
+  }
+
+  .dash-page {
+    gap: 16px;
+  }
+
+  .dash-bar-row {
+    grid-template-columns: minmax(80px, 110px) minmax(0, 1fr) 34px;
+    gap: 8px;
+  }
+
+  .dash-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .dash-kpi-grid,
+  .dash-kpi-grid-3,
+  .dash-kpi-grid-4 {
+    gap: 8px;
+  }
+
+  .dash-kpi {
+    min-height: 104px;
+    padding: 13px;
+  }
+
+  .dash .tag,
+  .dash .dash-card,
+  .dash .rounded-surface.bg-surface {
+    padding: 14px;
+  }
+
+  .dash-brand {
+    font-size: 22px;
+  }
+}
+
+@media print {
+  .dash {
+    background: #ffffff;
+  }
+
+  .dash-inner {
+    max-width: none;
+    padding: 0;
+  }
+
+  .dash-header-actions,
+  .dash-menu,
+  .dash-footer {
+    display: none;
+  }
+}

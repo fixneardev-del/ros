@@ -3,8 +3,9 @@
  *
  * The public, auth and job pages render inside a `.studio` wrapper. It remaps
  * the application tokens to the landing design system and adds the shape
- * language (2px ink outlines, hard offset shadows, pill controls). The signed
- * in dashboards sit outside this wrapper, so they keep the original tokens.
+ * language (2px ink outlines, hard offset shadows, pill controls). The
+ * provider dashboard sits outside this wrapper and keeps the original tokens;
+ * the customer and admin dashboards use the `.dash` scope in app/dash.css.
  *
  * The shared `.l-*` classes and `--l-*` tokens live in app/design-system.css,
  * which the studio layouts import alongside this file.

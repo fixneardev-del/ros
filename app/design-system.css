@@ -394,6 +394,36 @@
   box-shadow: 6px 6px 0 var(--l-ink);
 }
 
+/* Placeholder for a section that streams in behind a Suspense boundary. It
+   keeps the page's shape while the data loads. */
+.l-skeleton {
+  min-height: 120px;
+  border-radius: 22px;
+  background: linear-gradient(
+    90deg,
+    rgb(17 17 17 / 0.05) 25%,
+    rgb(17 17 17 / 0.09) 37%,
+    rgb(17 17 17 / 0.05) 63%
+  );
+  background-size: 400% 100%;
+  animation: l-skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes l-skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-skeleton {
+    animation: none;
+  }
+}
+
 .l-ticket-head {
   display: flex;
   align-items: baseline;

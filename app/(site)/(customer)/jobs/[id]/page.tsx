@@ -23,7 +23,8 @@ import { formatDate } from "@/lib/format";
 import { timeframeLabels, TIMEFRAMES } from "@/lib/schemas/job";
 import { StatusBadge } from "@/components/mend/status-badge";
 import { OfferCard, ContactDetails } from "@/components/mend/offer-card";
-import { PilotNotice, EmptyState, StitchLine } from "@/components/mend/tag";
+import { EmptyState } from "@/components/mend/tag";
+import { DashAlert } from "@/components/dash/dash-alert";
 import { ActionForm } from "@/components/forms/action-form";
 import { EditJobForm } from "@/components/forms/job-forms";
 import { CreateOfferForm, EditOfferForm } from "@/components/forms/offer-forms";
@@ -36,6 +37,8 @@ type Params = Promise<{ id: string }>;
 
 export const metadata: Metadata = { title: "Job details" };
 
+const card = "rounded-surface border border-line bg-surface p-5";
+
 function timeframeLabel(value: string) {
   return TIMEFRAMES.includes(value as (typeof TIMEFRAMES)[number])
     ? timeframeLabels[value as (typeof TIMEFRAMES)[number]]
@@ -44,7 +47,7 @@ function timeframeLabel(value: string) {
 
 function JobSkeleton() {
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_360px]" aria-hidden>
+    <div className="grid gap-6 lg:grid-cols-[1fr_360px]" aria-hidden>
       <div className="space-y-4">
         <div className="h-12 w-2/3 rounded bg-slate-100" />
         <div className="h-72 rounded-surface bg-slate-100" />
@@ -113,7 +116,7 @@ async function JobDetailContent({ params }: { params: Params }) {
   });
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       <div>
         <Link
           href={isOwner ? "/jobs" : isAdmin ? "/admin/jobs" : "/provide/jobs"}
@@ -124,7 +127,8 @@ async function JobDetailContent({ params }: { params: Params }) {
         </Link>
 
         <div className="mt-5">
-          <div className="flex flex-wrap items-center gap-2">
+          <p className="dash-kicker">Job request</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <StatusBadge kind="job" status={job.status} />
             {job.service_categories ? (
               <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold">
@@ -133,10 +137,7 @@ async function JobDetailContent({ params }: { params: Params }) {
             ) : null}
             <span className="text-sm text-muted">Posted {formatDate(job.created_at)}</span>
           </div>
-          <h1 className="mt-3">
-            {job.title}
-          </h1>
-          <StitchLine className="mt-4 w-24" />
+          <h1 className="mt-3">{job.title}</h1>
           <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
             <span className="flex items-center gap-1.5">
               <MapPin className="size-4" aria-hidden />
@@ -156,9 +157,11 @@ async function JobDetailContent({ params }: { params: Params }) {
         </div>
 
         {job.status === "removed" && job.removed_reason ? (
-          <p className="s-alert mt-5 bg-danger-bg p-4 text-sm text-danger-fg">
-            <strong>This job was removed.</strong> {job.removed_reason}
-          </p>
+          <div className="mt-5">
+            <DashAlert tone="danger">
+              <strong>This job was removed.</strong> {job.removed_reason}
+            </DashAlert>
+          </div>
         ) : null}
 
         {sortedPhotos.length > 0 ? (
@@ -169,7 +172,7 @@ async function JobDetailContent({ params }: { params: Params }) {
               return (
                 <figure
                   key={photo.id}
-                  className="s-thumb overflow-hidden bg-slate-100"
+                  className="rounded-photo overflow-hidden border border-line bg-slate-100"
                 >
                   <img
                     src={url}
@@ -195,27 +198,25 @@ async function JobDetailContent({ params }: { params: Params }) {
           </div>
         ) : null}
 
-        <section className="mt-8">
-          <h2 className="text-2xl font-bold">What needs doing</h2>
-          <p className="mt-3 max-w-[70ch] whitespace-pre-line leading-7">
+        <section className={`${card} mt-6`}>
+          <h2>What needs doing</h2>
+          <p className="mt-3 max-w-[70ch] whitespace-pre-line leading-6">
             {job.description}
           </p>
         </section>
 
         {contactDetails.length > 0 ? (
-          <div className="mt-8">
+          <div className="mt-6">
             <ContactDetails details={contactDetails} />
           </div>
         ) : null}
 
         {isOwner || isAdmin ? (
-          <section className="mt-10">
+          <section className="mt-8">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-bold">
-                  {isOwner ? "Offers" : "Offers on this job"}
-                </h2>
-                <p className="mt-1 text-muted">
+                <h2>{isOwner ? "Offers" : "Offers on this job"}</h2>
+                <p className="mt-1 text-sm text-muted">
                   {isOwner
                     ? "Accept one offer to close the job and release contact details. Other offers are declined automatically."
                     : "Read-only admin view."}
@@ -259,7 +260,7 @@ async function JobDetailContent({ params }: { params: Params }) {
                 ))}
               </div>
             ) : (
-              <div className="mt-5">
+              <div className={`${card} mt-5`}>
                 <EmptyState
                   title="No offers yet"
                   description="Matching approved providers can see this job and send an offer. You can close the job if you no longer need help."
@@ -268,14 +269,14 @@ async function JobDetailContent({ params }: { params: Params }) {
             )}
           </section>
         ) : (
-          <section className="mt-10">
-            <h2 className="text-2xl font-bold">Your offer</h2>
+          <section className="mt-8">
+            <h2>Your offer</h2>
             {myOffer ? (
               <div className="mt-5 space-y-4">
                 <OfferCard offer={myOffer} title="Your offer" />
                 {myOffer.status === "submitted" ? (
                   <>
-                    <details className="panel">
+                    <details className={card}>
                       <summary className="cursor-pointer font-bold text-primary">
                         Edit your offer
                       </summary>
@@ -294,17 +295,17 @@ async function JobDetailContent({ params }: { params: Params }) {
                   </>
                 ) : null}
                 {myOffer.status === "accepted" ? (
-                  <p className="s-alert bg-success-bg p-4 text-sm font-bold text-success-fg">
+                  <DashAlert tone="success">
                     This offer was accepted. Contact details are shown above.
-                  </p>
+                  </DashAlert>
                 ) : null}
               </div>
             ) : canOffer ? (
-              <div className="panel mt-5">
+              <div className={`${card} mt-5`}>
                 <CreateOfferForm jobId={job.id} jobTitle={job.title} />
               </div>
             ) : (
-              <p className="mt-4 text-muted">
+              <p className="mt-4 text-sm text-muted">
                 This job is not taking offers from you. It may be closed, or it
                 may be outside the services or areas you cover.
               </p>
@@ -314,8 +315,8 @@ async function JobDetailContent({ params }: { params: Params }) {
       </div>
 
       <aside className="space-y-4">
-        <div className="panel">
-          <h2 className="text-lg font-bold">Job summary</h2>
+        <div className={card}>
+          <h2>Job summary</h2>
           <dl className="mt-3 space-y-3 text-sm">
             <div className="flex justify-between gap-3">
               <dt className="text-muted">Status</dt>
@@ -343,7 +344,7 @@ async function JobDetailContent({ params }: { params: Params }) {
         </div>
 
         {isOwner && job.status === "open" && !job.accepted_offer_id ? (
-          <details className="panel">
+          <details className={card}>
             <summary className="cursor-pointer font-bold text-primary">
               Edit job details
             </summary>
@@ -365,7 +366,7 @@ async function JobDetailContent({ params }: { params: Params }) {
         ) : null}
 
         {isAdmin ? (
-          <div className="panel text-sm">
+          <div className={`${card} text-sm`}>
             <p className="font-bold">Admin view</p>
             <p className="mt-1 text-muted">
               You can see the full postcode and all offers. Use the admin job
@@ -380,7 +381,7 @@ async function JobDetailContent({ params }: { params: Params }) {
           </div>
         ) : null}
 
-        <div className="panel">
+        <div className={card}>
           <p className="flex items-center gap-2 font-bold">
             <ShieldCheck className="size-5 text-success" aria-hidden />
             Contact stays private
@@ -395,10 +396,10 @@ async function JobDetailContent({ params }: { params: Params }) {
           <ReportForm targetType="job" targetId={job.id} />
         ) : null}
 
-        <PilotNotice>
+        <DashAlert tone="info">
           Agree the work, price and timing directly with the provider. We do not
           take payments or commission.
-        </PilotNotice>
+        </DashAlert>
 
         <p className="flex items-center gap-1.5 text-xs text-muted">
           <CalendarDays className="size-3.5" aria-hidden />
@@ -411,7 +412,7 @@ async function JobDetailContent({ params }: { params: Params }) {
 
 export default function JobDetailPage({ params }: { params: Params }) {
   return (
-    <div className="l-container s-page">
+    <div className="dash-page">
       <Suspense fallback={<JobSkeleton />}>
         <JobDetailContent params={params} />
       </Suspense>

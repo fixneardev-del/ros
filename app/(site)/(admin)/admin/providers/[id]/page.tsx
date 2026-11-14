@@ -10,8 +10,8 @@ import { getProviderById } from "@/lib/data/providers";
 import { providerPhotoUrl } from "@/lib/storage";
 import { formatDate } from "@/lib/format";
 import { StatusBadge } from "@/components/mend/status-badge";
-import { StitchLine } from "@/components/mend/tag";
-import { Button } from "@/components/ui/button";
+import { DashAlert } from "@/components/dash/dash-alert";
+import { Button, ButtonLink } from "@/components/ui/button";
 import {
   approveProvider,
   rejectProvider,
@@ -56,10 +56,9 @@ async function ProviderContent({ params }: { params: Params }) {
 
       <div className="mt-5 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-extrabold md:text-5xl">
+          <h1>
             {provider.display_name}
           </h1>
-          <StitchLine className="mt-4 w-20" />
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <StatusBadge kind="provider" status={provider.status} />
             <span className="text-sm text-muted">
@@ -67,19 +66,19 @@ async function ProviderContent({ params }: { params: Params }) {
             </span>
           </div>
         </div>
-        <Link
+        <ButtonLink
           href={`/providers/${provider.user_id}`}
-          className="inline-flex min-h-10 items-center gap-1.5 rounded-control border border-line-strong bg-surface px-3 text-sm font-bold hover:border-primary hover:text-primary"
+          variant="secondary"
         >
           Public profile
           <ExternalLink className="size-4" aria-hidden />
-        </Link>
+        </ButtonLink>
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
         <div className="space-y-6">
           <section className="rounded-surface border border-line bg-surface p-5 md:p-6">
-            <h2 className="text-xl font-bold">Application</h2>
+            <h2>Application</h2>
             <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
               <div>
                 <dt className="font-bold">Account name</dt>
@@ -115,15 +114,20 @@ async function ProviderContent({ params }: { params: Params }) {
             </dl>
 
             {provider.needs_more_info_note ? (
-              <p className="mt-4 rounded-control bg-warning-bg p-4 text-sm text-warning-fg">
-                <strong>More information requested:</strong>{" "}
-                {provider.needs_more_info_note}
-              </p>
+              <div className="mt-4">
+                <DashAlert tone="warning">
+                  <strong>More information requested:</strong>{" "}
+                  {provider.needs_more_info_note}
+                </DashAlert>
+              </div>
             ) : null}
             {provider.rejection_reason ? (
-              <p className="mt-4 rounded-control bg-danger-bg p-4 text-sm text-danger-fg">
-                <strong>Rejection reason:</strong> {provider.rejection_reason}
-              </p>
+              <div className="mt-4">
+                <DashAlert tone="danger">
+                  <strong>Rejection reason:</strong>{" "}
+                  {provider.rejection_reason}
+                </DashAlert>
+              </div>
             ) : null}
 
             <dl className="mt-6 border-t border-line pt-4 text-sm">
@@ -143,7 +147,7 @@ async function ProviderContent({ params }: { params: Params }) {
           </section>
 
           <section className="rounded-surface border border-line bg-surface p-5 md:p-6">
-            <h2 className="text-xl font-bold">Photos</h2>
+            <h2>Photos</h2>
             {photos.length > 0 ? (
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 {photos.map((photo) => {
@@ -179,7 +183,7 @@ async function ProviderContent({ params }: { params: Params }) {
         <aside className="space-y-4">
           {provider.status === "pending" || provider.status === "rejected" ? (
             <section className="rounded-surface border border-line bg-surface p-5">
-              <h2 className="text-lg font-bold">Approve</h2>
+              <h2>Approve</h2>
               <p className="mt-1 text-sm text-muted">
                 Approving makes this profile visible in search and lets the
                 provider send offers.
@@ -208,7 +212,7 @@ async function ProviderContent({ params }: { params: Params }) {
 
           {provider.status === "pending" ? (
             <section className="rounded-surface border border-line bg-surface p-5">
-              <h2 className="text-lg font-bold">Ask for more information</h2>
+              <h2>Ask for more information</h2>
               <form action={requestMoreInfo} className="mt-4 space-y-3">
                 <input type="hidden" name="providerId" value={provider.user_id} />
                 <label htmlFor="more-info" className="block text-sm font-bold">
@@ -232,7 +236,7 @@ async function ProviderContent({ params }: { params: Params }) {
 
           {provider.status !== "rejected" && provider.status !== "suspended" ? (
             <section className="rounded-surface border border-line bg-surface p-5">
-              <h2 className="text-lg font-bold">Not approved</h2>
+              <h2>Not approved</h2>
               <p className="mt-1 text-sm text-muted">
                 Give a clear reason. It is shown to the provider.
               </p>
@@ -258,7 +262,7 @@ async function ProviderContent({ params }: { params: Params }) {
           ) : null}
 
           <section className="rounded-surface border border-line bg-surface p-5">
-            <h2 className="text-lg font-bold">Account status</h2>
+            <h2>Account status</h2>
             {provider.status === "suspended" ? (
               <form action={reinstateProvider} className="mt-4">
                 <input type="hidden" name="providerId" value={provider.user_id} />
@@ -277,7 +281,7 @@ async function ProviderContent({ params }: { params: Params }) {
           </section>
 
           <section className="rounded-surface border border-line bg-surface p-5">
-            <h2 className="text-lg font-bold">Remove application</h2>
+            <h2>Remove application</h2>
             <p className="mt-1 text-sm text-muted">
               This deletes the provider profile, its services and its photos. The
               account stays, so they can apply again. Use suspend to hide

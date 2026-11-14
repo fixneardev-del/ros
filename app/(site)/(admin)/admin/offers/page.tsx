@@ -5,9 +5,9 @@ import { requireAdmin } from "@/lib/permissions";
 import { getAdminOffers } from "@/lib/data/admin";
 import { formatDate, formatPrice } from "@/lib/format";
 import { StatusBadge } from "@/components/mend/status-badge";
-import { StitchLine } from "@/components/mend/tag";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { removeOffer } from "@/lib/actions/admin";
+import { DashAlert } from "@/components/dash/dash-alert";
 
 export const metadata: Metadata = { title: "Admin offers" };
 
@@ -22,10 +22,9 @@ async function OffersContent({ searchParams }: { searchParams: SearchParams }) {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-extrabold md:text-5xl">
+          <h1>
             Offers
           </h1>
-          <StitchLine className="mt-4 w-20" />
           <p className="mt-3 text-muted">
             Read every offer sent on the marketplace. Removing an offer withdraws
             it from the customer.
@@ -36,16 +35,8 @@ async function OffersContent({ searchParams }: { searchParams: SearchParams }) {
         </ButtonLink>
       </div>
 
-      {params.ok ? (
-        <p className="mt-6 rounded-control bg-success-bg p-4 text-sm font-bold text-success-fg">
-          {params.ok}
-        </p>
-      ) : null}
-      {params.error ? (
-        <p className="mt-6 rounded-control bg-danger-bg p-4 text-sm font-bold text-danger-fg">
-          {params.error}
-        </p>
-      ) : null}
+      {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
+      {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
 
       {offers.length > 0 ? (
         <div className="mt-6 space-y-4">
@@ -56,7 +47,7 @@ async function OffersContent({ searchParams }: { searchParams: SearchParams }) {
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-xl font-bold">
+                  <h2>
                     {offer.provider_profiles?.display_name ?? "Unknown provider"}
                   </h2>
                   <p className="mt-1 text-sm text-muted">

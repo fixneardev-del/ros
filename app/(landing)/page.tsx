@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import {
   ArrowRight,
   Check,
@@ -35,18 +36,22 @@ const steps = [
   },
 ];
 
-export default async function LandingPage() {
-  const [categories, notice, locations] = await Promise.all([
+/**
+ * Each piece of the landing page that reads the database sits behind its own
+ * Suspense boundary. The reads are not cacheable, so without a boundary the
+ * route cannot be prerendered and the page is blocked.
+ */
+async function HeroSearch() {
+  const [categories, notice] = await Promise.all([
     getCategories(),
     getSiteSetting("pilot_notice", defaultNotice),
-    getDistricts(),
   ]);
 
-  const districts =
-    locations.length > 0
-      ? locations.map((location) => location.postcode_district)
-      : fallbackDistricts;
+  return <LandingSearch categories={categories} notice={notice} />;
+}
 
+async function ServiceTiles() {
+  const categories = await getCategories();
   const parents = topLevelCategories(categories);
   const starterBySlug = new Map(
     starterServices.map((service) => [service.slug, service]),
@@ -78,6 +83,60 @@ export default async function LandingPage() {
     }),
   }));
 
+  if (tiles.length === 0) {
+    return (
+      <p className="l-lead" style={{ marginTop: 24 }}>
+        The service list is being set up. Browse the search page to see what is
+        live.
+      </p>
+    );
+  }
+
+  return (
+    <div className="l-tiles" style={{ marginTop: 24 }}>
+      {tiles.map((tile) => (
+        <Link
+          key={tile.id}
+          href={`/search?service=${tile.slug}`}
+          className="l-tile"
+          style={{
+            background: tile.background,
+            "--l-tile-fg": tile.foreground,
+          } as React.CSSProperties}
+        >
+          <div>
+            <span className="l-tile-icon">
+              <tile.Icon size={16} aria-hidden />
+            </span>
+            <p className="l-tile-name">{tile.name}</p>
+            <p className="l-tile-copy">{tile.copy}</p>
+          </div>
+          <span className="l-tile-link">Find help</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+async function PilotDistricts() {
+  const locations = await getDistricts();
+  const districts =
+    locations.length > 0
+      ? locations.map((location) => location.postcode_district)
+      : fallbackDistricts;
+
+  return (
+    <div className="l-districts">
+      {districts.map((district) => (
+        <span key={district} className="l-district">
+          {district}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export default function LandingPage() {
   return (
     <>
       <section className="l-container l-hero">
@@ -118,7 +177,9 @@ export default async function LandingPage() {
         </div>
 
         <div>
-          <LandingSearch categories={categories} notice={notice} />
+          <Suspense fallback={<div className="l-skeleton" aria-hidden />}>
+            <HeroSearch />
+          </Suspense>
         </div>
       </section>
 
@@ -151,35 +212,9 @@ export default async function LandingPage() {
             </Link>
           </div>
 
-          {tiles.length > 0 ? (
-            <div className="l-tiles" style={{ marginTop: 24 }}>
-              {tiles.map((tile) => (
-                <Link
-                  key={tile.id}
-                  href={`/search?service=${tile.slug}`}
-                  className="l-tile"
-                  style={{
-                    background: tile.background,
-                    "--l-tile-fg": tile.foreground,
-                  } as React.CSSProperties}
-                >
-                  <div>
-                    <span className="l-tile-icon">
-                      <tile.Icon size={16} aria-hidden />
-                    </span>
-                    <p className="l-tile-name">{tile.name}</p>
-                    <p className="l-tile-copy">{tile.copy}</p>
-                  </div>
-                  <span className="l-tile-link">Find help</span>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <p className="l-lead" style={{ marginTop: 24 }}>
-              The service list is being set up. Browse the search page to see
-              what is live.
-            </p>
-          )}
+          <Suspense fallback={<div className="l-skeleton" aria-hidden />}>
+            <ServiceTiles />
+          </Suspense>
         </div>
       </section>
 
@@ -298,13 +333,9 @@ export default async function LandingPage() {
             <p className="l-lead" style={{ marginTop: 20 }}>
               We are live in these districts so far:
             </p>
-            <div className="l-districts">
-              {districts.map((district) => (
-                <span key={district} className="l-district">
-                  {district}
-                </span>
-              ))}
-            </div>
+            <Suspense fallback={<div className="l-skeleton" aria-hidden />}>
+              <PilotDistricts />
+            </Suspense>
           </div>
 
           <div>

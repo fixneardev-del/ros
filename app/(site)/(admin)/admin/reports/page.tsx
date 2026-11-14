@@ -5,9 +5,9 @@ import { requireAdmin } from "@/lib/permissions";
 import { getAdminReports } from "@/lib/data/admin";
 import { formatDate } from "@/lib/format";
 import { StatusBadge } from "@/components/mend/status-badge";
-import { StitchLine } from "@/components/mend/tag";
 import { Button } from "@/components/ui/button";
 import { resolveReport } from "@/lib/actions/admin";
+import { DashAlert } from "@/components/dash/dash-alert";
 
 export const metadata: Metadata = { title: "Admin reports" };
 
@@ -21,26 +21,17 @@ async function ReportsContent({ searchParams }: { searchParams: SearchParams }) 
   return (
     <div>
       <div>
-        <h1 className="font-display text-3xl font-extrabold md:text-5xl">
+        <h1>
           Reports
         </h1>
-        <StitchLine className="mt-4 w-20" />
         <p className="mt-3 text-muted">
           Reports are raised by customers and providers from public profiles and
           job pages. Mark them reviewed or dismissed once handled.
         </p>
       </div>
 
-      {params.ok ? (
-        <p className="mt-6 rounded-control bg-success-bg p-4 text-sm font-bold text-success-fg">
-          {params.ok}
-        </p>
-      ) : null}
-      {params.error ? (
-        <p className="mt-6 rounded-control bg-danger-bg p-4 text-sm font-bold text-danger-fg">
-          {params.error}
-        </p>
-      ) : null}
+      {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
+      {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
 
       {reports.length > 0 ? (
         <div className="mt-6 space-y-4">
@@ -56,9 +47,7 @@ async function ReportsContent({ searchParams }: { searchParams: SearchParams }) 
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h2 className="text-lg font-bold capitalize">
-                      {report.target_type} report
-                    </h2>
+                    <h2 className="capitalize">{report.target_type} report</h2>
                     <p className="mt-1 text-sm text-muted">
                       {formatDate(report.created_at)} ·{" "}
                       <Link

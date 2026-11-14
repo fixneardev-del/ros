@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { requireApprovedProvider } from "@/lib/permissions";
 import { getProviderOffers } from "@/lib/data/jobs";
 import { OfferCard } from "@/components/mend/offer-card";
-import { EmptyState, StitchLine } from "@/components/mend/tag";
+import { EmptyState } from "@/components/mend/tag";
 import { ActionForm } from "@/components/forms/action-form";
 import { EditOfferForm } from "@/components/forms/offer-forms";
 import { withdrawOffer } from "@/lib/actions/offers";
@@ -28,14 +28,9 @@ async function OffersContent() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
-            Provider offers
-          </p>
-          <h1 className="mt-2 font-display text-3xl font-extrabold md:text-5xl">
-            My offers
-          </h1>
-          <StitchLine className="mt-4 w-20" />
-          <p className="mt-3 text-muted">
+          <p className="dash-kicker">Provider offers</p>
+          <h1 className="mt-2">My offers</h1>
+          <p className="mt-3 text-sm text-muted">
             Track the offers you have sent. You can edit or withdraw an offer
             while it is still submitted.
           </p>
@@ -60,7 +55,7 @@ async function OffersContent() {
       </div>
 
       {offers.length > 0 ? (
-        <div className="mt-8 space-y-6">
+        <div className="mt-6 space-y-6">
           {offers.map((offer) => (
             <div key={offer.id}>
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -109,11 +104,13 @@ async function OffersContent() {
           ))}
         </div>
       ) : (
-        <EmptyState
-          title="No offers yet"
-          description="When you send an offer for a matching job, it will appear here with its status."
-          action={<ButtonLink href="/provide/jobs">Find matching jobs</ButtonLink>}
-        />
+        <div className="mt-6 rounded-surface border border-line bg-surface p-5">
+          <EmptyState
+            title="No offers yet"
+            description="When you send an offer for a matching job, it will appear here with its status."
+            action={<ButtonLink href="/provide/jobs">Find matching jobs</ButtonLink>}
+          />
+        </div>
       )}
     </div>
   );
@@ -121,7 +118,7 @@ async function OffersContent() {
 
 export default function ProviderOffersPage() {
   return (
-    <div className="mx-auto max-w-[1200px] px-4 py-10 md:px-8 lg:px-12">
+    <div className="dash-page">
       <Suspense
         fallback={
           <div className="space-y-4" aria-hidden>

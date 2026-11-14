@@ -5,8 +5,8 @@ import { requireAdmin } from "@/lib/permissions";
 import { getAdminProviders } from "@/lib/data/admin";
 import { getCategories } from "@/lib/data/categories";
 import { StatusBadge } from "@/components/mend/status-badge";
-import { StitchLine } from "@/components/mend/tag";
-import { ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { DashAlert } from "@/components/dash/dash-alert";
 
 export const metadata: Metadata = { title: "Admin providers" };
 
@@ -47,10 +47,9 @@ async function ProvidersContent({ searchParams }: { searchParams: SearchParams }
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-extrabold md:text-5xl">
+          <h1>
             Providers
           </h1>
-          <StitchLine className="mt-4 w-20" />
           <p className="mt-3 text-muted">
             Review applications and manage approved provider profiles.
           </p>
@@ -60,18 +59,10 @@ async function ProvidersContent({ searchParams }: { searchParams: SearchParams }
         </ButtonLink>
       </div>
 
-      {params.ok ? (
-        <p className="mt-6 rounded-control bg-success-bg p-4 text-sm font-bold text-success-fg">
-          {params.ok}
-        </p>
-      ) : null}
-      {params.error ? (
-        <p className="mt-6 rounded-control bg-danger-bg p-4 text-sm font-bold text-danger-fg">
-          {params.error}
-        </p>
-      ) : null}
+      {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
+      {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
 
-      <nav aria-label="Filter providers" className="mt-6 flex flex-wrap gap-2">
+      <nav aria-label="Filter providers" className="dash-pills mt-6">
         {filters.map((filter) => {
           const active = status === filter.value;
           return (
@@ -79,11 +70,6 @@ async function ProvidersContent({ searchParams }: { searchParams: SearchParams }
               key={filter.label}
               href={filterHref(filter.value)}
               aria-current={active ? "page" : undefined}
-              className={
-                active
-                  ? "inline-flex min-h-10 items-center rounded-control bg-primary px-3 text-sm font-bold text-primary-fg"
-                  : "inline-flex min-h-10 items-center rounded-control border border-line-strong bg-surface px-3 text-sm font-bold hover:border-primary hover:text-primary"
-              }
             >
               {filter.label}
             </Link>
@@ -119,12 +105,9 @@ async function ProvidersContent({ searchParams }: { searchParams: SearchParams }
             ))}
           </select>
         </div>
-        <button
-          type="submit"
-          className="inline-flex min-h-11 items-center rounded-control border border-line-strong bg-surface px-4 text-sm font-bold hover:border-primary hover:text-primary"
-        >
+        <Button type="submit" variant="secondary">
           Apply filter
-        </button>
+        </Button>
         {category ? (
           <Link
             href={filterHref(status)}

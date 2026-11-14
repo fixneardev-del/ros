@@ -14,7 +14,6 @@ async function Header({ hideAuthLinks }: { hideAuthLinks?: boolean }) {
   return (
     <LandingHeader
       user={context.user}
-      isAdmin={context.profile?.role === "admin"}
       isProvider={Boolean(context.providerProfile)}
       hideAuthLinks={hideAuthLinks}
     />
@@ -46,8 +45,9 @@ function HeaderFallback() {
 }
 
 /**
- * Shell for the pages that use the landing design system: public pages, the
- * auth pages and the job pages. The signed in dashboards use AppShell instead.
+ * Shell for the pages that use the landing design system: the public pages,
+ * the auth pages and the post-a-job flow. The dashboards use DashShell
+ * instead.
  */
 export function StudioShell({
   children,

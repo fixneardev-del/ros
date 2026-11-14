@@ -1,14 +1,23 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import {
+  Archive,
+  ArrowUpRight,
+  Briefcase,
+  Flag,
+  MessageSquare,
+  UserCheck,
+  Users,
+} from "lucide-react";
 import { requireAdmin } from "@/lib/permissions";
 import { getAdminCounts, getAdminProviders, getAdminReports } from "@/lib/data/admin";
 import { getSiteSettings } from "@/lib/data/settings";
 import { updateSiteSetting } from "@/lib/actions/admin";
 import { StatusBadge } from "@/components/mend/status-badge";
-import { StitchLine } from "@/components/mend/tag";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
+import { DashAlert } from "@/components/dash/dash-alert";
 
 export const metadata: Metadata = { title: "Admin overview" };
 
@@ -37,23 +46,56 @@ async function AdminContent({ searchParams }: { searchParams: SearchParams }) {
   const openReports = reports.filter((report) => report.status === "open");
 
   const cards = [
-    { label: "Pending providers", value: counts.pendingProviders, href: "/admin/providers?status=pending" },
-    { label: "Approved providers", value: counts.approvedProviders, href: "/admin/providers?status=approved" },
-    { label: "Open jobs", value: counts.openJobs, href: "/admin/jobs?status=open" },
-    { label: "Closed jobs", value: counts.closedJobs, href: "/admin/jobs?status=closed" },
-    { label: "Offers", value: counts.offers, href: "/admin/offers" },
-    { label: "Open reports", value: counts.openReports, href: "/admin/reports" },
+    {
+      label: "Pending providers",
+      value: counts.pendingProviders,
+      href: "/admin/providers?status=pending",
+      Icon: UserCheck,
+      tone: "amber",
+    },
+    {
+      label: "Approved providers",
+      value: counts.approvedProviders,
+      href: "/admin/providers?status=approved",
+      Icon: Users,
+      tone: "green",
+    },
+    {
+      label: "Open jobs",
+      value: counts.openJobs,
+      href: "/admin/jobs?status=open",
+      Icon: Briefcase,
+      tone: "blue",
+    },
+    {
+      label: "Closed jobs",
+      value: counts.closedJobs,
+      href: "/admin/jobs?status=closed",
+      Icon: Archive,
+      tone: "neutral",
+    },
+    {
+      label: "Offers",
+      value: counts.offers,
+      href: "/admin/offers",
+      Icon: MessageSquare,
+      tone: "orange",
+    },
+    {
+      label: "Open reports",
+      value: counts.openReports,
+      href: "/admin/reports",
+      Icon: Flag,
+      tone: "purple",
+    },
   ];
 
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-extrabold md:text-5xl">
-            Marketplace overview
-          </h1>
-          <StitchLine className="mt-4 w-20" />
-          <p className="mt-3 text-muted">
+          <h1>Marketplace overview</h1>
+          <p className="mt-2 max-w-[70ch] text-muted">
             Review providers, moderate content, manage the pilot area and change
             public copy.
           </p>
@@ -71,26 +113,27 @@ async function AdminContent({ searchParams }: { searchParams: SearchParams }) {
         </div>
       </div>
 
-      {params.ok ? (
-        <p className="mt-6 rounded-control bg-success-bg p-4 text-sm font-bold text-success-fg">
-          {params.ok}
-        </p>
-      ) : null}
-      {params.error ? (
-        <p className="mt-6 rounded-control bg-danger-bg p-4 text-sm font-bold text-danger-fg">
-          {params.error}
-        </p>
-      ) : null}
+      {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
+      {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="dash-kpi-grid mt-8">
         {cards.map((card) => (
           <Link
             key={card.label}
             href={card.href}
-            className="rounded-surface border border-line bg-surface p-5 hover:border-primary"
+            className={`dash-kpi dash-kpi-${card.tone}`}
           >
-            <p className="font-display text-3xl font-extrabold">{card.value}</p>
-            <p className="mt-1 text-sm font-bold text-muted">{card.label}</p>
+            <div className="dash-kpi-top">
+              <span className="dash-kpi-label">{card.label}</span>
+              <span className="dash-kpi-icon">
+                <card.Icon aria-hidden />
+              </span>
+            </div>
+            <p className="dash-kpi-value">{card.value}</p>
+            <span className="dash-kpi-meta">
+              View
+              <ArrowUpRight className="size-3" aria-hidden />
+            </span>
           </Link>
         ))}
       </div>
@@ -98,7 +141,7 @@ async function AdminContent({ searchParams }: { searchParams: SearchParams }) {
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section className="rounded-surface border border-line bg-surface p-5 md:p-6">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-xl font-bold">Providers waiting for review</h2>
+            <h2>Providers waiting for review</h2>
             <Link
               href="/admin/providers?status=pending"
               className="text-sm font-bold text-primary underline underline-offset-4"
@@ -129,7 +172,7 @@ async function AdminContent({ searchParams }: { searchParams: SearchParams }) {
 
         <section className="rounded-surface border border-line bg-surface p-5 md:p-6">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-xl font-bold">Open reports</h2>
+            <h2>Open reports</h2>
             <Link
               href="/admin/reports"
               className="text-sm font-bold text-primary underline underline-offset-4"
@@ -160,7 +203,7 @@ async function AdminContent({ searchParams }: { searchParams: SearchParams }) {
       </div>
 
       <section className="mt-8 rounded-surface border border-line bg-surface p-5 md:p-6">
-        <h2 className="text-xl font-bold">Public copy and settings</h2>
+        <h2>Public copy and settings</h2>
         <p className="mt-1 text-sm text-muted">
           These values are stored in `site_settings` and used across the public
           site. Changes are logged.
