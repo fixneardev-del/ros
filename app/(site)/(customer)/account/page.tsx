@@ -106,13 +106,17 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
 
       <aside className="space-y-4">
         <div className="rounded-surface border border-line bg-surface p-5">
-          <h2>Your marketplace</h2>
-          <div className="mt-3 flex flex-col gap-3 text-sm">
+          <h2>Your profiles</h2>
+          <p className="mt-1 text-sm text-muted">
+            One account can hire help and offer services. Switch whenever you
+            like.
+          </p>
+          <div className="mt-4 flex flex-col gap-3 text-sm">
             <Link
               href="/jobs"
               className="font-bold text-primary underline underline-offset-4"
             >
-              My jobs
+              Customer dashboard
             </Link>
             <Link
               href="/post-job"
@@ -121,18 +125,24 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
               Post a job
             </Link>
             {context.providerProfile ? (
-              <Link
-                href="/provide"
-                className="font-bold text-primary underline underline-offset-4"
-              >
-                Provider dashboard
-              </Link>
+              <>
+                <Link
+                  href="/provide"
+                  className="font-bold text-primary underline underline-offset-4"
+                >
+                  Provider dashboard
+                </Link>
+                <p className="-mt-1 text-xs text-muted">
+                  Application status:{" "}
+                  {context.providerProfile.status.replace("_", " ")}
+                </p>
+              </>
             ) : (
               <Link
                 href="/provide/apply"
                 className="font-bold text-primary underline underline-offset-4"
               >
-                Apply to offer services
+                Become a provider
               </Link>
             )}
             {context.profile.role === "admin" ? (

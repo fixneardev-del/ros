@@ -437,3 +437,68 @@ test.describe("search", () => {
     });
   });
 });
+
+test.describe("profiles and posting a job", () => {
+  test.describe("a customer without a provider profile", () => {
+    test.use({ storageState: customerState });
+
+    test("sees how to become a provider and posts a job in the dashboard", async ({
+      page,
+    }) => {
+      await page.goto("/jobs");
+
+      const dashboardNav = page.getByRole("navigation", {
+        name: "Dashboard",
+        exact: true,
+      });
+      await expect(dashboardNav).toBeVisible();
+      await expect(
+        dashboardNav.getByRole("link", { name: "Become a provider" }),
+      ).toBeVisible();
+
+      await page.goto("/post-job");
+
+      // Posting a job is part of the customer dashboard now, not the landing
+      // site. The dashboard navigation and the shared form are both present.
+      await expect(
+        page.getByRole("navigation", { name: "Dashboard", exact: true }),
+      ).toBeVisible();
+      await expect(page.locator(".l-header")).toHaveCount(0);
+      await expect(
+        page.getByRole("heading", { name: "Post a job" }),
+      ).toBeVisible();
+      await expect(page.getByLabel("What do you need?")).toBeVisible();
+      await expect(page.getByLabel("Job title")).toBeVisible();
+    });
+  });
+
+  test.describe("a provider who can also hire", () => {
+    test.use({ storageState: providerState });
+
+    test("switches between the customer and provider dashboards", async ({
+      page,
+    }) => {
+      await page.goto("/provide");
+
+      const switcher = page.getByRole("group", { name: "Switch profile" });
+      await expect(switcher).toBeVisible();
+
+      await switcher
+        .getByRole("link", { name: "Switch to customer dashboard" })
+        .click();
+      await expect(page).toHaveURL(/\/jobs$/);
+      await expect(
+        page.getByRole("heading", { name: "My jobs" }),
+      ).toBeVisible();
+
+      await page
+        .getByRole("group", { name: "Switch profile" })
+        .getByRole("link", { name: "Switch to provider dashboard" })
+        .click();
+      await expect(page).toHaveURL(/\/provide$/);
+      await expect(
+        page.getByRole("heading", { name: "Petra Mends" }),
+      ).toBeVisible();
+    });
+  });
+});

@@ -16,6 +16,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
+import type { ProviderStatus } from "@/lib/types";
 import { signOut } from "@/lib/actions/auth";
 import { initials } from "@/lib/initials";
 
@@ -32,22 +33,51 @@ function isActive(pathname: string, href: string) {
     return pathname === "/admin" || pathname.startsWith("/admin/");
   }
 
-  if (href === "/jobs") {
-    return pathname === "/jobs";
+  // "/jobs" and "/provide" are section roots, so their tab should not stay
+  // selected while the user is on a child page such as /provide/jobs.
+  if (href === "/jobs" || href === "/provide") {
+    return pathname === href;
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/**
+ * A compact segmented control for accounts that both hire and offer services.
+ * It navigates between the two dashboards; it does not change the account.
+ */
+function ProfileSwitch({ variant }: { variant: "customer" | "provider" }) {
+  return (
+    <span className="dash-switcher" role="group" aria-label="Switch profile">
+      <Link
+        href="/jobs"
+        aria-current={variant === "customer" ? "page" : undefined}
+        aria-label="Switch to customer dashboard"
+      >
+        Customer
+      </Link>
+      <Link
+        href="/provide"
+        aria-current={variant === "provider" ? "page" : undefined}
+        aria-label="Switch to provider dashboard"
+      >
+        Provider
+      </Link>
+    </span>
+  );
 }
 
 export function DashHeader({
   user,
   name,
   isProvider = false,
+  providerStatus = null,
   variant = "customer",
 }: {
   user: { email?: string | null } | null;
   name?: string | null;
   isProvider?: boolean;
+  providerStatus?: ProviderStatus | null;
   variant?: DashVariant;
 }) {
   const pathname = usePathname();
@@ -62,6 +92,11 @@ export function DashHeader({
     }
   }, [pathname]);
 
+  const providerLabel =
+    providerStatus && providerStatus !== "approved"
+      ? "Provider application"
+      : "Provider dashboard";
+
   const links: NavLink[] =
     variant === "provider"
       ? [
@@ -73,9 +108,6 @@ export function DashHeader({
       : [
           { href: "/jobs", label: "My jobs", Icon: Briefcase },
           { href: "/search", label: "Find help", Icon: Search },
-          isProvider
-            ? { href: "/provide", label: "Provider dashboard", Icon: Wrench }
-            : { href: "/provide/apply", label: "Offer services", Icon: UserPlus },
         ];
 
   // The admin area has its own section navigation, so it stays out of the
@@ -102,6 +134,12 @@ export function DashHeader({
               {link.label}
             </Link>
           ))}
+
+          {isProvider ? (
+            <ProfileSwitch variant={variant} />
+          ) : (
+            <Link href="/provide/apply">Become a provider</Link>
+          )}
         </nav>
       ) : null}
 
@@ -142,7 +180,7 @@ export function DashHeader({
           </summary>
           <div className="dash-menu-panel">
             <nav aria-label="Dashboard menu">
-              {variant === "customer"
+              {variant !== "admin"
                 ? links.map((link) => (
                     <Link key={link.href} href={link.href}>
                       <link.Icon className="size-4" aria-hidden />
@@ -150,6 +188,27 @@ export function DashHeader({
                     </Link>
                   ))
                 : null}
+
+              {variant !== "admin" ? (
+                isProvider ? (
+                  <Link href={variant === "provider" ? "/jobs" : "/provide"}>
+                    {variant === "provider" ? (
+                      <Briefcase className="size-4" aria-hidden />
+                    ) : (
+                      <Wrench className="size-4" aria-hidden />
+                    )}
+                    {variant === "provider"
+                      ? "Switch to customer dashboard"
+                      : `Switch to ${providerLabel.toLowerCase()}`}
+                  </Link>
+                ) : (
+                  <Link href="/provide/apply">
+                    <UserPlus className="size-4" aria-hidden />
+                    Become a provider
+                  </Link>
+                )
+              ) : null}
+
               {variant === "customer" ? (
                 <Link href="/post-job">
                   <Plus className="size-4" aria-hidden />

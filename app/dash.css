@@ -1,13 +1,12 @@
 /*
  * Dashboard theme.
  *
- * The customer and admin dashboards render inside a `.dash` wrapper. It
- * remaps the application tokens to the Movexa dashboard design system and
+ * The customer, provider and admin dashboards render inside a `.dash` wrapper.
+ * It remaps the application tokens to the Movexa dashboard design system and
  * adds the shape language: a floating warm-grey shell, translucent cards,
  * compact pills and soft semantic tints.
  *
- * The provider dashboard still uses AppShell and the original tokens. Like
- * `.studio`, this file is intentionally unlayered so it can override the
+ * Like `.studio`, this file is intentionally unlayered so it can override the
  * Tailwind utilities emitted from app/globals.css.
  */
 
@@ -350,6 +349,35 @@
 .dash-header-nav a[aria-current="page"] {
   background: var(--d-dark);
   color: #ffffff;
+}
+
+/* A compact segmented control for accounts that both hire and offer services.
+   It only appears in the header when the account has a provider profile. */
+.dash-header-nav .dash-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 5px;
+  padding: 3px;
+  border: 1px solid var(--d-line);
+  border-radius: 999px;
+  background: var(--d-control);
+}
+
+.dash-header-nav .dash-switcher a {
+  padding: 5px 11px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.dash-header-nav .dash-switcher a[aria-current="page"] {
+  background: var(--d-dark);
+  color: #ffffff;
+}
+
+.dash-header-nav .dash-switcher a:not([aria-current="page"]):hover {
+  background: #ffffff;
+  color: var(--d-ink);
 }
 
 .dash-header-actions {

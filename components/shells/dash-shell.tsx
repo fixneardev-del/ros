@@ -15,6 +15,7 @@ async function Header({ variant }: { variant: DashVariant }) {
       user={context.user}
       name={context.profile?.full_name}
       isProvider={Boolean(context.providerProfile)}
+      providerStatus={context.providerProfile?.status ?? null}
       variant={variant}
     />
   );
