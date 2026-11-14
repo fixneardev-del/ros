@@ -84,8 +84,27 @@ async function JobDetailContent({ params }: { params: Params }) {
 
   const isAcceptedProvider = Boolean(myOffer && myOffer.status === "accepted");
 
+  // A second line of defence. Row level security normally hides a job the
+  // viewer has no claim on, so this only runs if a policy ever drifts. It
+  // says what happened instead of rendering a page with someone else's job.
   if (!isOwner && !isAdmin && !isMatchingProvider && !isAcceptedProvider) {
-    notFound();
+    return (
+      <div className="mx-auto max-w-2xl">
+        <p className="dash-kicker">Job request</p>
+        <h1 className="mt-2">This job is not available to you.</h1>
+        <p className="mt-4 text-sm text-muted">
+          It may be closed, or it may be outside the services or areas you
+          cover. Browse the jobs that match your profile to see what you can
+          offer on.
+        </p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <ButtonLink href="/provide/jobs">Matching jobs</ButtonLink>
+          <ButtonLink href="/jobs" variant="secondary">
+            My jobs
+          </ButtonLink>
+        </div>
+      </div>
+    );
   }
 
   const photos = await getJobPhotos(job.job_photos.map((photo) => photo.storage_path));
