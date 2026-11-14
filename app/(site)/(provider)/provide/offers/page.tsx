@@ -9,12 +9,33 @@ import { ActionForm } from "@/components/forms/action-form";
 import { EditOfferForm } from "@/components/forms/offer-forms";
 import { withdrawOffer } from "@/lib/actions/offers";
 import { ButtonLink } from "@/components/ui/button";
+import { SearchBox } from "@/components/dash/search-box";
+import { matchesQuery, normaliseQuery } from "@/lib/search";
 
 export const metadata: Metadata = { title: "My offers" };
 
-async function OffersContent() {
+type SearchParams = Promise<{ q?: string }>;
+
+async function OffersContent({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
   const context = await requireApprovedProvider();
   const offers = await getProviderOffers(context.user.id);
+  const query = normaliseQuery(params.q);
+
+  // The status counts describe every offer, so they are built from the full
+  // list before the search narrows what is shown.
+  const visible = query
+    ? offers.filter((offer) =>
+        matchesQuery(
+          query,
+          offer.message,
+          offer.status,
+          offer.job_requests?.title,
+          offer.job_requests?.postcode_district,
+          offer.job_requests?.service_categories?.name,
+        ),
+      )
+    : offers;
 
   const counts = offers.reduce(
     (totals, offer) => {
@@ -54,9 +75,20 @@ async function OffersContent() {
         ))}
       </div>
 
-      {offers.length > 0 ? (
+      <div className="mt-5">
+        <SearchBox
+          action="/provide/offers"
+          query={query}
+          label="Search your offers by job, area or message"
+          placeholder="Job, area or message"
+          resultCount={visible.length}
+          noun="offer"
+        />
+      </div>
+
+      {visible.length > 0 ? (
         <div className="mt-6 space-y-6">
-          {offers.map((offer) => (
+          {visible.map((offer) => (
             <div key={offer.id}>
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <Link
@@ -103,6 +135,13 @@ async function OffersContent() {
             </div>
           ))}
         </div>
+      ) : query ? (
+        <div className="mt-6 rounded-surface border border-line bg-surface p-5">
+          <EmptyState
+            title="No offers match your search"
+            description={`Nothing in your offers matches “${query}”. Try a different word, or clear the search.`}
+          />
+        </div>
       ) : (
         <div className="mt-6 rounded-surface border border-line bg-surface p-5">
           <EmptyState
@@ -116,7 +155,11 @@ async function OffersContent() {
   );
 }
 
-export default function ProviderOffersPage() {
+export default function ProviderOffersPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   return (
     <div className="dash-page">
       <Suspense
@@ -128,7 +171,7 @@ export default function ProviderOffersPage() {
           </div>
         }
       >
-        <OffersContent />
+        <OffersContent searchParams={searchParams} />
       </Suspense>
     </div>
   );

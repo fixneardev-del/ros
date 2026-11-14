@@ -886,6 +886,99 @@ a.dash-kpi:hover {
   color: #ffffff;
 }
 
+/* Search --------------------------------------------------------------- */
+
+.dash-search {
+  display: flex;
+  max-width: 560px;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dash-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 5px 5px 14px;
+  border: 1px solid var(--d-line);
+  border-radius: 999px;
+  background: var(--d-card);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.dash-search-row:focus-within {
+  border-color: var(--d-orange);
+  box-shadow: 0 0 0 3px var(--d-orange-tint);
+}
+
+.dash-search-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--d-muted);
+}
+
+.dash-search-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.dash-search-input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 8px 0;
+  color: var(--d-ink);
+  font-size: 13px;
+  outline: none;
+}
+
+.dash-search-input::placeholder {
+  color: var(--d-muted);
+}
+
+/* The browser's own clear button is invisible against the pill. */
+.dash-search-input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.dash-search-submit {
+  flex: none;
+  min-height: 34px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--d-dark);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 180ms ease;
+}
+
+.dash-search-submit:hover {
+  background: var(--d-orange);
+}
+
+.dash-search-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding-left: 14px;
+  color: var(--d-muted);
+  font-size: 12px;
+}
+
+.dash-search-meta a {
+  color: var(--d-orange-strong);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* Profile summary ------------------------------------------------------ */
 
 .dash-profile-card {

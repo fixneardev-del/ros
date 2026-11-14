@@ -8,15 +8,18 @@ import { StatusBadge } from "@/components/mend/status-badge";
 import { Button } from "@/components/ui/button";
 import { resolveReport } from "@/lib/actions/admin";
 import { DashAlert } from "@/components/dash/dash-alert";
+import { SearchBox } from "@/components/dash/search-box";
+import { normaliseQuery } from "@/lib/search";
 
 export const metadata: Metadata = { title: "Admin reports" };
 
-type SearchParams = Promise<{ ok?: string; error?: string }>;
+type SearchParams = Promise<{ q?: string; ok?: string; error?: string }>;
 
 async function ReportsContent({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   await requireAdmin();
-  const reports = await getAdminReports();
+  const query = normaliseQuery(params.q);
+  const reports = await getAdminReports(query);
 
   return (
     <div>
@@ -32,6 +35,17 @@ async function ReportsContent({ searchParams }: { searchParams: SearchParams }) 
 
       {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
       {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
+
+      <div className="mt-6">
+        <SearchBox
+          action="/admin/reports"
+          query={query}
+          label="Search reports by type, status or reason"
+          placeholder="Type, status or reason"
+          resultCount={reports.length}
+          noun="report"
+        />
+      </div>
 
       {reports.length > 0 ? (
         <div className="mt-6 space-y-4">
@@ -93,7 +107,9 @@ async function ReportsContent({ searchParams }: { searchParams: SearchParams }) 
         </div>
       ) : (
         <p className="mt-8 rounded-surface border border-line bg-surface p-5 text-muted">
-          No reports have been raised.
+          {query
+            ? `No reports match “${query}”.`
+            : "No reports have been raised."}
         </p>
       )}
     </div>

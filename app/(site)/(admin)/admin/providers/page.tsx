@@ -7,12 +7,15 @@ import { getCategories } from "@/lib/data/categories";
 import { StatusBadge } from "@/components/mend/status-badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { DashAlert } from "@/components/dash/dash-alert";
+import { SearchBox } from "@/components/dash/search-box";
+import { normaliseQuery } from "@/lib/search";
 
 export const metadata: Metadata = { title: "Admin providers" };
 
 type SearchParams = Promise<{
   status?: string;
   category?: string;
+  q?: string;
   ok?: string;
   error?: string;
 }>;
@@ -30,8 +33,9 @@ async function ProvidersContent({ searchParams }: { searchParams: SearchParams }
   await requireAdmin();
   const status = params.status ?? "";
   const category = params.category ?? "";
+  const query = normaliseQuery(params.q);
   const [providers, categories] = await Promise.all([
-    getAdminProviders(status || undefined, category || undefined),
+    getAdminProviders(status || undefined, category || undefined, query),
     getCategories(true),
   ]);
 
@@ -39,8 +43,9 @@ async function ProvidersContent({ searchParams }: { searchParams: SearchParams }
     const search = new URLSearchParams();
     if (nextStatus) search.set("status", nextStatus);
     if (category) search.set("category", category);
-    const query = search.toString();
-    return query ? `/admin/providers?${query}` : "/admin/providers";
+    if (query) search.set("q", query);
+    const queryString = search.toString();
+    return queryString ? `/admin/providers?${queryString}` : "/admin/providers";
   };
 
   return (
@@ -77,12 +82,25 @@ async function ProvidersContent({ searchParams }: { searchParams: SearchParams }
         })}
       </nav>
 
+      <div className="mt-4">
+        <SearchBox
+          action="/admin/providers"
+          query={query}
+          label="Search providers by name, service or area"
+          placeholder="Name, service or area"
+          hidden={{ status, category }}
+          resultCount={providers.length}
+          noun="provider"
+        />
+      </div>
+
       <form
         method="get"
         className="mt-4 flex flex-wrap items-end gap-3"
         aria-label="Filter providers by service"
       >
         {status ? <input type="hidden" name="status" value={status} /> : null}
+        {query ? <input type="hidden" name="q" value={query} /> : null}
         <div>
           <label
             htmlFor="category"
@@ -168,7 +186,9 @@ async function ProvidersContent({ searchParams }: { searchParams: SearchParams }
         </div>
       ) : (
         <p className="mt-8 rounded-surface border border-line bg-surface p-5 text-muted">
-          No providers match this filter.
+          {query
+            ? `No providers match “${query}”.`
+            : "No providers match this filter."}
         </p>
       )}
     </div>

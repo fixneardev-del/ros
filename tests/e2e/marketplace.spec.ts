@@ -344,3 +344,96 @@ test.describe("the admin dashboard", () => {
     );
   });
 });
+
+test.describe("search", () => {
+  // These cover the keyword boxes. Every query is either created by the test
+  // or is a string that cannot exist, so nothing here depends on demo data.
+
+  test("public search offers a keyword field and explains an empty match", async ({
+    page,
+  }) => {
+    await page.goto("/search?service=furniture-repair&postcode=G12%208QQ");
+
+    await expect(page.getByLabel("Provider name or keyword")).toBeVisible();
+    await expect(page.getByText(/^\d+ approved provider/)).toBeVisible();
+
+    await page
+      .getByLabel("Provider name or keyword")
+      .fill("zzzz-no-such-provider");
+    await page.getByRole("button", { name: "Find local help" }).click();
+
+    await expect(page).toHaveURL(/q=zzzz-no-such-provider/);
+    await expect(
+      page.getByText("No providers match that keyword"),
+    ).toBeVisible();
+  });
+
+  test.describe("the customer dashboard", () => {
+    test.use({ storageState: customerState });
+
+    test("a customer can search their own jobs and clear the search", async ({
+      page,
+    }) => {
+      const title = unique("Searchable chair");
+      await postJob(page, {
+        category: CATEGORY.furniture,
+        title,
+        description: "A dining chair with a loose leg that needs re-gluing.",
+        postcode: "G12 8QQ",
+      });
+
+      await page.goto("/jobs");
+      await page
+        .getByLabel("Search your jobs by title, service or postcode")
+        .fill(title);
+      await page.getByRole("button", { name: "Search" }).click();
+
+      await expect(page).toHaveURL(/\/jobs\?q=/);
+      await expect(page.getByText(/^1 job for/)).toBeVisible();
+      await expect(page.getByText(title).first()).toBeVisible();
+
+      await page.getByRole("link", { name: "Clear search" }).click();
+      await expect(page).toHaveURL(/\/jobs$/);
+      await expect(page.getByText(/^0 jobs for/)).toHaveCount(0);
+
+      await page.goto("/jobs?q=zzzz-no-such-job");
+      await expect(page.getByText("No jobs match your search")).toBeVisible();
+    });
+  });
+
+  test.describe("the provider dashboard", () => {
+    test.use({ storageState: providerState });
+
+    test("a provider can search matching jobs and their offers", async ({
+      page,
+    }) => {
+      await page.goto("/provide/jobs?q=zzzz-no-such-job");
+      await expect(page.getByText("No jobs match your search")).toBeVisible();
+
+      await page.goto("/provide/offers?q=zzzz-no-such-offer");
+      await expect(
+        page.getByText("No offers match your search"),
+      ).toBeVisible();
+    });
+  });
+
+  test.describe("the admin dashboard", () => {
+    test.use({ storageState: adminState });
+
+    test("an admin can search users and providers", async ({ page }) => {
+      await page.goto(`/admin/users?q=${encodeURIComponent(ACCOUNTS.admin)}`);
+      await expect(page.getByText(/^1 user for/)).toBeVisible();
+      await expect(
+        page.locator("article").first().getByText(ACCOUNTS.admin),
+      ).toBeVisible();
+
+      await page.goto("/admin/users?q=zzzz-no-such-user");
+      await expect(page.getByText("No users match “zzzz-no-such-user”.")).toBeVisible();
+
+      await page.goto("/admin/providers?q=zzzz-no-such-provider");
+      await expect(
+        page.getByText("No providers match “zzzz-no-such-provider”."),
+      ).toBeVisible();
+    });
+  });
+});

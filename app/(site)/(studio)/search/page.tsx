@@ -16,6 +16,7 @@ import { ProviderCard } from "@/components/mend/provider-card";
 import { EmptyState, PilotNotice, StitchLine } from "@/components/mend/tag";
 import { WaitlistForm } from "@/components/forms/waitlist-form";
 import { ButtonLink } from "@/components/ui/button";
+import { normaliseQuery } from "@/lib/search";
 
 export const metadata: Metadata = {
   title: "Find local help",
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
     "Search approved local providers in Glasgow's West End by service and postcode district.",
 };
 
-type SearchParams = Promise<{ service?: string; postcode?: string }>;
+type SearchParams = Promise<{ service?: string; postcode?: string; q?: string }>;
 
 function SearchSkeleton() {
   return (
@@ -41,6 +42,7 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const service = params.service?.trim() ?? "";
   const postcode = params.postcode?.trim() ?? "";
+  const query = normaliseQuery(params.q);
   const categories = await getCategories();
   const parents = topLevelCategories(categories);
 
@@ -57,6 +59,7 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
               categories={categories}
               defaultService={service}
               defaultPostcode={postcode}
+              defaultQuery={query}
             />
           </div>
         </div>
@@ -107,6 +110,7 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
             categories={categories}
             defaultService={service}
             defaultPostcode={postcode}
+            defaultQuery={query}
           />
         </div>
       </div>
@@ -151,6 +155,7 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
           <SearchForm
             categories={categories}
             defaultPostcode={postcode}
+            defaultQuery={query}
           />
         </div>
       </div>
@@ -162,6 +167,7 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
     category.id,
     children?.ids.filter((id) => id !== category.id) ?? [],
     postcodeCheck.district ?? "",
+    query,
   )) as unknown as SearchProvider[];
 
   return (
@@ -174,6 +180,7 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
               categories={categories}
               defaultService={service}
               defaultPostcode={postcode}
+              defaultQuery={query}
             />
           </div>
         </div>
@@ -198,6 +205,7 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
             <p className="mt-1 text-muted">
               {providers.length}{" "}
               {providers.length === 1 ? "approved provider" : "approved providers"}
+              {query ? ` matching “${query}”` : ""}
             </p>
           </div>
           <ButtonLink href="/post-job" variant="secondary">
@@ -218,8 +226,16 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
           </div>
         ) : (
           <EmptyState
-            title="No approved providers here yet"
-            description={`We are still growing in ${postcodeCheck.district}. Post a job so local providers can find you, or check another service.`}
+            title={
+              query
+                ? "No providers match that keyword"
+                : "No approved providers here yet"
+            }
+            description={
+              query
+                ? `No approved ${category.name.toLowerCase()} providers in ${postcodeCheck.district} match “${query}”. Try a different word, or search again without a keyword.`
+                : `We are still growing in ${postcodeCheck.district}. Post a job so local providers can find you, or check another service.`
+            }
             action={
               <div className="flex flex-wrap justify-center gap-3">
                 <ButtonLink href="/post-job">Post a job</ButtonLink>

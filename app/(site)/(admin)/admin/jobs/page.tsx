@@ -8,10 +8,17 @@ import { StatusBadge } from "@/components/mend/status-badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { removeJob } from "@/lib/actions/admin";
 import { DashAlert } from "@/components/dash/dash-alert";
+import { SearchBox } from "@/components/dash/search-box";
+import { normaliseQuery } from "@/lib/search";
 
 export const metadata: Metadata = { title: "Admin jobs" };
 
-type SearchParams = Promise<{ status?: string; ok?: string; error?: string }>;
+type SearchParams = Promise<{
+  status?: string;
+  q?: string;
+  ok?: string;
+  error?: string;
+}>;
 
 const filters = [
   { value: "", label: "All" },
@@ -25,7 +32,8 @@ async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   await requireAdmin();
   const status = params.status ?? "";
-  const jobs = await getAdminJobs(status || undefined);
+  const query = normaliseQuery(params.q);
+  const jobs = await getAdminJobs(status || undefined, query);
 
   return (
     <div>
@@ -50,9 +58,11 @@ async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
       <nav aria-label="Filter jobs" className="dash-pills mt-6">
         {filters.map((filter) => {
           const active = status === filter.value;
-          const href = filter.value
-            ? `/admin/jobs?status=${filter.value}`
-            : "/admin/jobs";
+          const search = new URLSearchParams();
+          if (filter.value) search.set("status", filter.value);
+          if (query) search.set("q", query);
+          const queryString = search.toString();
+          const href = queryString ? `/admin/jobs?${queryString}` : "/admin/jobs";
           return (
             <Link
               key={filter.label}
@@ -64,6 +74,18 @@ async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
           );
         })}
       </nav>
+
+      <div className="mt-4">
+        <SearchBox
+          action="/admin/jobs"
+          query={query}
+          label="Search jobs by title, customer or postcode"
+          placeholder="Title, customer or postcode"
+          hidden={{ status }}
+          resultCount={jobs.length}
+          noun="job"
+        />
+      </div>
 
       {jobs.length > 0 ? (
         <div className="mt-6 space-y-4">
@@ -138,7 +160,7 @@ async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
         </div>
       ) : (
         <p className="mt-8 rounded-surface border border-line bg-surface p-5 text-muted">
-          No jobs match this filter.
+          {query ? `No jobs match “${query}”.` : "No jobs match this filter."}
         </p>
       )}
     </div>

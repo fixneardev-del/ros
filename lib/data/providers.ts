@@ -1,5 +1,6 @@
 import { isSupabaseConfigured } from "@/lib/env";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { matchesQuery, normaliseQuery } from "@/lib/search";
 import type { ProviderPhoto, ProviderProfile, ServiceCategory } from "@/lib/types";
 
 export interface ProviderServiceRow {
@@ -13,7 +14,12 @@ export interface ProviderWithRelations extends ProviderProfile {
   provider_photos: ProviderPhoto[];
 }
 
-export async function searchProviders(categoryId: string, childIds: string[], district: string) {
+export async function searchProviders(
+  categoryId: string,
+  childIds: string[],
+  district: string,
+  search?: string,
+) {
   if (!isSupabaseConfigured()) return [];
 
   const supabase = await createServerSupabase();
@@ -37,19 +43,26 @@ export async function searchProviders(categoryId: string, childIds: string[], di
 
   const wanted = new Set([categoryId, ...childIds]);
 
-  return rows
-    .filter((row) =>
-      row.provider_services.some((service) => wanted.has(service.category_id)),
-    )
-    .map((row) => ({
-      ...row,
-      photo_path:
-        [...row.provider_photos].sort((a, b) => a.sort_order - b.sort_order)[0]
-          ?.storage_path ?? null,
-      categories: row.provider_services
-        .map((service) => service.category_id)
-        .filter((id) => wanted.has(id)),
-    }));
+  const matches = rows.filter((row) =>
+    row.provider_services.some((service) => wanted.has(service.category_id)),
+  );
+
+  const needle = normaliseQuery(search);
+  const visible = needle
+    ? matches.filter((row) =>
+        matchesQuery(needle, row.display_name, row.bio, row.price_note),
+      )
+    : matches;
+
+  return visible.map((row) => ({
+    ...row,
+    photo_path:
+      [...row.provider_photos].sort((a, b) => a.sort_order - b.sort_order)[0]
+        ?.storage_path ?? null,
+    categories: row.provider_services
+      .map((service) => service.category_id)
+      .filter((id) => wanted.has(id)),
+  }));
 }
 
 // `provider_profiles` has three foreign keys to `profiles` (user, reviewer and

@@ -268,6 +268,7 @@ No global percentage threshold. Critical pure logic and every RLS policy group m
 - [ ] Every route in `.context/master-build-prompt.md` exists and works with real data, including empty, loading and error states.
 - [ ] Home renders correctly at 375px, 768px and 1280px; layout holds from 320px.
 - [ ] Hero search passes service and postcode to results; pilot and out-of-pilot paths both work.
+- [ ] An optional keyword narrows search results by provider name, bio or price note, and every dashboard list can be searched by its own fields.
 - [ ] Only approved, active providers in an enabled district appear in search and have public profiles.
 - [ ] A provider can apply with 1–6 validated photos, sees pending status, and becomes public only after approval.
 - [ ] A customer can post a job, receive multiple offers, accept one, and have the job close with other offers declined.

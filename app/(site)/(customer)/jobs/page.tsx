@@ -7,12 +7,34 @@ import { getCustomerJobs } from "@/lib/data/jobs";
 import { JobCard } from "@/components/mend/job-card";
 import { EmptyState } from "@/components/mend/tag";
 import { ButtonLink } from "@/components/ui/button";
+import { SearchBox } from "@/components/dash/search-box";
+import { matchesQuery, normaliseQuery } from "@/lib/search";
 
 export const metadata: Metadata = { title: "My jobs" };
 
-async function JobsContent() {
+type SearchParams = Promise<{ q?: string }>;
+
+async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
   const context = await requireUser("/jobs");
   const jobs = await getCustomerJobs(context.user.id);
+  const query = normaliseQuery(params.q);
+
+  // The counters describe every job the customer has, so they are built from
+  // the full list before the search narrows what is shown below.
+  const visible = query
+    ? jobs.filter((job) =>
+        matchesQuery(
+          query,
+          job.title,
+          job.description,
+          job.postcode,
+          job.postcode_district,
+          job.status.replace("_", " "),
+          job.service_categories?.name,
+        ),
+      )
+    : jobs;
 
   const openJobs = jobs.filter(
     (job) => job.status === "open" || job.status === "receiving_offers",
@@ -68,9 +90,20 @@ async function JobsContent() {
         ))}
       </div>
 
-      {jobs.length > 0 ? (
+      <div className="mt-8">
+        <SearchBox
+          action="/jobs"
+          query={query}
+          label="Search your jobs by title, service or postcode"
+          placeholder="Title, service or postcode"
+          resultCount={visible.length}
+          noun="job"
+        />
+      </div>
+
+      {visible.length > 0 ? (
         <div className="mt-8 grid gap-4 md:grid-cols-2">
-          {jobs.map((job) => (
+          {visible.map((job) => (
             <JobCard
               key={job.id}
               job={job}
@@ -85,6 +118,11 @@ async function JobsContent() {
             />
           ))}
         </div>
+      ) : query ? (
+        <EmptyState
+          title="No jobs match your search"
+          description={`Nothing in your jobs matches “${query}”. Try a different word, or clear the search.`}
+        />
       ) : (
         <EmptyState
           title="No jobs yet"
@@ -96,7 +134,11 @@ async function JobsContent() {
   );
 }
 
-export default function JobsPage() {
+export default function JobsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   return (
     <div className="dash-page">
       <Suspense
@@ -108,7 +150,7 @@ export default function JobsPage() {
           </div>
         }
       >
-        <JobsContent />
+        <JobsContent searchParams={searchParams} />
       </Suspense>
     </div>
   );

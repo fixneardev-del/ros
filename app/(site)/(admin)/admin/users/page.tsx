@@ -7,16 +7,29 @@ import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { suspendUser, unsuspendUser } from "@/lib/actions/admin";
 import { DashAlert } from "@/components/dash/dash-alert";
+import { SearchBox } from "@/components/dash/search-box";
+import { matchesQuery, normaliseQuery } from "@/lib/search";
 
 export const metadata: Metadata = { title: "Admin users" };
 
-type SearchParams = Promise<{ ok?: string; error?: string }>;
+type SearchParams = Promise<{ q?: string; ok?: string; error?: string }>;
 
 async function UsersContent({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   await requireAdmin();
+  const query = normaliseQuery(params.q);
   const users = await getAdminUsers();
   const emails = await getUserEmails(users.map((user) => user.id));
+
+  // The email lives in `auth.users`, which the browser client cannot read, so
+  // it arrives in a second lookup. That makes this one list that filters here
+  // rather than in the data function: matching on a name without its email
+  // would miss the most common way an admin looks someone up.
+  const visible = query
+    ? users.filter((user) =>
+        matchesQuery(query, user.full_name, emails.get(user.id), user.role),
+      )
+    : users;
 
   return (
     <div>
@@ -31,8 +44,20 @@ async function UsersContent({ searchParams }: { searchParams: SearchParams }) {
       {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
       {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
 
-      <div className="mt-6 space-y-3">
-        {users.map((user) => (
+      <div className="mt-6">
+        <SearchBox
+          action="/admin/users"
+          query={query}
+          label="Search users by name, email or role"
+          placeholder="Name, email or role"
+          resultCount={visible.length}
+          noun="user"
+        />
+      </div>
+
+      {visible.length > 0 ? (
+        <div className="mt-6 space-y-3">
+          {visible.map((user) => (
           <article
             key={user.id}
             className="rounded-surface border border-line bg-surface p-5"
@@ -81,8 +106,13 @@ async function UsersContent({ searchParams }: { searchParams: SearchParams }) {
               </Button>
             </form>
           </article>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-8 rounded-surface border border-line bg-surface p-5 text-muted">
+          {query ? `No users match “${query}”.` : "No users yet."}
+        </p>
+      )}
     </div>
   );
 }

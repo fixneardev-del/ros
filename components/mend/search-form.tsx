@@ -3,15 +3,18 @@ import type { ServiceCategory } from "@/lib/types";
 import { topLevelCategories } from "@/lib/category-utils";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
+import { SEARCH_QUERY_MAX } from "@/lib/search";
 
 export function SearchForm({
   categories,
   defaultService = "",
   defaultPostcode = "",
+  defaultQuery = "",
 }: {
   categories: ServiceCategory[];
   defaultService?: string;
   defaultPostcode?: string;
+  defaultQuery?: string;
 }) {
   const parents = topLevelCategories(categories);
 
@@ -48,6 +51,22 @@ export function SearchForm({
           autoComplete="postal-code"
           inputMode="text"
           required
+        />
+      </Field>
+
+      <Field
+        label="Provider name or keyword"
+        htmlFor="q"
+        hint="Optional. Narrows the results."
+      >
+        <Input
+          id="q"
+          name="q"
+          type="search"
+          defaultValue={defaultQuery}
+          placeholder="For example Petra or furniture"
+          maxLength={SEARCH_QUERY_MAX}
+          autoComplete="off"
         />
       </Field>
 

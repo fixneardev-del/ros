@@ -23,6 +23,7 @@ Architecture decisions that should not be re-litigated without a reason. Product
 - **Accepting an offer is one transaction.** `accept_offer` is a Postgres RPC that accepts one offer and declines the others.
 - **Session refresh happens in `proxy.ts`.** Next 16 uses `proxy.ts`, not `middleware.ts`.
 - **The session is read once per request.** `getSessionContext` is wrapped in React's `cache`, so the layout and the page share one round trip.
+- **Search lives in the URL.** Every search box is a plain GET form, so a result set can be linked to, refreshed and shared, and the page stays a Server Component with no client state. The query is cleaned in `lib/search.ts` before it is compared or echoed. Matching happens on the server where the rows are already read; the lists do not paginate, and a list that starts to will move its filter into the database query.
 
 ## Admin access
 

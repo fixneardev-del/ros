@@ -8,15 +8,18 @@ import { StatusBadge } from "@/components/mend/status-badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { removeOffer } from "@/lib/actions/admin";
 import { DashAlert } from "@/components/dash/dash-alert";
+import { SearchBox } from "@/components/dash/search-box";
+import { normaliseQuery } from "@/lib/search";
 
 export const metadata: Metadata = { title: "Admin offers" };
 
-type SearchParams = Promise<{ ok?: string; error?: string }>;
+type SearchParams = Promise<{ q?: string; ok?: string; error?: string }>;
 
 async function OffersContent({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   await requireAdmin();
-  const offers = await getAdminOffers();
+  const query = normaliseQuery(params.q);
+  const offers = await getAdminOffers(query);
 
   return (
     <div>
@@ -37,6 +40,17 @@ async function OffersContent({ searchParams }: { searchParams: SearchParams }) {
 
       {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
       {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
+
+      <div className="mt-6">
+        <SearchBox
+          action="/admin/offers"
+          query={query}
+          label="Search offers by provider, job or message"
+          placeholder="Provider, job or message"
+          resultCount={offers.length}
+          noun="offer"
+        />
+      </div>
 
       {offers.length > 0 ? (
         <div className="mt-6 space-y-4">
@@ -114,7 +128,9 @@ async function OffersContent({ searchParams }: { searchParams: SearchParams }) {
         </div>
       ) : (
         <p className="mt-8 rounded-surface border border-line bg-surface p-5 text-muted">
-          No offers have been sent yet.
+          {query
+            ? `No offers match “${query}”.`
+            : "No offers have been sent yet."}
         </p>
       )}
     </div>

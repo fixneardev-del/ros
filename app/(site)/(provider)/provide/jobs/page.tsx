@@ -6,12 +6,18 @@ import { getMatchingJobs } from "@/lib/data/jobs";
 import { JobCard } from "@/components/mend/job-card";
 import { EmptyState } from "@/components/mend/tag";
 import { ButtonLink } from "@/components/ui/button";
+import { SearchBox } from "@/components/dash/search-box";
+import { normaliseQuery } from "@/lib/search";
 
 export const metadata: Metadata = { title: "Matching jobs" };
 
-async function JobsContent() {
+type SearchParams = Promise<{ q?: string }>;
+
+async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
   const context = await requireApprovedProvider();
-  const jobs = await getMatchingJobs(context.user.id);
+  const query = normaliseQuery(params.q);
+  const jobs = await getMatchingJobs(context.user.id, query);
 
   return (
     <div>
@@ -27,6 +33,17 @@ async function JobsContent() {
         <ButtonLink href="/provide/offers" variant="secondary">
           My offers
         </ButtonLink>
+      </div>
+
+      <div className="mt-6">
+        <SearchBox
+          action="/provide/jobs"
+          query={query}
+          label="Search matching jobs by title, service or postcode"
+          placeholder="Title, service or postcode"
+          resultCount={jobs.length}
+          noun="job"
+        />
       </div>
 
       {jobs.length > 0 ? (
@@ -46,6 +63,13 @@ async function JobsContent() {
             />
           ))}
         </div>
+      ) : query ? (
+        <div className="mt-6 rounded-surface border border-line bg-surface p-5">
+          <EmptyState
+            title="No jobs match your search"
+            description={`Nothing in your matching jobs matches “${query}”. Try a different word, or clear the search.`}
+          />
+        </div>
       ) : (
         <div className="mt-6 rounded-surface border border-line bg-surface p-5">
           <EmptyState
@@ -63,7 +87,11 @@ async function JobsContent() {
   );
 }
 
-export default function ProviderJobsPage() {
+export default function ProviderJobsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   return (
     <div className="dash-page">
       <Suspense
@@ -75,7 +103,7 @@ export default function ProviderJobsPage() {
           </div>
         }
       >
-        <JobsContent />
+        <JobsContent searchParams={searchParams} />
       </Suspense>
     </div>
   );

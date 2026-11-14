@@ -1,5 +1,6 @@
 import { isSupabaseConfigured } from "@/lib/env";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { matchesQuery, normaliseQuery } from "@/lib/search";
 import type {
   JobPhoto,
   JobRequest,
@@ -105,7 +106,7 @@ export function providerCoversCategory(
   );
 }
 
-export async function getMatchingJobs(providerId: string) {
+export async function getMatchingJobs(providerId: string, search?: string) {
   if (!isSupabaseConfigured()) return [];
 
   const supabase = await createServerSupabase();
@@ -147,7 +148,21 @@ export async function getMatchingJobs(providerId: string) {
 
   const offered = new Set(((myOffers ?? []) as { job_id: string }[]).map((row) => row.job_id));
 
-  return matching.filter((job) => !offered.has(job.id));
+  const open = matching.filter((job) => !offered.has(job.id));
+
+  const needle = normaliseQuery(search);
+  if (!needle) return open;
+
+  return open.filter((job) =>
+    matchesQuery(
+      needle,
+      job.title,
+      job.description,
+      job.postcode,
+      job.postcode_district,
+      job.service_categories?.name,
+    ),
+  );
 }
 
 export async function getProviderOffers(providerId: string) {

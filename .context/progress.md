@@ -1,6 +1,6 @@
 # Progress: Repairs and Other Services MVP
 
-Last updated: 2026-11-11
+Last updated: 2026-11-14
 Current gate: **Foundation checkpoint** — code is in place and the core flows have now been run end to end against the local Supabase stack. The hosted project still needs its schema and secret key, and the repo still needs a remote so CI can run.
 
 ---
@@ -25,16 +25,16 @@ The Foundation checkpoint in `tasks/plan.md` says to stop for human review befor
 
 ## Verification
 
-Run on 2026-11-09:
+Run on 2026-11-14:
 
 | Command | Result |
 |---|---|
 | `npm run lint` | Pass |
 | `npm run typecheck` | Pass |
-| `npm test` | Pass — 6 files, 35 tests |
+| `npm test` | Pass — 7 files, 50 tests |
 | `npm run test:coverage` | Pass — 100% statements, branches, functions and lines on `lib/postcode.ts`, `lib/transitions.ts`, `lib/format.ts`, `lib/next-path.ts` |
 | `npm run build` | Pass — 35 routes generated, both with and without Supabase configured |
-| `npm run test:e2e` | Pass — 19 Playwright tests locally in Chromium; CI runs the same 19 in Chromium, Firefox and WebKit |
+| `npm run test:e2e` | Pass — 37 Playwright tests against a production build; CI runs the same set in Chromium, Firefox and WebKit |
 | `npm run test:rls` | Pass — 5 SQL files, run against a real Postgres with the Supabase `auth` and `storage` schemas stubbed |
 | `npm audit --omit=dev` | Clean, 0 vulnerabilities |
 | Visual pass at 375 / 768 / 1280 | Landing, search, register, login, legal, provider profile, 404 and 403 checked in a real browser |
@@ -146,10 +146,17 @@ The build emits one benign font warning: Turbopack cannot generate fallback metr
 ### Discovery
 
 - Landing page with a hero search, the starter services, how it works, a provider band, a privacy band and a waitlist.
-- Search page with category/district filters, pilot checks and provider cards.
+- Search page with category/district filters, pilot checks and provider cards, plus an optional provider-name or keyword field.
 - Public provider profile with photos, services, areas and report form.
 - Privacy, terms and cookies pages linked from the footer.
 - Public shell with header, mobile navigation and footer.
+
+### Search
+
+- `lib/search.ts` holds the cleaning and matching rules: queries are trimmed, capped at 80 characters and stripped of the characters that break a PostgREST filter or a `LIKE` pattern.
+- `SearchBox` is a plain GET form, so the query lives in the URL and results can be linked to, refreshed and shared. Other filters are carried in hidden inputs, and a "Clear search" link removes only the query.
+- Dashboard lists with search: admin providers, jobs, offers, users and reports; customer jobs; provider matching jobs and offers. The public `/search` page adds a keyword field that narrows the existing service-and-district results.
+- Matching happens on the server, where the rows are already read. The lists do not paginate yet; a list that starts paginating moves its filter into the database query.
 
 ### Provider onboarding
 
@@ -296,3 +303,4 @@ changes return to review (`reapprove_on_key_change = true`).
 | 2026-11-14 | The 403 page rendered blank because it nested a second `<html>` and `<body>` inside the root layout. It now uses the dashboard chrome it is shown inside, and the dashboard has its own 404 for a missing job. |
 | 2026-11-14 | The end-to-end suite was rebuilt around a production build. It runs on port 3005 into `.next-e2e`, so a test run never touches the dev server or its build, and the development server's different error rendering can no longer make a test pass that would fail in production. Each role signs in once in a setup project and the session is reused, which keeps the run at about 17 seconds and well inside the sign-in rate limit. Each test creates its own data, so the tests no longer interfere when they run in parallel. 33 tests pass. |
 | 2026-11-14 | `scripts/local-demo-data.sh` now creates its own accounts instead of assuming `local-supabase.sh` made them. GoTrue stores a bcrypt hash in `encrypted_password`, so a directly inserted row signs in normally; this was verified against the local stack. That makes the same script usable on the Supabase CLI containers the CI job uses, so the CI e2e job now starts the stack, resets the schema, loads the demo data and hands the keys to the suite. |
+| 2026-11-14 | Search was only on the public `/search` page, and the dashboard lists could not be searched at all. Added a shared `SearchBox` GET form, `lib/search.ts` for cleaning and matching, and keyword search on every list: admin providers, jobs, offers, users and reports, customer jobs, provider matching jobs and offers, plus an optional provider-name/keyword field on the public search. The query lives in the URL, other filters survive a search, and a clear link removes only the query. 8 unit tests and 4 end-to-end tests added; 50 unit tests and 37 Playwright tests pass. |

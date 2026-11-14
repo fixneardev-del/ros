@@ -1,5 +1,6 @@
 import { isSupabaseConfigured } from "@/lib/env";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { matchesQuery, normaliseQuery } from "@/lib/search";
 import type { AnalyticsEventRow } from "@/lib/analytics";
 import type {
   JobRequest,
@@ -76,7 +77,11 @@ export async function getAdminCounts() {
   };
 }
 
-export async function getAdminProviders(status?: string, categoryId?: string) {
+export async function getAdminProviders(
+  status?: string,
+  categoryId?: string,
+  search?: string,
+) {
   if (!isSupabaseConfigured()) return [];
 
   const supabase = await createServerSupabase();
@@ -101,7 +106,7 @@ export async function getAdminProviders(status?: string, categoryId?: string) {
 
   const { data } = await query.order("created_at", { ascending: true });
 
-  return (data ?? []) as unknown as Array<
+  const providers = (data ?? []) as unknown as Array<
     ProviderProfile & {
       profiles: Pick<Profile, "full_name"> | null;
       provider_services: Array<{
@@ -111,9 +116,26 @@ export async function getAdminProviders(status?: string, categoryId?: string) {
       provider_photos: Array<{ id: string; storage_path: string; alt_text: string | null }>;
     }
   >;
+
+  const needle = normaliseQuery(search);
+  if (!needle) return providers;
+
+  return providers.filter((provider) =>
+    matchesQuery(
+      needle,
+      provider.display_name,
+      provider.bio,
+      provider.profiles?.full_name,
+      provider.provider_type.replace("_", " "),
+      provider.service_districts.join(" "),
+      provider.provider_services
+        .map((service) => service.service_categories?.name)
+        .join(" "),
+    ),
+  );
 }
 
-export async function getAdminJobs(status?: string) {
+export async function getAdminJobs(status?: string, search?: string) {
   if (!isSupabaseConfigured()) return [];
 
   const supabase = await createServerSupabase();
@@ -129,16 +151,32 @@ export async function getAdminJobs(status?: string) {
     ? await query.eq("status", status).order("created_at", { ascending: false })
     : await query.order("created_at", { ascending: false });
 
-  return (data ?? []) as unknown as Array<
+  const jobs = (data ?? []) as unknown as Array<
     JobRequest & {
       profiles: Pick<Profile, "full_name"> | null;
       service_categories: Pick<ServiceCategory, "id" | "name" | "slug"> | null;
       provider_offers: { count: number }[];
     }
   >;
+
+  const needle = normaliseQuery(search);
+  if (!needle) return jobs;
+
+  return jobs.filter((job) =>
+    matchesQuery(
+      needle,
+      job.title,
+      job.description,
+      job.postcode,
+      job.postcode_district,
+      job.status.replace("_", " "),
+      job.profiles?.full_name,
+      job.service_categories?.name,
+    ),
+  );
 }
 
-export async function getAdminOffers() {
+export async function getAdminOffers(search?: string) {
   if (!isSupabaseConfigured()) return [];
 
   const supabase = await createServerSupabase();
@@ -149,7 +187,7 @@ export async function getAdminOffers() {
     )
     .order("created_at", { ascending: false });
 
-  return (data ?? []) as unknown as Array<
+  const offers = (data ?? []) as unknown as Array<
     ProviderOffer & {
       provider_profiles: {
         user_id: string;
@@ -161,6 +199,23 @@ export async function getAdminOffers() {
       job_requests: Pick<JobRequest, "id" | "title" | "status" | "postcode_district"> | null;
     }
   >;
+
+  const needle = normaliseQuery(search);
+  if (!needle) return offers;
+
+  return offers.filter((offer) =>
+    matchesQuery(
+      needle,
+      offer.message,
+      offer.status,
+      offer.provider_profiles?.display_name,
+      offer.job_requests?.title,
+      offer.job_requests?.postcode_district,
+      offer.indicative_price_pence === null
+        ? null
+        : (offer.indicative_price_pence / 100).toFixed(2),
+    ),
+  );
 }
 
 export async function getAdminUsers() {
@@ -175,7 +230,7 @@ export async function getAdminUsers() {
   return (data ?? []) as Profile[];
 }
 
-export async function getAdminReports() {
+export async function getAdminReports(search?: string) {
   if (!isSupabaseConfigured()) return [];
 
   const supabase = await createServerSupabase();
@@ -184,7 +239,19 @@ export async function getAdminReports() {
     .select("*")
     .order("created_at", { ascending: false });
 
-  return (data ?? []) as Report[];
+  const reports = (data ?? []) as Report[];
+  const needle = normaliseQuery(search);
+  if (!needle) return reports;
+
+  return reports.filter((report) =>
+    matchesQuery(
+      needle,
+      report.target_type,
+      report.reason,
+      report.status,
+      report.target_id,
+    ),
+  );
 }
 
 export async function getAnalyticsSummary(days = 30) {
