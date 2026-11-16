@@ -104,6 +104,52 @@ test.describe("authentication", () => {
     await expect(page.getByText("terms", { exact: true })).toBeVisible();
   });
 
+  test("login and registration offer Google sign-in", async ({ page }) => {
+    await page.goto("/login");
+    await expect(
+      page.getByRole("button", { name: "Continue with Google" }),
+    ).toBeVisible();
+
+    await page.goto("/register");
+    await expect(
+      page.getByRole("button", { name: "Continue with Google" }),
+    ).toBeVisible();
+  });
+
+  test("Google registration requires the terms", async ({ page }) => {
+    await page.goto("/register");
+
+    await page.getByRole("button", { name: "Continue with Google" }).click();
+
+    await expect(
+      page.getByText(
+        "Accept the terms and privacy notice before continuing with Google.",
+      ),
+    ).toBeVisible();
+    await expect(page).toHaveURL(/\/register/);
+  });
+
+  test("the Google button starts the OAuth flow with the safe callback", async ({
+    page,
+  }) => {
+    const authorizeRequest = page.waitForRequest(
+      (request) => request.url().includes("/auth/v1/authorize"),
+    );
+
+    await page.goto("/login?next=/post-job");
+    await page.getByRole("button", { name: "Continue with Google" }).click();
+
+    const request = await authorizeRequest;
+    const authorizeUrl = new URL(request.url());
+    expect(authorizeUrl.searchParams.get("provider")).toBe("google");
+
+    const redirectTo = new URL(
+      authorizeUrl.searchParams.get("redirect_to") ?? "",
+    );
+    expect(redirectTo.pathname).toBe("/auth/callback");
+    expect(redirectTo.searchParams.get("next")).toBe("/post-job");
+  });
+
   test("signing in from a protected page comes back to it", async ({ page }) => {
     await page.goto("/post-job");
 

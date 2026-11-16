@@ -7,6 +7,7 @@ Architecture decisions that should not be re-litigated without a reason. Product
 - **Pilot area is a set of enabled postcode districts.** No distance search, maps or geolocation.
 - **Contact details are private until an offer is accepted.** The release happens in a Postgres RPC so it cannot be bypassed by the client.
 - **No payments or commission.** Customers and providers agree payment directly.
+- **Google is the only social provider.** Added at the client's request on 2026-11-16. Supabase owns the Google client secret; the app only holds the public Supabase key and the `/auth/callback` redirect URL.
 - **Providers are independent.** The platform does not guarantee qualifications, insurance or checks unless a profile says so.
 - **Money is integer pence.** A null price means "Quote on inspection".
 - **Closed and removed jobs are terminal.** So are accepted, declined and withdrawn offers.

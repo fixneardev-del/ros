@@ -14,7 +14,7 @@ Work autonomously, but follow the scope rules below exactly. If a requirement is
 
 **In scope:** everything in this prompt.
 
-**Out of scope (do not build, do not stub UI for):** payments, commissions, live chat or messaging, SMS, maps or GPS distance, booking calendars, identity verification APIs, reviews and ratings, subscriptions, AI matching, mobile apps, multi-admin role hierarchy, social login, two-factor authentication.
+**Out of scope (do not build, do not stub UI for):** payments, commissions, live chat or messaging, SMS, maps or GPS distance, booking calendars, identity verification APIs, reviews and ratings, subscriptions, AI matching, mobile apps, multi-admin role hierarchy, social providers other than Google, two-factor authentication. Google sign-in was added at the client's request on 2026-11-16.
 
 Contact details are shared only after a customer accepts an offer. The platform never claims providers are verified, qualified or insured.
 

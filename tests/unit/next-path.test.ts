@@ -27,6 +27,16 @@ describe("safeNextPath", () => {
     expect(safeNextPath("/\\example.com")).toBe("/account");
   });
 
+  it("refuses control characters that the URL parser strips", () => {
+    expect(safeNextPath("/\t/example.com")).toBe("/account");
+    expect(safeNextPath("/\n/example.com")).toBe("/account");
+    expect(safeNextPath("/\r\n/example.com")).toBe("/account");
+  });
+
+  it("refuses a path that resolves to another origin", () => {
+    expect(safeNextPath("/\t//example.com")).toBe("/account");
+  });
+
   it("uses the fallback it is given", () => {
     expect(safeNextPath("//example.com", "/jobs")).toBe("/jobs");
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import {
   signIn,
@@ -12,13 +12,28 @@ import {
 import { Field, Input, Checkbox } from "@/components/ui/field";
 import { FormMessage } from "@/components/mend/form-message";
 import { SubmitButton } from "@/components/mend/submit-button";
+import {
+  ACCEPTED_TERMS_ID,
+  GoogleAuthButton,
+} from "@/components/forms/google-auth-button";
 
 function fieldsFrom(state: { ok: boolean; error?: { fields?: Record<string, string> } } | null) {
   return state && !state.ok ? state.error?.fields : undefined;
 }
 
+function AuthDivider() {
+  return (
+    <div className="flex items-center gap-3 text-sm font-bold text-muted" aria-hidden="true">
+      <span className="h-px flex-1 bg-line" />
+      <span>or</span>
+      <span className="h-px flex-1 bg-line" />
+    </div>
+  );
+}
+
 export function RegisterForm({ next }: { next: string }) {
   const [state, action] = useActionState(registerUser, null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   return (
     <form action={action} className="space-y-5" noValidate>
@@ -47,8 +62,10 @@ export function RegisterForm({ next }: { next: string }) {
         />
       </Field>
       <Checkbox
-        id="acceptedTerms"
+        id={ACCEPTED_TERMS_ID}
         name="acceptedTerms"
+        checked={acceptedTerms}
+        onChange={(event) => setAcceptedTerms(event.target.checked)}
         label={
           <>
             I agree to the{" "}
@@ -63,6 +80,12 @@ export function RegisterForm({ next }: { next: string }) {
           </>
         }
       />
+      <GoogleAuthButton
+        next={next}
+        requireTerms
+        acceptedTerms={acceptedTerms}
+      />
+      <AuthDivider />
       <SubmitButton label="Create account" pendingLabel="Creating account" />
     </form>
   );
@@ -73,6 +96,8 @@ export function LoginForm({ next }: { next: string }) {
 
   return (
     <form action={action} className="space-y-5" noValidate>
+      <GoogleAuthButton next={next} />
+      <AuthDivider />
       <FormMessage
         error={state && !state.ok ? state.error.message : null}
         fields={fieldsFrom(state)}

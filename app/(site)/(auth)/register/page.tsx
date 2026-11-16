@@ -11,7 +11,9 @@ type SearchParams = Promise<{ next?: string }>;
 
 async function RegisterContent({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const next = safeNextPath(params.next);
+  // An empty value means "no destination". The sign-up action and Google
+  // callback then choose the landing page from the account role.
+  const next = params.next ? safeNextPath(params.next) : "";
 
   return (
     <AuthShell

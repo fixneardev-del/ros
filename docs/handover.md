@@ -48,6 +48,8 @@ Vercel for staging and production. `.env.local` is optional and overrides
    redirect URLs for every environment:
    - `http://localhost:3001/auth/callback`
    - `http://localhost:3001/reset-password`
+   - `https://ros-jet.vercel.app/auth/callback`
+   - `https://ros-jet.vercel.app/reset-password`
    - `https://<your-staging-domain>/auth/callback`
    - `https://<your-staging-domain>/reset-password`
 4. Turn on email confirmations or leave them off for the pilot. Either way,
@@ -58,6 +60,12 @@ Vercel for staging and production. `.env.local` is optional and overrides
 6. Reset emails are generated and sent by the app with Resend, so they do not
    use Supabase's reset template. Confirmation emails still come from Supabase;
    see **Domain and email** to send those through Resend too.
+7. Google sign-in uses the Google provider on the hosted Supabase project.
+   The Google web client's authorized JavaScript origin is
+   `https://ros-jet.vercel.app`, its authorized redirect URI is
+   `https://eohqgkxnjshnzwadglnh.supabase.co/auth/v1/callback`, and the app
+   callback is `https://ros-jet.vercel.app/auth/callback`. Keep the Google
+   client secret in Supabase; it is never an application environment variable.
 
 ## Domain and email
 
@@ -89,7 +97,8 @@ Vercel for staging and production. `.env.local` is optional and overrides
 
 - Payments, commission, live chat, SMS, maps, booking calendars, identity
   verification, reviews and ratings, subscriptions, AI matching, native apps,
-  social login and two factor auth are all out of scope for the pilot.
+  social providers other than Google and two factor auth are all out of scope
+  for the pilot.
 - The legal pages hold pilot copy. Replace them with the approved text.
 - The project is not yet in its own Git repository. It currently sits inside a
   larger repository on the build machine.

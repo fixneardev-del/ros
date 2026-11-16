@@ -43,6 +43,11 @@ Copy `.env.example` to `.env.local` and fill in:
 
 Never expose the service-role key to the browser.
 
+Sign-in and registration support both password accounts and Google OAuth. The
+Google client is configured inside Supabase Auth; the application only needs
+the `/auth/callback` redirect URL to be present in Supabase's redirect allow
+list.
+
 ## Database
 
 The schema lives in `supabase/migrations/0001_init.sql`. It creates the tables, indexes, helper functions, triggers, RLS policies, RPCs and storage buckets. Starter categories, pilot districts and site settings are in `supabase/seed.sql`.

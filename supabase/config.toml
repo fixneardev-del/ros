@@ -26,6 +26,10 @@ site_url = "http://localhost:3000"
 additional_redirect_urls = [
   "http://localhost:3000/auth/callback",
   "http://localhost:3000/reset-password",
+  "http://localhost:3001/auth/callback",
+  "http://localhost:3001/reset-password",
+  "http://127.0.0.1:3005/auth/callback",
+  "http://127.0.0.1:3005/reset-password",
 ]
 jwt_expiry = 3600
 enable_signup = true

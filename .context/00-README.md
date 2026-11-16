@@ -20,7 +20,7 @@ Stack (recommended): Next.js, React, TypeScript, Tailwind, shadcn/ui, Supabase (
 | 11 | 11-security-testing-deployment.md | 4 | 8–10 |
 
 ## Out of scope for this MVP
-Payments and commission, live chat, SMS, GPS matching, maps, booking calendars, identity verification APIs, AI matching, mobile apps, subscriptions.
+Payments and commission, live chat, SMS, GPS matching, maps, booking calendars, identity verification APIs, AI matching, mobile apps, subscriptions, social providers other than Google, two-factor authentication.
 
 ## Excluded costs (client pays directly)
 Domain, hosting beyond free tiers, paid APIs, email service, legal advice, ongoing maintenance.

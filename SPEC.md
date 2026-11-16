@@ -21,7 +21,7 @@ Correct any of these now; otherwise the spec and plan will proceed on them.
 9. **Provider photos:** at least 1 and at most 6 photos are required before an application can be submitted (per `.context/master-build-prompt.md`). `.context/05` only states a maximum; the stricter rule wins unless corrected.
 10. **Admin creation:** the first admin is promoted manually in the database. There is no public admin sign-up and no role hierarchy.
 11. **Contact release:** full postcode, email and phone are released only after a customer accepts an offer. Public and provider-facing views show postcode district only.
-12. **Out of scope stays out:** payments, commission, live chat, SMS, GPS/maps, booking calendars, identity-verification APIs, reviews/ratings, subscriptions, AI matching, native apps, social login, 2FA, multi-admin hierarchy.
+12. **Out of scope stays out:** payments, commission, live chat, SMS, GPS/maps, booking calendars, identity-verification APIs, reviews/ratings, subscriptions, AI matching, native apps, social providers other than Google, 2FA, multi-admin hierarchy. Google sign-in was added at the client's request on 2026-11-16.
 
 ---
 
@@ -256,7 +256,7 @@ No global percentage threshold. Critical pure logic and every RLS policy group m
 - Expose full postcode, email or phone before an offer is accepted.
 - Use `dangerouslySetInnerHTML` with user content, or log PII.
 - Delete or skip failing tests to get green; fix the cause or ask.
-- Build out-of-scope features (payments, chat, maps, ratings, subscriptions, native apps, social login, 2FA).
+- Build out-of-scope features (payments, chat, maps, ratings, subscriptions, native apps, social providers other than Google, 2FA).
 - Claim providers are verified, qualified or insured.
 
 ---

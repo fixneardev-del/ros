@@ -9,9 +9,19 @@ export function safeNextPath(
   fallback = "/account",
 ) {
   if (!value) return fallback;
+  if (/[\u0000-\u001f\u007f]/.test(value)) return fallback;
   if (!value.startsWith("/")) return fallback;
   if (value.startsWith("//")) return fallback;
   if (value.startsWith("/\\")) return fallback;
+
+  try {
+    const base = new URL("https://same-origin.invalid");
+    const resolved = new URL(value, base);
+    if (resolved.origin !== base.origin) return fallback;
+  } catch {
+    return fallback;
+  }
+
   return value;
 }
 
