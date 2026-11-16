@@ -76,6 +76,7 @@ jobs:
       - name: Load the demo accounts and content
         env:
           PGPORT: "54322"
+          PGPASSWORD: postgres
           DB: postgres
         run: ./scripts/local-demo-data.sh
       # `e2e-server.mjs` uses these instead of starting a stack of its own.
