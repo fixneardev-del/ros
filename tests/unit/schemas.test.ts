@@ -39,8 +39,17 @@ describe("registerSchema", () => {
 });
 
 describe("resetPasswordSchema", () => {
+  it("requires the account being reset", () => {
+    const result = resetPasswordSchema.safeParse({
+      password: "a-long-password",
+      confirmPassword: "a-long-password",
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("reports mismatched passwords on confirmPassword", () => {
     const result = resetPasswordSchema.safeParse({
+      email: "ada@example.com",
       password: "a-long-password",
       confirmPassword: "another-password",
     });

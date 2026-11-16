@@ -33,10 +33,11 @@ Copy `.env.example` to `.env.local` and fill in:
 |---|---|
 | `NEXT_PUBLIC_SITE_URL` | Canonical site URL used in emails and auth redirects |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only key for admin operations and notifications |
-| `RESEND_API_KEY` | Resend API key |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable (anon) key |
+| `SUPABASE_SECRET_KEY` | Server-only key for admin operations and notifications |
+| `RESEND_API_KEY` | Resend API key; email is skipped when it is empty |
 | `EMAIL_FROM` | Sender shown on transactional email |
+| `EMAIL_REPLY_TO` | Optional monitored inbox for replies |
 | `ADMIN_NOTIFICATION_EMAIL` | Admin contact and notification address |
 | `CRON_SECRET` | Optional secret for the notification retry endpoint |
 
@@ -66,10 +67,18 @@ scripts/local-demo-data.sh           # optional sample providers, jobs and offer
 
 The script creates three accounts with the password `password123`: `admin@example.com` (the site owner), `customer@example.com` and `provider@example.com`. `docs/local-development.md` has the full list, the dashboard links and the hosted-project steps.
 
-To use a hosted project instead, apply the schema and create the accounts with the database password:
+To use a hosted project instead, apply the schema and seed with the database password:
 
 ```bash
 scripts/hosted-setup.sh <database-password>
+```
+
+The migration is idempotent, so the setup script applies it every time and can be re-run safely. Demo accounts are deliberately opt-in because they use a published password. To create or refresh them in a non-production environment, use both confirmations:
+
+```bash
+ALLOW_DEMO_ACCOUNTS=1 npm run hosted:accounts -- --yes
+# or
+ALLOW_DEMO_ACCOUNTS=1 scripts/hosted-setup.sh <database-password> --with-demo-accounts
 ```
 
 ## RLS tests
@@ -82,7 +91,7 @@ npm run test:rls
 
 The runner never skips. If the database is unreachable the command fails. Point it at a database with `SUPABASE_DB_URL`, or with `SUPABASE_DB_HOST`, `SUPABASE_DB_PORT`, `SUPABASE_DB_NAME` and `SUPABASE_DB_PASSWORD`. It defaults to the local Supabase instance on port 54322.
 
-The suite covers profile creation, role and suspension protection, provider application, approval and withdrawal, job visibility by district and service, offer permissions, offer acceptance, and contact release only after acceptance.
+The suite covers profile creation, role and suspension protection, provider application, approval and withdrawal, job visibility by district and service, offer permissions, offer acceptance, contact release only after acceptance, notification ownership, admin-only delivery records, and one-time job completion.
 
 ## Commands
 
@@ -104,7 +113,13 @@ The suite covers profile creation, role and suspension protection, provider appl
 - Reads happen in Server Components. Writes happen only in Server Actions.
 - Authorisation is enforced in the action and again in RLS.
 - Actions return a typed `ActionResult`; forms use `useActionState` where typed feedback is needed.
-- Notifications use a non-blocking outbox. A failed email never fails the action that triggered it.
+- Notifications have two channels: an in-app centre (`notifications`) and a
+  non-blocking email outbox (`notification_deliveries`). A failed email never
+  fails the action that triggered it.
+- Optional job and offer email follows `notification_preferences`; account,
+  security and moderation email always sends.
+- Every notification links to the job or account page it refers to. Users can
+  mark items read and change their email settings at `/account/notifications`.
 - Money is stored as integer pence. A null price means "Quote on inspection".
 - Status transitions live in `lib/transitions.ts` and are enforced in SQL triggers.
 - Pilot coverage is by enabled postcode district, not distance or maps.

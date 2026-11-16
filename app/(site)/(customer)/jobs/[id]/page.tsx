@@ -31,7 +31,7 @@ import { CreateOfferForm, EditOfferForm } from "@/components/forms/offer-forms";
 import { ReportForm } from "@/components/forms/report-form";
 import { ButtonLink } from "@/components/ui/button";
 import { acceptOffer, declineOffer, withdrawOffer } from "@/lib/actions/offers";
-import { closeJob, deleteJobPhoto } from "@/lib/actions/jobs";
+import { closeJob, deleteJobPhoto, markJobComplete } from "@/lib/actions/jobs";
 
 type Params = Promise<{ id: string }>;
 
@@ -149,6 +149,11 @@ async function JobDetailContent({ params }: { params: Params }) {
           <p className="dash-kicker">Job request</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <StatusBadge kind="job" status={job.status} />
+            {job.completed_at ? (
+              <span className="rounded-full bg-success-bg px-3 py-1 text-sm font-bold text-success-fg">
+                Completed {formatDate(job.completed_at)}
+              </span>
+            ) : null}
             {job.service_categories ? (
               <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold">
                 {job.service_categories.name}
@@ -382,6 +387,30 @@ async function JobDetailContent({ params }: { params: Params }) {
             confirmMessage="Close this job? Providers will no longer be able to send offers."
             successMessage="Job closed."
           />
+        ) : null}
+
+        {job.status === "closed" &&
+        job.accepted_offer_id &&
+        !job.completed_at &&
+        (isOwner || isAcceptedProvider) ? (
+          <ActionForm
+            action={markJobComplete}
+            fields={{ id: job.id }}
+            label="Mark job completed"
+            variant="secondary"
+            confirmMessage="Mark this job as completed? This tells the other party the work is finished."
+            successMessage="Job marked completed."
+          />
+        ) : null}
+
+        {job.completed_at ? (
+          <div className={`${card} text-sm`}>
+            <p className="font-bold">Work completed</p>
+            <p className="mt-1 text-muted">
+              Marked completed on {formatDate(job.completed_at)}. Contact details
+              stay available on this page.
+            </p>
+          </div>
         ) : null}
 
         {isAdmin ? (

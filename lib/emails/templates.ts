@@ -15,14 +15,25 @@ export function escapeHtml(value: unknown) {
     .replaceAll("'", "&#39;");
 }
 
-function layout(heading: string, body: string, cta?: { label: string; url: string }) {
+function layout(
+  heading: string,
+  body: string,
+  cta?: { label: string; url: string },
+  preview?: string,
+) {
   const ctaHtml = cta
     ? `<p style="margin:24px 0 0"><a href="${escapeHtml(cta.url)}" style="display:inline-block;background:#1F3A5F;color:#ffffff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:700">${escapeHtml(cta.label)}</a></p>`
+    : "";
+  // The preheader is the snippet a mail client shows next to the subject.
+  // It is hidden in the body so the first visible line stays the heading.
+  const preheader = preview
+    ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${escapeHtml(preview)}</div>`
     : "";
 
   return `<!doctype html>
 <html lang="en-GB">
   <body style="margin:0;background:#F3F6F8;color:#14253F;font-family:Atkinson Hyperlegible, Arial, sans-serif">
+    ${preheader}
     <div style="max-width:600px;margin:0 auto;padding:32px 20px">
       <div style="background:#ffffff;border:1px solid #CBD5DD;border-radius:14px;padding:32px">
         <p style="margin:0 0 8px;font-size:14px;color:#475666">Repairs and Other Services</p>
@@ -59,6 +70,22 @@ function quote(text: string) {
   return `<blockquote style="margin:0 0 16px;padding:12px 16px;background:#F3F6F8;border-left:3px solid #F2B01E;font-size:16px;line-height:1.6">${escapeHtml(text)}</blockquote>`;
 }
 
+/** A one-time code, sized to be read on a phone without zooming. */
+function codeBlock(code: string) {
+  return `<p style="margin:0 0 16px;padding:16px;background:#F3F6F8;border:1px solid #CBD5DD;border-radius:8px;font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:28px;letter-spacing:6px;text-align:center;font-weight:700">${escapeHtml(code)}</p>`;
+}
+
+/** A stable, readable time for security emails. The site serves Glasgow. */
+function formatLondonTime(iso: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Europe/London",
+  }).format(date);
+}
+
 export function buildEmailMessages(
   event: string,
   payload: Record<string, unknown>,
@@ -68,6 +95,109 @@ export function buildEmailMessages(
   const messages: EmailMessage[] = [];
 
   switch (event) {
+    case "auth.welcome": {
+      const email = text("email");
+      if (!email) break;
+      const name = text("name");
+      const needsConfirmation = payload.needsConfirmation === true;
+
+      const heading = needsConfirmation ? "Welcome — confirm your email" : "Welcome";
+      const greeter = name ? `Thanks for joining, ${name}.` : "Thanks for joining.";
+      const nextStep = needsConfirmation
+        ? "Check your inbox for the confirmation email, open the link, then log in."
+        : "You can log in now and get started.";
+      const body = `${paragraph(greeter)}${paragraph("You can post a repair or service job, or apply to offer your services as a provider.")}${paragraph(nextStep)}`;
+
+      messages.push({
+        template: "auth.welcome",
+        to: email,
+        subject: needsConfirmation
+          ? "Confirm your email for Repairs and Other Services"
+          : "Welcome to Repairs and Other Services",
+        html: layout(
+          heading,
+          body,
+          { label: "Open your account", url: `${siteUrl}/account` },
+          needsConfirmation
+            ? "Confirm your email to finish setting up your account."
+            : "Your account is ready.",
+        ),
+        text: textLayout(heading, `${greeter} ${nextStep}`, {
+          label: "Open your account",
+          url: `${siteUrl}/account`,
+        }),
+      });
+      break;
+    }
+
+    case "auth.signed_in": {
+      const email = text("email");
+      if (!email) break;
+      const name = text("name");
+      const when = formatLondonTime(text("signedInAt"));
+
+      const heading = "New sign-in to your account";
+      const greeter = name ? `Hi ${name}.` : "Hello.";
+      const whenText = when
+        ? `Your account was used to log in on ${when} (UK time).`
+        : "Your account was used to log in.";
+      const body = `${paragraph(greeter)}${paragraph(whenText)}${paragraph("If this was you, there is nothing to do. If you do not recognise this, reset your password now.")}`;
+
+      messages.push({
+        template: "auth.signed_in",
+        to: email,
+        subject: "New sign-in to your account",
+        html: layout(
+          heading,
+          body,
+          { label: "Reset your password", url: `${siteUrl}/forgot-password` },
+          "If this was not you, reset your password.",
+        ),
+        text: textLayout(heading, `${greeter} ${whenText} If this was not you, reset your password.`, {
+          label: "Reset your password",
+          url: `${siteUrl}/forgot-password`,
+        }),
+      });
+      break;
+    }
+
+    case "auth.password_reset": {
+      const email = text("email");
+      const resetUrl = text("resetUrl");
+      if (!email || !resetUrl) break;
+
+      const name = text("name");
+      const code = text("code");
+      const minutes = Number(payload.expiresInMinutes) || 60;
+      const expiry = minutes === 60 ? "1 hour" : `${minutes} minutes`;
+
+      const heading = "Reset your password";
+      const greeting = name
+        ? `Hi ${name}, we received a request to reset the password for ${email}.`
+        : `We received a request to reset the password for ${email}.`;
+      const codeHtml = code ? codeBlock(code) : "";
+      const codeText = code ? ` Or enter this code: ${code}.` : "";
+      const body = `${paragraph(greeting)}${paragraph(`Choose a new password using the button below. The link and the code expire in ${expiry}.`)}${codeHtml}${paragraph("If you did not ask for this, you can ignore this email. Your password will not change.")}`;
+
+      messages.push({
+        template: "auth.password_reset",
+        to: email,
+        subject: "Reset your password for Repairs and Other Services",
+        html: layout(
+          heading,
+          body,
+          { label: "Choose a new password", url: resetUrl },
+          `Reset your password. The link and code expire in ${expiry}.`,
+        ),
+        text: textLayout(
+          heading,
+          `${greeting} Choose a new password with the link below. The link and the code expire in ${expiry}.${codeText} If you did not ask for this, you can ignore this email.`,
+          { label: "Choose a new password", url: resetUrl },
+        ),
+      });
+      break;
+    }
+
     case "provider.applied": {
       const providerEmail = text("providerEmail");
       const adminEmail = text("adminEmail");
@@ -307,6 +437,42 @@ export function buildEmailMessages(
         text: textLayout(heading, `The customer chose another offer for "${text("jobTitle")}".`, {
           label: "See open jobs",
           url: `${siteUrl}/provide/jobs`,
+        }),
+      });
+      break;
+    }
+
+    case "job.cancelled": {
+      const email = text("providerEmail");
+      if (!email) break;
+      const heading = "A job was cancelled";
+      const body = `${paragraph(`The customer cancelled "${text("jobTitle")}".`)}${paragraph("You do not need to do anything. More matching jobs are on the board.")}`;
+      messages.push({
+        template: "job.cancelled",
+        to: email,
+        subject: "A job you offered on was cancelled",
+        html: layout(heading, body, { label: "See open jobs", url: `${siteUrl}/provide/jobs` }),
+        text: textLayout(heading, `The customer cancelled "${text("jobTitle")}".`, {
+          label: "See open jobs",
+          url: `${siteUrl}/provide/jobs`,
+        }),
+      });
+      break;
+    }
+
+    case "job.completed": {
+      const email = text("recipientEmail");
+      if (!email) break;
+      const heading = "Job marked completed";
+      const body = `${paragraph(`"${text("jobTitle")}" has been marked completed.`)}${paragraph("Thanks for using Repairs and Other Services.")}`;
+      messages.push({
+        template: "job.completed",
+        to: email,
+        subject: "Job marked completed",
+        html: layout(heading, body, { label: "View the job", url: `${siteUrl}/jobs/${text("jobId")}` }),
+        text: textLayout(heading, `"${text("jobTitle")}" has been marked completed.`, {
+          label: "View the job",
+          url: `${siteUrl}/jobs/${text("jobId")}`,
         }),
       });
       break;

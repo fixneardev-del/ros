@@ -75,6 +75,8 @@ export interface JobRequest {
   timeframe: string;
   status: JobStatus;
   accepted_offer_id: string | null;
+  cancelled_at: string | null;
+  completed_at: string | null;
   removed_reason: string | null;
   removed_by: string | null;
   removed_at: string | null;
@@ -115,13 +117,36 @@ export interface Report {
 
 export interface NotificationRow {
   id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  body: string;
+  data: Record<string, unknown>;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface NotificationPreference {
+  user_id: string;
+  email_enabled: boolean;
+  job_updates: boolean;
+  offer_updates: boolean;
+}
+
+export interface NotificationDeliveryRow {
+  id: string;
   user_id: string | null;
+  notification_id: string | null;
   to_email: string;
   template: string;
   payload: Record<string, unknown>;
-  status: "queued" | "sent" | "failed";
+  channel: string;
+  status: "queued" | "sent" | "failed" | "skipped";
+  attempt_count: number;
+  provider_message_id: string | null;
   error: string | null;
   created_at: string;
+  updated_at: string;
   sent_at: string | null;
 }
 

@@ -105,8 +105,8 @@ A provider detail page looks like
 
 ## Email
 
-There is no Resend key locally, so emails are not sent. The notification
-outbox in `notifications` still records every trigger, which is how the event
+There is no Resend key locally, so emails are not sent. The delivery outbox in
+`notification_deliveries` still records every trigger, which is how the event
 layer is checked.
 
 ## The hosted project
@@ -119,9 +119,15 @@ applied before the app can use it:
 scripts/hosted-setup.sh <database-password>
 ```
 
-That applies `supabase/migrations/0001_init.sql`, applies `supabase/seed.sql`
-and creates the three accounts above. The server-only key is needed as well,
-for the admin approve, reject and suspend actions. It is `SUPABASE_SECRET_KEY`
+That applies `supabase/migrations/0001_init.sql` and `supabase/seed.sql`.
+Demo accounts are opt-in in a non-production environment:
+
+```bash
+ALLOW_DEMO_ACCOUNTS=1 scripts/hosted-setup.sh <database-password> --with-demo-accounts
+```
+
+The server-only key is needed as well, for the admin approve, reject and
+suspend actions and the notification outbox. It is `SUPABASE_SECRET_KEY`
 (the older `SUPABASE_SERVICE_ROLE_KEY` still works).
 
 ## Tests

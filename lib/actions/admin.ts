@@ -13,6 +13,7 @@ import {
 import { reasonSchema, uuidSchema } from "@/lib/schemas/common";
 import { writeAudit } from "@/lib/audit";
 import { emit } from "@/lib/events";
+import { createNotifications } from "@/lib/notifications";
 import { getUserEmail } from "@/lib/auth-admin";
 
 function messageFor(error: ZodError) {
@@ -85,6 +86,15 @@ export async function approveProvider(formData: FormData) {
     metadata: { extraChecksConfirmed },
   });
 
+  await createNotifications([
+    {
+      userId: providerId.data,
+      type: "provider.approved",
+      title: "Provider application approved",
+      body: "Your provider profile has been approved. You can now receive relevant job opportunities.",
+    },
+  ]);
+
   await emit("provider.approved", {
     providerEmail: await getUserEmail(providerId.data),
     providerName: provider.display_name,
@@ -133,6 +143,15 @@ export async function rejectProvider(formData: FormData) {
     entityId: providerId.data,
     metadata: { reason: reason.data },
   });
+
+  await createNotifications([
+    {
+      userId: providerId.data,
+      type: "provider.rejected",
+      title: "Provider application not approved",
+      body: `Your provider application was not approved. Reason: ${reason.data}`,
+    },
+  ]);
 
   await emit("provider.rejected", {
     providerEmail: await getUserEmail(providerId.data),
@@ -184,6 +203,15 @@ export async function requestMoreInfo(formData: FormData) {
     metadata: { note: note.data },
   });
 
+  await createNotifications([
+    {
+      userId: providerId.data,
+      type: "provider.more_info_requested",
+      title: "More information needed",
+      body: `We need a little more information about your provider application. ${note.data}`,
+    },
+  ]);
+
   await emit("provider.more_info_requested", {
     providerEmail: await getUserEmail(providerId.data),
     providerName: provider.display_name,
@@ -227,6 +255,15 @@ export async function suspendProvider(formData: FormData) {
     entityType: "provider",
     entityId: providerId.data,
   });
+
+  await createNotifications([
+    {
+      userId: providerId.data,
+      type: "provider.suspended",
+      title: "Provider account suspended",
+      body: "Your provider account has been suspended. Your profile is hidden from search while the suspension is in place.",
+    },
+  ]);
 
   await emit("provider.suspended", {
     providerEmail: await getUserEmail(providerId.data),
@@ -272,6 +309,15 @@ export async function reinstateProvider(formData: FormData) {
     entityType: "provider",
     entityId: providerId.data,
   });
+
+  await createNotifications([
+    {
+      userId: providerId.data,
+      type: "provider.reinstated",
+      title: "Provider account reinstated",
+      body: "Your provider account has been reinstated and your profile is visible in search again.",
+    },
+  ]);
 
   await emit("provider.reinstated", {
     providerEmail: await getUserEmail(providerId.data),
@@ -331,6 +377,15 @@ export async function removeProvider(formData: FormData) {
     metadata: { reason: reason.data },
   });
 
+  await createNotifications([
+    {
+      userId: providerId.data,
+      type: "provider.removed",
+      title: "Provider profile removed",
+      body: `Your provider profile was removed by an administrator. Reason: ${reason.data}`,
+    },
+  ]);
+
   await emit("provider.removed", {
     providerEmail: await getUserEmail(providerId.data),
     providerName: provider.display_name,
@@ -379,6 +434,16 @@ export async function removeJob(formData: FormData) {
     entityId: id.data,
     metadata: { reason: reason.data },
   });
+
+  await createNotifications([
+    {
+      userId: job.customer_id,
+      type: "job.removed",
+      title: "Job removed",
+      body: `Your job "${job.title}" was removed by an administrator. Reason: ${reason.data}`,
+      data: { job_id: job.id },
+    },
+  ]);
 
   await emit("job.removed", {
     customerEmail: await getUserEmail(job.customer_id),

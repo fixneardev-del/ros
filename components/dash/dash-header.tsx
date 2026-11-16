@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import {
   ArrowUpRight,
+  Bell,
   Briefcase,
   LogOut,
   Menu,
@@ -71,13 +72,17 @@ export function DashHeader({
   user,
   name,
   isProvider = false,
+  isAdmin = false,
   providerStatus = null,
+  unreadCount = 0,
   variant = "customer",
 }: {
   user: { email?: string | null } | null;
   name?: string | null;
   isProvider?: boolean;
+  isAdmin?: boolean;
   providerStatus?: ProviderStatus | null;
+  unreadCount?: number;
   variant?: DashVariant;
 }) {
   const pathname = usePathname();
@@ -137,7 +142,7 @@ export function DashHeader({
 
           {isProvider ? (
             <ProfileSwitch variant={variant} />
-          ) : (
+          ) : isAdmin ? null : (
             <Link href="/provide/apply">Become a provider</Link>
           )}
         </nav>
@@ -155,6 +160,23 @@ export function DashHeader({
             <ArrowUpRight className="size-3.5" aria-hidden />
           </Link>
         )}
+        <Link
+          href="/account/notifications"
+          className="dash-icon-button dash-notification-button"
+          aria-label={
+            unreadCount > 0
+              ? `Notifications, ${unreadCount} unread`
+              : "Notifications"
+          }
+        >
+          <Bell className="size-4" aria-hidden />
+          {unreadCount > 0 ? (
+            <span className="dash-notification-count" aria-hidden>
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          ) : null}
+        </Link>
+
         <Link
           href="/account"
           className="dash-avatar"
@@ -201,7 +223,7 @@ export function DashHeader({
                       ? "Switch to customer dashboard"
                       : `Switch to ${providerLabel.toLowerCase()}`}
                   </Link>
-                ) : (
+                ) : isAdmin ? null : (
                   <Link href="/provide/apply">
                     <UserPlus className="size-4" aria-hidden />
                     Become a provider
@@ -220,6 +242,15 @@ export function DashHeader({
                   View site
                 </Link>
               )}
+              <Link href="/account/notifications">
+                <Bell className="size-4" aria-hidden />
+                Notifications
+                {unreadCount > 0 ? (
+                  <span className="dash-notification-count" aria-hidden>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                ) : null}
+              </Link>
               <Link href="/account">
                 <ShieldCheck className="size-4" aria-hidden />
                 Account

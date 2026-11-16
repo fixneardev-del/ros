@@ -25,6 +25,7 @@ export function getServerEnv() {
     resendApiKey: process.env.RESEND_API_KEY || "",
     emailFrom:
       process.env.EMAIL_FROM || "Repairs and Other Services <hello@example.com>",
+    emailReplyTo: process.env.EMAIL_REPLY_TO || "",
     adminEmail: process.env.ADMIN_NOTIFICATION_EMAIL || "",
   };
 }

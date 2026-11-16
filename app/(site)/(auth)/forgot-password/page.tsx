@@ -10,7 +10,7 @@ export default function ForgotPasswordPage() {
     <AuthShell
       eyebrow="Account help"
       title="Forgot your password?"
-      description="Enter the email on your account. If it matches, we will send a reset link."
+      description="Enter the email on your account. If it matches, we will send a reset link and, when available, a 6-digit code."
       footer={
         <Link href="/login" className="font-bold text-primary underline">
           Back to log in

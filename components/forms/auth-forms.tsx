@@ -7,6 +7,7 @@ import {
   registerUser,
   requestPasswordReset,
   resetPassword,
+  resetPasswordWithCode,
 } from "@/lib/actions/auth";
 import { Field, Input, Checkbox } from "@/components/ui/field";
 import { FormMessage } from "@/components/mend/form-message";
@@ -109,7 +110,7 @@ export function ForgotPasswordForm() {
         fields={fieldsFrom(state)}
         success={
           state?.ok
-            ? "If an account uses that email, we have sent a reset link."
+            ? "If an account uses that email, we have sent a reset link. If the email includes a 6-digit code, you can use it if the link expires."
             : null
         }
       />
@@ -121,7 +122,7 @@ export function ForgotPasswordForm() {
   );
 }
 
-export function ResetPasswordForm() {
+export function ResetPasswordForm({ email }: { email: string }) {
   const [state, action] = useActionState(resetPassword, null);
 
   return (
@@ -130,6 +131,10 @@ export function ResetPasswordForm() {
         error={state && !state.ok ? state.error.message : null}
         fields={fieldsFrom(state)}
       />
+      <input type="hidden" name="email" value={email} />
+      <p className="text-sm text-muted">
+        Resetting the password for <strong className="text-ink">{email}</strong>.
+      </p>
       <Field
         label="New password"
         htmlFor="password"
@@ -153,6 +158,49 @@ export function ResetPasswordForm() {
         />
       </Field>
       <SubmitButton label="Update password" pendingLabel="Updating password" />
+    </form>
+  );
+}
+
+/**
+ * Shown when the reset page is opened without a session, for example after
+ * the link expired or when the email was opened on a different device.
+ */
+export function ResetCodeForm() {
+  const [state, action] = useActionState(resetPasswordWithCode, null);
+
+  return (
+    <form action={action} className="space-y-5" noValidate>
+      <FormMessage
+        error={state && !state.ok ? state.error.message : null}
+        fields={fieldsFrom(state)}
+      />
+      <Field label="Email" htmlFor="reset-email">
+        <Input
+          id="reset-email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+        />
+      </Field>
+      <Field
+        label="6-digit code"
+        htmlFor="reset-code"
+        hint="The code is in the reset email, next to the button."
+      >
+        <Input
+          id="reset-code"
+          name="code"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]{6}"
+          maxLength={6}
+          autoComplete="one-time-code"
+          required
+        />
+      </Field>
+      <SubmitButton label="Use this code" pendingLabel="Checking code" />
     </form>
   );
 }

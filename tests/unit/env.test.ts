@@ -36,6 +36,7 @@ describe("environment contract", () => {
       serviceRoleKey: "",
       resendApiKey: "",
       emailFrom: "Repairs and Other Services <hello@example.com>",
+      emailReplyTo: "",
       adminEmail: "",
     });
   });

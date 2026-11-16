@@ -18,13 +18,25 @@ values
   ('77777777-7777-4777-8777-777777777778', '77777777-7777-4777-8777-777777777777', 'Tutoring and learning help', 'tutoring-learning-help', 'Informal tutoring and learning support.', false, true, 71)
 on conflict (id) do nothing;
 
+-- The pilot covers the whole West End. The app matches on the outward district
+-- (the part before the space), so each row covers these postcode sectors:
+--   G3   G3 6, G3 7, G3 8
+--   G4   G4 9
+--   G11  G11 5, G11 6, G11 7
+--   G12  G12 0, G12 8, G12 9
+--   G13  G13 1, G13 2, G13 3, G13 4
+--   G14  G14 0, G14 9
+--   G20  G20 0, G20 6, G20 7, G20 8, G20 9
 insert into locations (postcode_district, area_name, is_enabled)
 values
-  ('G12', 'West End', true),
-  ('G11', 'Partick', true),
-  ('G3', 'Finnieston and Anderston', true),
-  ('G4', 'City centre north', true)
-on conflict (postcode_district) do nothing;
+  ('G3', 'Finnieston, Kelvingrove, Yorkhill, Park and Woodlands', true),
+  ('G4', 'Kelvinbridge, Woodside and Woodlands', true),
+  ('G11', 'Partick, Partickhill, Broomhill, Thornwood and Glasgow Harbour', true),
+  ('G12', 'Hillhead, Dowanhill, Hyndland, Kelvindale, Kelvinside and University of Glasgow', true),
+  ('G13', 'Jordanhill, Anniesland, Temple and Knightswood', true),
+  ('G14', 'Whiteinch, Scotstoun and Yoker', true),
+  ('G20', 'North Kelvinside, Maryhill and Firhill', true)
+on conflict (postcode_district) do update set area_name = excluded.area_name;
 
 insert into site_settings (key, value)
 values

@@ -10,6 +10,8 @@ import { fail, fromZodError, ok } from "@/lib/actions/result";
 import type { ActionResult } from "@/lib/actions/result";
 import { MAX_JOB_PHOTOS, photoFiles, validatePhoto } from "@/lib/uploads";
 import { emit } from "@/lib/events";
+import { createNotifications } from "@/lib/notifications";
+import { getUserEmail, getUserEmails } from "@/lib/auth-admin";
 import { recordEvent } from "@/lib/analytics-server";
 import { getServerEnv } from "@/lib/env";
 import { writeAudit } from "@/lib/audit";
@@ -34,7 +36,7 @@ export async function createJob(
 
   const { data: category } = await context.supabase
     .from("service_categories")
-    .select("id")
+    .select("id, parent_id")
     .eq("id", parsed.data.categoryId)
     .eq("is_active", true)
     .maybeSingle();
@@ -106,6 +108,37 @@ export async function createJob(
       entityType: "job",
       entityId: jobId,
     });
+
+    const { data: matchingProviders } = await context.supabase
+      .from("provider_profiles")
+      .select("user_id, provider_services(category_id)")
+      .eq("status", "approved")
+      .contains("service_districts", [postcode.data.district]);
+
+    const parentId = category.parent_id;
+    const providerIds = (matchingProviders ?? [])
+      .filter((provider) => provider.user_id !== context.user.id)
+      .filter((provider) => {
+        const services = (provider.provider_services ?? []) as {
+          category_id: string;
+        }[];
+        return services.some(
+          (service) =>
+            service.category_id === parsed.data.categoryId ||
+            (parentId !== null && service.category_id === parentId),
+        );
+      })
+      .map((provider) => provider.user_id);
+
+    await createNotifications(
+      providerIds.map((userId) => ({
+        userId,
+        type: "job.new" as const,
+        title: "New job in your area",
+        body: `A new job matching your services is available: "${parsed.data.title}".`,
+        data: { job_id: jobId },
+      })),
+    );
 
     await emit("job.created", {
       customerEmail: context.user.email,
@@ -194,7 +227,7 @@ export async function closeJob(
 
   const { data: job } = await context.supabase
     .from("job_requests")
-    .select("id, customer_id, status")
+    .select("id, customer_id, title, status, accepted_offer_id")
     .eq("id", id)
     .maybeSingle();
 
@@ -208,7 +241,7 @@ export async function closeJob(
 
   const { error } = await context.supabase
     .from("job_requests")
-    .update({ status: "closed" })
+    .update({ status: "closed", cancelled_at: new Date().toISOString() })
     .eq("id", id);
 
   if (error) return fail("SAVE_FAILED", "We couldn't close that job. Try again.");
@@ -220,8 +253,146 @@ export async function closeJob(
     entityId: id,
   });
 
+  const { data: offers } = await context.supabase
+    .from("provider_offers")
+    .select("provider_id")
+    .eq("job_id", id)
+    .eq("status", "submitted");
+
+  const providerIds = [
+    ...new Set((offers ?? []).map((offer) => offer.provider_id)),
+  ];
+
+  if (providerIds.length > 0) {
+    await createNotifications(
+      providerIds.map((userId) => ({
+        userId,
+        type: "job.cancelled" as const,
+        title: "Job cancelled",
+        body: `The customer cancelled "${job.title}".`,
+        data: { job_id: id },
+      })),
+    );
+
+    const emails = await getUserEmails(providerIds);
+
+    for (const providerId of providerIds) {
+      const email = emails.get(providerId);
+      if (!email) continue;
+
+      await emit("job.cancelled", {
+        providerEmail: email,
+        jobTitle: job.title,
+        jobId: id,
+      });
+    }
+  }
+
   revalidatePath(`/jobs/${id}`);
   revalidatePath("/jobs");
+  revalidatePath("/provide/jobs");
+  return ok(undefined);
+}
+
+export async function markJobComplete(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const context = await requireUser("/jobs");
+  const id = formData.get("id")?.toString() ?? "";
+
+  if (!id) return fail("NOT_FOUND", "That job could not be found.");
+
+  const { data: job } = await context.supabase
+    .from("job_requests")
+    .select("id, customer_id, title, status, accepted_offer_id, completed_at")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!job) return fail("NOT_FOUND", "That job could not be found.");
+
+  if (job.status !== "closed" || !job.accepted_offer_id || job.completed_at) {
+    return fail(
+      "LOCKED",
+      "Only a job with an accepted offer can be marked completed.",
+    );
+  }
+
+  const { data: accepted } = await context.supabase
+    .from("provider_offers")
+    .select("provider_id, job_id, status")
+    .eq("id", job.accepted_offer_id)
+    .maybeSingle();
+
+  if (!accepted) return fail("NOT_FOUND", "That job could not be found.");
+  if (accepted.job_id !== id || accepted.status !== "accepted") {
+    return fail(
+      "LOCKED",
+      "That job's accepted offer is no longer available.",
+    );
+  }
+
+  const isOwner = job.customer_id === context.user.id;
+  const isProvider = accepted.provider_id === context.user.id;
+
+  if (!isOwner && !isProvider) {
+    return fail("NOT_FOUND", "That job could not be found.");
+  }
+
+  const { data: updated, error } = await context.supabase
+    .from("job_requests")
+    .update({ completed_at: new Date().toISOString() })
+    .eq("id", id)
+    .is("completed_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    return fail("SAVE_FAILED", "We couldn't mark that job completed. Try again.");
+  }
+
+  if (!updated) {
+    return fail("LOCKED", "That job was already marked completed.");
+  }
+
+  const otherPartyId = isOwner ? accepted.provider_id : job.customer_id;
+  const otherParty = isOwner ? "provider" : "customer";
+
+  await createNotifications([
+    {
+      userId: otherPartyId,
+      type: "job.completed",
+      title: "Job marked completed",
+      body: `The ${otherParty} marked "${job.title}" as completed.`,
+      data: { job_id: id },
+    },
+  ]);
+
+  const otherEmail = await getUserEmail(otherPartyId);
+
+  await emit(
+    "job.completed",
+    {
+      recipientEmail: otherEmail,
+      jobTitle: job.title,
+      jobId: id,
+    },
+    {
+      emailCategory: "job",
+      recipients: otherEmail ? { [otherEmail]: otherPartyId } : {},
+    },
+  );
+
+  await writeAudit({
+    actorId: context.user.id,
+    action: "job.completed",
+    entityType: "job",
+    entityId: id,
+  });
+
+  revalidatePath(`/jobs/${id}`);
+  revalidatePath("/jobs");
+  revalidatePath("/provide/offers");
   revalidatePath("/provide/jobs");
   return ok(undefined);
 }

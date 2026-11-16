@@ -31,7 +31,7 @@ against a staging build with the pilot seed data loaded.
 | 2.2 | Try to register without the terms tick | The form refuses to submit and says why. | |
 | 2.3 | Register without ticking terms using the browser console | The server refuses. The rule is on the server, not only in the browser. | |
 | 2.4 | Log out, then log in with the same details | You land on your account page. | |
-| 2.5 | Use **Forgot password** | A reset email arrives and the link opens a reset form. | |
+| 2.5 | Use **Forgot password** | A reset email arrives with a link and a 6-digit code. Either the link or the code opens the reset form. | |
 | 2.6 | Reset to a short password | The form refuses it. Passwords need at least 10 characters. | |
 | 2.7 | Sign in, then open `/account` and change your name | The new name shows in the header and on your profile. | |
 | 2.8 | Sign in, then open `/admin` as a customer | A **403** page. Not a redirect, not a blank screen. Check the status code in the browser network panel. | |
@@ -119,8 +119,8 @@ against a staging build with the pilot seed data loaded.
 
 | # | Step | Expected | Result |
 |---|---|---|---|
-| 9.1 | Register | A confirmation email arrives if Supabase email is on. | |
-| 9.2 | Request a password reset | The reset email arrives and the link works. | |
+| 9.1 | Register | A welcome email arrives. If Supabase confirmations are on, a confirmation email follows. | |
+| 9.2 | Request a password reset | The reset email arrives with a working link and a 6-digit code. | |
 | 9.3 | Apply as a provider | The provider and the admin both get an email. | |
 | 9.4 | Approve the provider | They get one approval email. | |
 | 9.5 | Reject the provider | They get one rejection email with the reason. | |
@@ -128,7 +128,8 @@ against a staging build with the pilot seed data loaded.
 | 9.7 | Send an offer | The customer gets one email. | |
 | 9.8 | Accept the offer | The provider gets one acceptance email. | |
 | 9.9 | Decline an offer | The provider gets one decline email. | |
-| 9.10 | Look at the notification outbox in Supabase | One row per expected email. No row for an email that was not supposed to send. | |
+| 9.10 | Look at the notification outbox in Supabase | One row per outbox email: provider, job, offer, welcome and sign-in notices. Reset emails are sent directly and are not stored. | |
+| 9.11 | Sign in with an existing account | A new sign-in notice arrives at the account email. | |
 
 ## 10 Legal pages and analytics
 

@@ -1,19 +1,25 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { getPublicEnv } from "@/lib/env";
+import { getPublicEnv, getServerEnv } from "@/lib/env";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { fail, ok, fromZodError, errorMessage } from "@/lib/actions/result";
 import type { ActionResult } from "@/lib/actions/result";
 import {
   loginSchema,
   registerSchema,
+  resetCodeSchema,
   resetPasswordSchema,
   resetRequestSchema,
 } from "@/lib/schemas/auth";
 import { landingPath, safeNextPath } from "@/lib/next-path";
 import { getAccountState } from "@/lib/auth-admin";
+import { createAdminSupabase } from "@/lib/supabase/admin";
+import { buildEmailMessages } from "@/lib/emails/templates";
+import { sendEmail } from "@/lib/emails/send";
+import { emit } from "@/lib/events";
 
 export async function registerUser(
   _previous: ActionResult<{ next: string }> | null,
@@ -37,9 +43,15 @@ export async function registerUser(
     );
   }
 
+  let welcome: {
+    email: string;
+    name: string;
+    needsConfirmation: boolean;
+  } | null = null;
+
   try {
     const supabase = await createServerSupabase();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -61,8 +73,29 @@ export async function registerUser(
       }
       return fail("SIGN_UP_FAILED", "We couldn't create your account. Check your details and try again.");
     }
+
+    // Supabase hides whether an address is already registered by returning a
+    // user with no identities. Only a genuine new account gets a welcome
+    // email, otherwise trying to register someone else's address would spam
+    // them.
+    if ((data.user?.identities?.length ?? 0) > 0 && data.user?.email) {
+      welcome = {
+        email: data.user.email,
+        name: fullName,
+        needsConfirmation: !data.session,
+      };
+    }
   } catch (error) {
     return fail("SIGN_UP_FAILED", errorMessage(error, "We couldn't create your account."));
+  }
+
+  if (welcome) {
+    try {
+      await emit("auth.welcome", welcome);
+    } catch (error) {
+      // The account exists; a welcome email failing must not undo that.
+      console.error("Welcome email could not be queued", errorMessage(error, "unknown"));
+    }
   }
 
   // The person is sent to sign in, then carried on to where they were
@@ -92,6 +125,11 @@ export async function signIn(
   }
 
   let next: string;
+  let signInNotice: {
+    email: string;
+    name: string;
+    signedInAt: string;
+  } | null = null;
 
   try {
     const supabase = await createServerSupabase();
@@ -117,8 +155,26 @@ export async function signIn(
       isProvider: account.isProvider,
       requested: formData.get("next")?.toString(),
     });
+
+    signInNotice = {
+      email: data.user.email ?? parsed.data.email,
+      name:
+        typeof data.user.user_metadata?.full_name === "string"
+          ? data.user.user_metadata.full_name
+          : "",
+      signedInAt: new Date().toISOString(),
+    };
   } catch (error) {
     return fail("SIGN_IN_FAILED", errorMessage(error, "We couldn't sign you in."));
+  }
+
+  if (signInNotice) {
+    try {
+      await emit("auth.signed_in", signInNotice);
+    } catch (error) {
+      // A security notice must never block a successful sign in.
+      console.error("Sign-in notice could not be queued", errorMessage(error, "unknown"));
+    }
   }
 
   // The redirect happens on the server, so it does not depend on the browser
@@ -149,14 +205,87 @@ export async function requestPasswordReset(
     return fail("RATE_LIMITED", "Too many requests. Wait a few minutes and try again.");
   }
 
+  const email = parsed.data.email;
+  const { siteUrl } = getPublicEnv();
+  const { resendApiKey } = getServerEnv();
+  const admin = createAdminSupabase();
+
+  // With the server key and Resend available, the link and the one-time code
+  // are generated here and the branded email is sent by this app. Otherwise
+  // Supabase sends its own reset email, which keeps local development and a
+  // deployment without Resend working.
+  if (admin && resendApiKey) {
+    try {
+      const { data, error } = await admin.auth.admin.generateLink({
+        type: "recovery",
+        email,
+      });
+
+      // An unknown address is not distinguishable from a failed send. The
+      // visitor is always told the same thing.
+      if (error || !data.properties?.hashed_token) {
+        return ok(undefined);
+      }
+
+      const tokenHash = data.properties.hashed_token;
+      const resetUrl = `${siteUrl}/auth/callback?token_hash=${encodeURIComponent(tokenHash)}&type=recovery&next=${encodeURIComponent("/reset-password")}`;
+      const [message] = buildEmailMessages(
+        "auth.password_reset",
+        {
+          email,
+          name:
+            typeof data.user?.user_metadata?.full_name === "string"
+              ? data.user.user_metadata.full_name
+              : "",
+          resetUrl,
+          code: data.properties.email_otp,
+          expiresInMinutes: 60,
+        },
+        siteUrl,
+      );
+
+      if (message) {
+        const task = async () => {
+          const result = await sendEmail({
+            ...message,
+            idempotencyKey: `password-reset/${tokenHash}`,
+          });
+          if (!result.ok) {
+            console.error("Password reset email failed", result.error);
+            const fallback = await admin.auth.resetPasswordForEmail(email, {
+              redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
+            });
+            if (fallback.error) {
+              console.error(
+                "Supabase password reset fallback failed",
+                fallback.error.message,
+              );
+            }
+          }
+        };
+
+        // The reset token must not be persisted, so it is sent directly
+        // rather than written to the notification outbox. The response does
+        // not wait for Resend.
+        try {
+          after(task);
+        } catch {
+          await task();
+        }
+      }
+    } catch (error) {
+      // Do not reveal whether the address exists.
+      console.error("Password reset request failed", errorMessage(error, "unknown"));
+    }
+
+    return ok(undefined);
+  }
+
   try {
     const supabase = await createServerSupabase();
-    const { error } = await supabase.auth.resetPasswordForEmail(
-      parsed.data.email,
-      {
-        redirectTo: `${getPublicEnv().siteUrl}/auth/callback?next=/reset-password`,
-      },
-    );
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
+    });
 
     // The visitor is not told whether the address exists, but a genuine
     // failure is still logged so it can be chased.
@@ -171,11 +300,65 @@ export async function requestPasswordReset(
   return ok(undefined);
 }
 
+/**
+ * The second half of the reset flow. The email carries a six digit code as
+ * well as a link, so someone whose link expired or was opened on another
+ * device can still reset their password.
+ */
+export async function resetPasswordWithCode(
+  _previous: ActionResult<{ next: string }> | null,
+  formData: FormData,
+): Promise<ActionResult<{ next: string }>> {
+  const parsed = resetCodeSchema.safeParse({
+    email: formData.get("email"),
+    code: formData.get("code"),
+  });
+
+  if (!parsed.success) return fromZodError(parsed.error);
+
+  const limit = checkRateLimit(
+    `reset-code:${parsed.data.email.toLowerCase()}`,
+    5,
+    15 * 60 * 1000,
+  );
+  if (!limit.allowed) {
+    return fail("RATE_LIMITED", "Too many attempts. Wait a few minutes and try again.");
+  }
+
+  let recoveryEmail: string | null = null;
+
+  try {
+    const supabase = await createServerSupabase();
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: parsed.data.email,
+      token: parsed.data.code,
+      type: "recovery",
+    });
+
+    if (error || !data.user?.email) {
+      return fail(
+        "RESET_CODE_FAILED",
+        "That code is not valid or has expired. Request a new one.",
+      );
+    }
+
+    recoveryEmail = data.user.email;
+  } catch (error) {
+    return fail("RESET_CODE_FAILED", errorMessage(error, "We couldn't check that code."));
+  }
+
+  // The code signs the person in, so the reset form can update the password.
+  redirect(
+    `/reset-password?email=${encodeURIComponent(recoveryEmail!)}`,
+  );
+}
+
 export async function resetPassword(
   _previous: ActionResult<{ next: string }> | null,
   formData: FormData,
 ): Promise<ActionResult<{ next: string }>> {
   const parsed = resetPasswordSchema.safeParse({
+    email: formData.get("email"),
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
   });
@@ -184,6 +367,19 @@ export async function resetPassword(
 
   try {
     const supabase = await createServerSupabase();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+
+    if (
+      userError ||
+      !userData.user?.email ||
+      userData.user.email.toLowerCase() !== parsed.data.email.toLowerCase()
+    ) {
+      return fail(
+        "RESET_FAILED",
+        "This reset link is for a different account. Sign out and use the code from the email.",
+      );
+    }
+
     const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
 
     if (error) {

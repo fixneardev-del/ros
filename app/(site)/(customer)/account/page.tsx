@@ -24,6 +24,7 @@ function initials(name?: string | null, email?: string | null) {
 async function AccountContent({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const context = await requireUser("/account");
+  const isAdmin = context.profile.role === "admin";
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
@@ -112,17 +113,25 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
             like.
           </p>
           <div className="mt-4 flex flex-col gap-3 text-sm">
-            <Link
-              href="/jobs"
-              className="font-bold text-primary underline underline-offset-4"
-            >
-              Customer dashboard
-            </Link>
+            {!isAdmin ? (
+              <Link
+                href="/jobs"
+                className="font-bold text-primary underline underline-offset-4"
+              >
+                Customer dashboard
+              </Link>
+            ) : null}
             <Link
               href="/post-job"
               className="font-bold text-primary underline underline-offset-4"
             >
               Post a job
+            </Link>
+            <Link
+              href="/account/notifications"
+              className="font-bold text-primary underline underline-offset-4"
+            >
+              Notifications and email settings
             </Link>
             {context.providerProfile ? (
               <>
@@ -137,14 +146,14 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
                   {context.providerProfile.status.replace("_", " ")}
                 </p>
               </>
-            ) : (
+            ) : !isAdmin ? (
               <Link
                 href="/provide/apply"
                 className="font-bold text-primary underline underline-offset-4"
               >
                 Become a provider
               </Link>
-            )}
+            ) : null}
             {context.profile.role === "admin" ? (
               <Link
                 href="/admin"

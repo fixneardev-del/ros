@@ -465,6 +465,35 @@
   color: var(--d-ink);
 }
 
+.dash-notification-button {
+  position: relative;
+}
+
+.dash-notification-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--d-orange);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.dash-notification-button .dash-notification-count {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+}
+
+.dash-menu-panel .dash-notification-count {
+  margin-left: auto;
+}
+
 .dash-menu {
   display: none;
   position: relative;

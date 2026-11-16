@@ -19,8 +19,17 @@ export const resetRequestSchema = z.object({
   email: emailSchema,
 });
 
+export const resetCodeSchema = z.object({
+  email: emailSchema,
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Enter the 6-digit code from the email."),
+});
+
 export const resetPasswordSchema = z
   .object({
+    email: emailSchema,
     password: passwordSchema,
     confirmPassword: z.string(),
   })

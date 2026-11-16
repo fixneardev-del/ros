@@ -263,7 +263,7 @@ test.describe("the admin dashboard", () => {
       .eq("user_id", pendingId);
 
     const notificationsBefore = await rowsFor(
-      "notifications",
+      "notification_deliveries",
       "to_email",
       ACCOUNTS.pending,
     );
@@ -283,7 +283,7 @@ test.describe("the admin dashboard", () => {
     expect(updated?.reviewed_at).toBeTruthy();
 
     const notificationsAfter = await rowsFor(
-      "notifications",
+      "notification_deliveries",
       "to_email",
       ACCOUNTS.pending,
     );
@@ -296,6 +296,36 @@ test.describe("the admin dashboard", () => {
 
     const audit = await rowsFor("audit_log", "entity_id", pendingId);
     expect(audit.some((row) => row.action === "provider.approved")).toBe(true);
+  });
+
+  test("an ordinary signed-in session cannot open the password reset form", async ({
+    page,
+  }) => {
+    await page.goto("/reset-password");
+
+    await expect(
+      page.getByRole("heading", { name: "Enter your reset code" }),
+    ).toBeVisible();
+    await expect(page.getByLabel("6-digit code")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Choose a new password" }),
+    ).toHaveCount(0);
+  });
+
+  test("the admin account does not show customer dashboard links", async ({
+    page,
+  }) => {
+    await page.goto("/account");
+
+    // The admin link comes after the customer links in the server-rendered
+    // sidebar, so waiting for it confirms the whole link list has loaded.
+    await expect(page.getByRole("link", { name: "Admin area" })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Customer dashboard", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Become a provider", exact: true }),
+    ).toHaveCount(0);
   });
 
   test("a signed-in customer cannot reach the admin area", async ({

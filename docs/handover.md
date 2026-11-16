@@ -17,38 +17,47 @@ be prefixed with `NEXT_PUBLIC_`, and never be sent to the browser.
 
 ## Environment variables
 
-Copy `.env.example` to `.env.local` for local work, and set the same variables
-in Vercel for staging and production.
+Copy `.env.example` to `.env` for local work, and set the same variables in
+Vercel for staging and production. `.env.local` is optional and overrides
+`.env` for machine-specific values.
 
 | Variable | Required | Notes |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | yes | The canonical URL. Used in email links and the auth redirect allowlist. |
 | `NEXT_PUBLIC_SUPABASE_URL` | yes | Supabase project URL. |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | Safe to expose to the browser. |
-| `SUPABASE_SERVICE_ROLE_KEY` | yes | Server only. |
-| `RESEND_API_KEY` | yes | Email is skipped silently when it is missing. |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | yes | Safe to expose to the browser. The older `NEXT_PUBLIC_SUPABASE_ANON_KEY` still works. |
+| `SUPABASE_SECRET_KEY` | yes | Server only. The older `SUPABASE_SERVICE_ROLE_KEY` still works. |
+| `RESEND_API_KEY` | yes | Email is skipped when it is missing; the outbox keeps the row for retry. |
 | `EMAIL_FROM` | yes | The sender address. Needs SPF and DKIM set up on the sending domain. |
+| `EMAIL_REPLY_TO` | no | A monitored inbox for replies. Falls back to `EMAIL_FROM`. |
 | `ADMIN_NOTIFICATION_EMAIL` | yes | Where admin notifications go. Also the contact address in the footer. |
 | `CRON_SECRET` | no | Lets a scheduler call `/api/notifications/retry` without an admin session. |
 
 ## Supabase setup
 
-1. Create the project and run `supabase/migrations/0001_init.sql`, then
+1. Create the project and apply `supabase/migrations/0001_init.sql`, then
    `supabase/seed.sql`. Either use the Supabase CLI with
    `npx supabase db reset`, or paste both files into the SQL editor in order.
-2. In **Authentication → URL Configuration**, set the site URL and add these
+   The migration is idempotent: it creates what is missing, upgrades the old
+   email outbox in place, and is safe to run again.
+2. If the schema is already applied and only the demo sign-in accounts are
+   missing, set `SUPABASE_SECRET_KEY` and run
+   `ALLOW_DEMO_ACCOUNTS=1 npm run hosted:accounts -- --yes`.
+   Do not run the demo-account command against production.
+3. In **Authentication → URL Configuration**, set the site URL and add these
    redirect URLs for every environment:
-   - `http://localhost:3000/auth/callback`
-   - `http://localhost:3000/reset-password`
+   - `http://localhost:3001/auth/callback`
+   - `http://localhost:3001/reset-password`
    - `https://<your-staging-domain>/auth/callback`
    - `https://<your-staging-domain>/reset-password`
-3. Turn on email confirmations or leave them off for the pilot. Either way,
+4. Turn on email confirmations or leave them off for the pilot. Either way,
    sign-up requires the terms tick on our own form.
-4. Promote the first admin with the SQL in `docs/admin-guide.md`. The owner is
+5. Promote the first admin with the SQL in `docs/admin-guide.md`. The owner is
    the account whose email is `ADMIN_NOTIFICATION_EMAIL`; that address also
    receives new-job and provider-application notifications.
-5. Replace the default Auth email templates so confirmations and resets look
-   like the rest of the site.
+6. Reset emails are generated and sent by the app with Resend, so they do not
+   use Supabase's reset template. Confirmation emails still come from Supabase;
+   see **Domain and email** to send those through Resend too.
 
 ## Domain and email
 
@@ -56,6 +65,16 @@ in Vercel for staging and production.
 - Verify the sending domain in Resend and add the SPF and DKIM records it
   gives you at the DNS host.
 - Add `EMAIL_FROM` using the verified domain, not a free Resend address.
+- Set `EMAIL_REPLY_TO` to an inbox someone watches. Transactional email should
+  not come from `noreply@`.
+- Welcome, sign-in notice and password reset emails are sent by the app. The
+  reset email contains a one-click link and, when Supabase supplies one, a
+  6-digit code; both expire after one hour.
+- To send Supabase's own confirmation emails through Resend as well, set a
+  custom SMTP server in **Authentication → SMTP Settings**: host
+  `smtp.resend.com`, port `465`, user `resend`, password = the Resend API key,
+  sender = `EMAIL_FROM`. Then update the confirmation template to match the
+  site.
 
 ## Deployment
 
@@ -80,6 +99,7 @@ in Vercel for staging and production.
 | Path | What it is |
 |---|---|
 | `supabase/migrations/0001_init.sql` | The whole database: tables, RLS, triggers, RPCs, storage. |
+| `supabase/demo-accounts.sql` | The three demo sign-in accounts, safe to re-run in the SQL editor. |
 | `supabase/seed.sql` | Starter categories, pilot districts and site settings. |
 | `tests/rls/` | The access rules, written as SQL. |
 | `docs/admin-guide.md` | How to run the pilot. |

@@ -9,6 +9,7 @@ import type { ActionResult } from "@/lib/actions/result";
 import { providerCoversCategory } from "@/lib/data/jobs";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { emit } from "@/lib/events";
+import { createNotifications } from "@/lib/notifications";
 import { getUserEmail, getUserEmails } from "@/lib/auth-admin";
 import { writeAudit } from "@/lib/audit";
 
@@ -120,8 +121,20 @@ export async function createOffer(
     metadata: { job_id: jobId },
   });
 
+  await createNotifications([
+    {
+      userId: job.customer_id,
+      type: "offer.received",
+      title: "New offer received",
+      body: `A provider has submitted an offer for "${job.title}". Log in to review the details.`,
+      data: { job_id: jobId, offer_id: offer.id },
+    },
+  ]);
+
+  const customerEmail = await getUserEmail(job.customer_id);
+
   await emit("offer.created", {
-    customerEmail: await getUserEmail(job.customer_id),
+    customerEmail,
     providerName: context.providerProfile.display_name,
     jobTitle: job.title,
     jobId,
@@ -291,6 +304,23 @@ export async function acceptOffer(
   const declined = (otherOffers ?? []) as { id: string; provider_id: string }[];
   const emails = await getUserEmails(declined.map((row) => row.provider_id));
 
+  await createNotifications([
+    {
+      userId: offer.provider_id,
+      type: "offer.accepted",
+      title: "Your offer was accepted",
+      body: `Your offer for "${job.title}" was accepted. Open the job to see the customer's contact details.`,
+      data: { job_id: job.id, offer_id: offerId },
+    },
+    ...declined.map((row) => ({
+      userId: row.provider_id,
+      type: "offer.rejected" as const,
+      title: "Offer not chosen",
+      body: `The customer chose another offer for "${job.title}".`,
+      data: { job_id: job.id, offer_id: row.id },
+    })),
+  ]);
+
   await emit("offer.accepted", {
     providerEmail,
     providerName: provider?.display_name ?? "there",
@@ -299,10 +329,18 @@ export async function acceptOffer(
   });
 
   for (const row of declined) {
-    await emit("offer.declined", {
-      providerEmail: emails.get(row.provider_id) ?? null,
-      jobTitle: job.title,
-    });
+    const email = emails.get(row.provider_id) ?? null;
+    await emit(
+      "offer.declined",
+      {
+        providerEmail: email,
+        jobTitle: job.title,
+      },
+      {
+        emailCategory: "offer",
+        recipients: email ? { [email]: row.provider_id } : {},
+      },
+    );
   }
 
   await writeAudit({
@@ -365,10 +403,29 @@ export async function declineOffer(
     metadata: { job_id: offer.job_id },
   });
 
-  await emit("offer.declined", {
-    providerEmail: await getUserEmail(offer.provider_id),
-    jobTitle: job.title,
-  });
+  await createNotifications([
+    {
+      userId: offer.provider_id,
+      type: "offer.rejected",
+      title: "Offer not chosen",
+      body: `The customer declined your offer for "${job.title}".`,
+      data: { job_id: job.id, offer_id: offerId },
+    },
+  ]);
+
+  const providerEmail = await getUserEmail(offer.provider_id);
+
+  await emit(
+    "offer.declined",
+    {
+      providerEmail,
+      jobTitle: job.title,
+    },
+    {
+      emailCategory: "offer",
+      recipients: providerEmail ? { [providerEmail]: offer.provider_id } : {},
+    },
+  );
 
   revalidatePath(`/jobs/${offer.job_id}`);
   revalidatePath("/provide/offers");

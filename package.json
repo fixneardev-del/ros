@@ -12,7 +12,8 @@
     "test:unit": "vitest run tests/unit",
     "test:coverage": "vitest run --coverage",
     "test:rls": "node tests/rls/run.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "hosted:accounts": "node scripts/hosted-accounts.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

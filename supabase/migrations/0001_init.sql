@@ -1,15 +1,114 @@
--- Repairs and Other Services: initial schema, RLS, storage and RPCs.
+-- Repairs and Other Services: schema, RLS, storage and RPCs.
+--
+-- This file is safe to run more than once. It is both the bootstrap for a new
+-- project and the upgrade path for an existing one: tables use IF NOT EXISTS,
+-- policies and triggers are recreated, and the old email outbox is moved to
+-- notification_deliveries before the in-app notifications table is created.
+--
+-- The migration is one transaction. A failure therefore rolls back the
+-- trigger and policy replacement instead of leaving a partially upgraded
+-- database without its access controls.
+
+begin;
 
 create extension if not exists pgcrypto;
 
-create type app_role as enum ('user', 'admin');
-create type provider_type as enum ('individual', 'sole_trader', 'business');
-create type provider_status as enum ('pending', 'approved', 'rejected', 'suspended');
-create type job_status as enum ('open', 'receiving_offers', 'closed', 'removed');
-create type offer_status as enum ('submitted', 'accepted', 'declined', 'withdrawn');
-create type report_status as enum ('open', 'reviewed', 'dismissed');
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_type t
+    join pg_namespace n on n.oid = t.typnamespace
+    where n.nspname = 'public' and t.typname = 'app_role'
+  ) then
+    execute 'create type public.app_role as enum (''user'', ''admin'')';
+  end if;
 
-create table profiles (
+  if not exists (
+    select 1
+    from pg_type t
+    join pg_namespace n on n.oid = t.typnamespace
+    where n.nspname = 'public' and t.typname = 'provider_type'
+  ) then
+    execute 'create type public.provider_type as enum (''individual'', ''sole_trader'', ''business'')';
+  end if;
+
+  if not exists (
+    select 1
+    from pg_type t
+    join pg_namespace n on n.oid = t.typnamespace
+    where n.nspname = 'public' and t.typname = 'provider_status'
+  ) then
+    execute 'create type public.provider_status as enum (''pending'', ''approved'', ''rejected'', ''suspended'')';
+  end if;
+
+  if not exists (
+    select 1
+    from pg_type t
+    join pg_namespace n on n.oid = t.typnamespace
+    where n.nspname = 'public' and t.typname = 'job_status'
+  ) then
+    execute 'create type public.job_status as enum (''open'', ''receiving_offers'', ''closed'', ''removed'')';
+  end if;
+
+  if not exists (
+    select 1
+    from pg_type t
+    join pg_namespace n on n.oid = t.typnamespace
+    where n.nspname = 'public' and t.typname = 'offer_status'
+  ) then
+    execute 'create type public.offer_status as enum (''submitted'', ''accepted'', ''declined'', ''withdrawn'')';
+  end if;
+
+  if not exists (
+    select 1
+    from pg_type t
+    join pg_namespace n on n.oid = t.typnamespace
+    where n.nspname = 'public' and t.typname = 'report_status'
+  ) then
+    execute 'create type public.report_status as enum (''open'', ''reviewed'', ''dismissed'')';
+  end if;
+end $$;
+
+-- Older projects called the email outbox "notifications". Move it out of the
+-- way before the in-app notification centre takes that name.
+do $$
+begin
+  if to_regclass('public.notifications') is not null
+    and exists (
+      select 1
+      from information_schema.columns
+      where table_schema = 'public'
+        and table_name = 'notifications'
+        and column_name = 'template'
+    )
+  then
+    if to_regclass('public.notification_deliveries') is not null then
+      raise exception 'Both public.notifications (email outbox) and public.notification_deliveries exist. Rename the outbox before running this migration.';
+    end if;
+
+    alter table public.notifications rename to notification_deliveries;
+
+    -- The primary-key index keeps its old name after the table rename. Move
+    -- it now so a fresh and an upgraded database end with the same names.
+    if exists (
+      select 1 from pg_constraint
+      where conname = 'notifications_pkey'
+        and conrelid = 'public.notification_deliveries'::regclass
+    ) and not exists (
+      select 1 from pg_constraint
+      where conname = 'notification_deliveries_pkey'
+        and conrelid = 'public.notification_deliveries'::regclass
+    ) then
+      alter table public.notification_deliveries
+        rename constraint notifications_pkey to notification_deliveries_pkey;
+    end if;
+  end if;
+end $$;
+
+drop index if exists public.idx_notifications_status;
+
+create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   role app_role not null default 'user',
   full_name text not null,
@@ -21,7 +120,7 @@ create table profiles (
   updated_at timestamptz not null default now()
 );
 
-create table service_categories (
+create table if not exists service_categories (
   id uuid primary key default gen_random_uuid(),
   parent_id uuid references service_categories(id),
   name text not null,
@@ -32,14 +131,14 @@ create table service_categories (
   sort_order int not null default 0
 );
 
-create table locations (
+create table if not exists locations (
   id uuid primary key default gen_random_uuid(),
   postcode_district text not null unique,
   area_name text not null,
   is_enabled boolean not null default true
 );
 
-create table provider_profiles (
+create table if not exists provider_profiles (
   user_id uuid primary key references profiles(id) on delete cascade,
   provider_type provider_type not null,
   display_name text not null,
@@ -59,13 +158,13 @@ create table provider_profiles (
   updated_at timestamptz not null default now()
 );
 
-create table provider_services (
+create table if not exists provider_services (
   provider_id uuid references provider_profiles(user_id) on delete cascade,
   category_id uuid references service_categories(id),
   primary key (provider_id, category_id)
 );
 
-create table provider_photos (
+create table if not exists provider_photos (
   id uuid primary key default gen_random_uuid(),
   provider_id uuid not null references provider_profiles(user_id) on delete cascade,
   storage_path text not null,
@@ -74,7 +173,7 @@ create table provider_photos (
   created_at timestamptz not null default now()
 );
 
-create table job_requests (
+create table if not exists job_requests (
   id uuid primary key default gen_random_uuid(),
   customer_id uuid not null references profiles(id) on delete cascade,
   category_id uuid not null references service_categories(id),
@@ -85,6 +184,8 @@ create table job_requests (
   timeframe text not null,
   status job_status not null default 'open',
   accepted_offer_id uuid,
+  cancelled_at timestamptz,
+  completed_at timestamptz,
   removed_reason text,
   removed_by uuid references profiles(id),
   removed_at timestamptz,
@@ -92,14 +193,17 @@ create table job_requests (
   updated_at timestamptz not null default now()
 );
 
-create table job_photos (
+alter table job_requests add column if not exists cancelled_at timestamptz;
+alter table job_requests add column if not exists completed_at timestamptz;
+
+create table if not exists job_photos (
   id uuid primary key default gen_random_uuid(),
   job_id uuid not null references job_requests(id) on delete cascade,
   storage_path text not null,
   sort_order int not null default 0
 );
 
-create table provider_offers (
+create table if not exists provider_offers (
   id uuid primary key default gen_random_uuid(),
   job_id uuid not null references job_requests(id) on delete cascade,
   provider_id uuid not null references provider_profiles(user_id) on delete cascade,
@@ -114,10 +218,21 @@ create table provider_offers (
   unique (job_id, provider_id)
 );
 
-alter table job_requests
-  add constraint fk_accepted_offer foreign key (accepted_offer_id) references provider_offers(id);
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'fk_accepted_offer'
+      and conrelid = 'public.job_requests'::regclass
+  ) then
+    alter table public.job_requests
+      add constraint fk_accepted_offer
+      foreign key (accepted_offer_id) references public.provider_offers(id);
+  end if;
+end $$;
 
-create table reports (
+create table if not exists reports (
   id uuid primary key default gen_random_uuid(),
   reporter_id uuid references profiles(id),
   target_type text not null check (target_type in ('provider', 'job')),
@@ -127,26 +242,103 @@ create table reports (
   created_at timestamptz not null default now()
 );
 
-create table interest_signups (
+create table if not exists interest_signups (
   id uuid primary key default gen_random_uuid(),
   email text not null,
   postcode text not null,
   created_at timestamptz not null default now()
 );
 
-create table notifications (
+-- In-app notification centre. These rows are written by the service role and
+-- read by the owner (or an administrator).
+create table if not exists notifications (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid references profiles(id),
+  user_id uuid not null references profiles(id) on delete cascade,
+  type text not null,
+  title text not null,
+  body text not null,
+  data jsonb not null default '{}',
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists notification_preferences (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references profiles(id) on delete cascade,
+  email_enabled boolean not null default true,
+  job_updates boolean not null default true,
+  offer_updates boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Transactional email outbox. A row is written before the send so a failed
+-- message can be retried without losing the recipient or the payload.
+create table if not exists notification_deliveries (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references profiles(id) on delete set null,
+  notification_id uuid references notifications(id) on delete set null,
   to_email text not null,
   template text not null,
   payload jsonb not null default '{}',
+  channel text not null default 'email',
   status text not null default 'queued' check (status in ('queued', 'sent', 'failed')),
+  attempt_count int not null default 0,
+  provider_message_id text,
   error text,
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   sent_at timestamptz
 );
 
-create table audit_log (
+-- The first version of the outbox had only the email columns. Add the
+-- delivery-tracking columns when the table was renamed into place.
+alter table notification_deliveries add column if not exists notification_id uuid references notifications(id) on delete set null;
+alter table notification_deliveries add column if not exists channel text not null default 'email';
+alter table notification_deliveries add column if not exists attempt_count int not null default 0;
+alter table notification_deliveries add column if not exists provider_message_id text;
+alter table notification_deliveries add column if not exists updated_at timestamptz not null default now();
+
+-- Reconcile the renamed legacy outbox with the fresh table definition. The
+-- old user_id foreign key used the default NO ACTION behaviour, which would
+-- prevent user deletion on an upgraded database.
+do $$
+declare
+  user_id_constraint text;
+begin
+  select c.conname
+  into user_id_constraint
+  from pg_constraint c
+  join pg_attribute a
+    on a.attrelid = c.conrelid
+   and a.attnum = c.conkey[1]
+  where c.conrelid = 'public.notification_deliveries'::regclass
+    and c.contype = 'f'
+    and a.attname = 'user_id'
+  limit 1;
+
+  if user_id_constraint is not null then
+    execute format(
+      'alter table public.notification_deliveries drop constraint %I',
+      user_id_constraint
+    );
+  end if;
+
+  alter table public.notification_deliveries
+    add constraint notification_deliveries_user_id_fkey
+    foreign key (user_id) references public.profiles(id) on delete set null;
+end $$;
+
+-- Keep the delivery state constraint identical for fresh and renamed tables.
+alter table notification_deliveries
+  drop constraint if exists notifications_status_check;
+alter table notification_deliveries
+  drop constraint if exists notification_deliveries_status_check;
+alter table notification_deliveries
+  add constraint notification_deliveries_status_check
+  check (status in ('queued', 'sent', 'failed', 'skipped'));
+
+create table if not exists audit_log (
   id uuid primary key default gen_random_uuid(),
   actor_id uuid references profiles(id),
   action text not null,
@@ -156,14 +348,14 @@ create table audit_log (
   created_at timestamptz not null default now()
 );
 
-create table site_settings (
+create table if not exists site_settings (
   key text primary key,
   value text not null
 );
 
 -- First party analytics. No cookies, no IP address, no third party script.
 -- Events are written by the public collector and read by admins only.
-create table analytics_events (
+create table if not exists analytics_events (
   id uuid primary key default gen_random_uuid(),
   event text not null,
   path text,
@@ -171,19 +363,23 @@ create table analytics_events (
   created_at timestamptz not null default now()
 );
 
-create index idx_analytics_events_event on analytics_events(event);
-create index idx_analytics_events_created on analytics_events(created_at desc);
+create index if not exists idx_analytics_events_event on analytics_events(event);
+create index if not exists idx_analytics_events_created on analytics_events(created_at desc);
 
-create index idx_provider_services_category on provider_services(category_id);
-create index idx_provider_profiles_status on provider_profiles(status);
-create index idx_provider_photos_provider on provider_photos(provider_id);
-create index idx_job_requests_status_district on job_requests(status, postcode_district);
-create index idx_job_requests_customer on job_requests(customer_id);
-create index idx_job_photos_job on job_photos(job_id);
-create index idx_offers_job on provider_offers(job_id);
-create index idx_offers_provider on provider_offers(provider_id);
-create index idx_reports_status on reports(status);
-create index idx_notifications_status on notifications(status);
+create index if not exists idx_provider_services_category on provider_services(category_id);
+create index if not exists idx_provider_profiles_status on provider_profiles(status);
+create index if not exists idx_provider_photos_provider on provider_photos(provider_id);
+create index if not exists idx_job_requests_status_district on job_requests(status, postcode_district);
+create index if not exists idx_job_requests_customer on job_requests(customer_id);
+create index if not exists idx_job_photos_job on job_photos(job_id);
+create index if not exists idx_offers_job on provider_offers(job_id);
+create index if not exists idx_offers_provider on provider_offers(provider_id);
+create index if not exists idx_reports_status on reports(status);
+create index if not exists idx_notifications_user_created on notifications(user_id, created_at desc);
+create index if not exists idx_notifications_user_unread on notifications(user_id) where read_at is null;
+create index if not exists idx_notification_deliveries_status on notification_deliveries(status);
+create index if not exists idx_notification_deliveries_retry
+  on notification_deliveries(status, updated_at);
 
 create or replace function public.is_admin()
 returns boolean
@@ -314,6 +510,33 @@ begin
 end;
 $$;
 
+-- Recreate triggers so a re-run picks up changes to the functions above.
+do $$
+declare
+  item record;
+begin
+  for item in
+    select * from (values
+      ('profiles', 'profiles_updated_at'),
+      ('provider_profiles', 'provider_profiles_updated_at'),
+      ('job_requests', 'job_requests_updated_at'),
+      ('provider_offers', 'provider_offers_updated_at'),
+      ('auth.users', 'on_auth_user_created'),
+      ('profiles', 'profiles_enforce_update'),
+      ('provider_profiles', 'provider_profiles_enforce_update'),
+      ('job_requests', 'job_requests_enforce_update'),
+      ('provider_offers', 'provider_offers_enforce_update'),
+      ('provider_photos', 'provider_photos_limit'),
+      ('job_photos', 'job_photos_limit'),
+      ('notifications', 'notifications_enforce_update'),
+      ('notification_preferences', 'notification_preferences_updated_at'),
+      ('notification_deliveries', 'notification_deliveries_updated_at')
+    ) as triggers(tbl, trg)
+  loop
+    execute format('drop trigger if exists %I on %s', item.trg, item.tbl);
+  end loop;
+end $$;
+
 create trigger profiles_updated_at before update on profiles
 for each row execute function set_updated_at();
 
@@ -342,6 +565,10 @@ begin
     )
   )
   on conflict (id) do nothing;
+
+  insert into notification_preferences (user_id)
+  values (new.id)
+  on conflict (user_id) do nothing;
 
   return new;
 end;
@@ -436,8 +663,45 @@ begin
 
   if new.status = 'receiving_offers'
     and old.status = 'open'
-    and can_provide_for_job(old.id) then
+    and can_provide_for_job(old.id)
+    and new.completed_at is not distinct from old.completed_at
+    and new.cancelled_at is not distinct from old.cancelled_at then
     return new;
+  end if;
+
+  -- Completion is a separate event from closing. The customer or the accepted
+  -- provider can mark a closed job complete, and nothing else may change in
+  -- the same update.
+  if new.completed_at is distinct from old.completed_at then
+    if old.status = 'closed'
+      and old.accepted_offer_id is not null
+      and old.completed_at is null
+      and new.completed_at is not null
+      and exists (
+        select 1
+        from provider_offers
+        where id = old.accepted_offer_id
+          and job_id = old.id
+          and status = 'accepted'
+      )
+      and (
+        old.customer_id = auth.uid()
+        or exists (
+          select 1
+          from provider_offers
+          where id = old.accepted_offer_id
+            and job_id = old.id
+            and provider_id = auth.uid()
+            and status = 'accepted'
+        )
+      )
+      and (to_jsonb(new) - 'completed_at' - 'updated_at')
+        = (to_jsonb(old) - 'completed_at' - 'updated_at')
+    then
+      return new;
+    end if;
+
+    raise exception 'That job update is not allowed.';
   end if;
 
   if old.customer_id <> auth.uid() then
@@ -456,8 +720,23 @@ begin
     raise exception 'Only an administrator can change moderation fields.';
   end if;
 
+  if new.cancelled_at is distinct from old.cancelled_at then
+    if not (
+      new.cancelled_at is not null
+      and new.status = 'closed'
+      and old.status in ('open', 'receiving_offers')
+      and old.accepted_offer_id is null
+    ) then
+      raise exception 'That job update is not allowed.';
+    end if;
+  end if;
+
   if new.status is distinct from old.status then
-    if not (old.status in ('open', 'receiving_offers') and new.status = 'closed') then
+    if not (
+      old.status in ('open', 'receiving_offers')
+      and new.status = 'closed'
+      and old.accepted_offer_id is null
+    ) then
       raise exception 'That job status change is not allowed.';
     end if;
   end if;
@@ -570,6 +849,39 @@ $$;
 create trigger job_photos_limit before insert on job_photos
 for each row execute function limit_job_photos();
 
+create or replace function public.enforce_notification_update()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null or is_admin() then
+    return new;
+  end if;
+
+  if new.user_id <> old.user_id
+    or new.type <> old.type
+    or new.title <> old.title
+    or new.body <> old.body
+    or new.data is distinct from old.data
+    or new.created_at <> old.created_at then
+    raise exception 'Only the read state can be changed.';
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger notifications_enforce_update before update on notifications
+for each row execute function enforce_notification_update();
+
+create trigger notification_preferences_updated_at before update on notification_preferences
+for each row execute function set_updated_at();
+
+create trigger notification_deliveries_updated_at before update on notification_deliveries
+for each row execute function set_updated_at();
+
 -- Row Level Security
 
 alter table profiles enable row level security;
@@ -584,9 +896,56 @@ alter table provider_offers enable row level security;
 alter table reports enable row level security;
 alter table interest_signups enable row level security;
 alter table notifications enable row level security;
+alter table notification_preferences enable row level security;
+alter table notification_deliveries enable row level security;
 alter table audit_log enable row level security;
 alter table site_settings enable row level security;
 alter table analytics_events enable row level security;
+
+-- Existing users need a preferences row too. New sign-ups get one from the
+-- handle_new_user trigger.
+insert into notification_preferences (user_id)
+select id from profiles
+on conflict (user_id) do nothing;
+
+-- Drop the policies this migration owns before recreating them. That keeps a
+-- re-run predictable and lets renamed policies disappear.
+do $$
+declare
+  item record;
+begin
+  for item in
+    select schemaname, tablename, policyname
+    from pg_policies
+    where schemaname = 'public'
+      and tablename in (
+        'profiles',
+        'service_categories',
+        'locations',
+        'provider_profiles',
+        'provider_services',
+        'provider_photos',
+        'job_requests',
+        'job_photos',
+        'provider_offers',
+        'reports',
+        'interest_signups',
+        'notifications',
+        'notification_preferences',
+        'notification_deliveries',
+        'audit_log',
+        'site_settings',
+        'analytics_events'
+      )
+  loop
+    execute format(
+      'drop policy if exists %I on %I.%I',
+      item.policyname,
+      item.schemaname,
+      item.tablename
+    );
+  end loop;
+end $$;
 
 create policy profiles_select on profiles for select
 using (id = auth.uid() or is_admin());
@@ -667,10 +1026,42 @@ create policy jobs_select on job_requests for select
 using (can_view_job(id));
 
 create policy jobs_insert_own on job_requests for insert
-with check (customer_id = auth.uid() and not is_suspended());
+with check (
+  customer_id = auth.uid()
+  and not is_suspended()
+  and status = 'open'
+  and accepted_offer_id is null
+  and cancelled_at is null
+  and completed_at is null
+  and removed_reason is null
+  and removed_by is null
+  and removed_at is null
+);
 
 create policy jobs_update_own on job_requests for update
 using (customer_id = auth.uid()) with check (customer_id = auth.uid());
+
+-- The accepted provider can mark a closed job completed. The trigger limits
+-- this policy to the completed_at column so it cannot be used to edit the job.
+create policy jobs_update_accepted_provider on job_requests for update
+using (
+  exists (
+    select 1
+    from provider_offers
+    where provider_offers.job_id = job_requests.id
+      and provider_offers.provider_id = auth.uid()
+      and provider_offers.status = 'accepted'
+  )
+)
+with check (
+  exists (
+    select 1
+    from provider_offers
+    where provider_offers.job_id = job_requests.id
+      and provider_offers.provider_id = auth.uid()
+      and provider_offers.status = 'accepted'
+  )
+);
 
 create policy jobs_update_admin on job_requests for update
 using (is_admin()) with check (is_admin());
@@ -736,7 +1127,22 @@ with check (true);
 create policy interest_signups_select_admin on interest_signups for select
 using (is_admin());
 
-create policy notifications_select_admin on notifications for select
+create policy notifications_select_own on notifications for select
+using (user_id = auth.uid() or is_admin());
+
+create policy notifications_update_own on notifications for update
+using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+create policy notification_preferences_select_own on notification_preferences for select
+using (user_id = auth.uid() or is_admin());
+
+create policy notification_preferences_insert_own on notification_preferences for insert
+with check (user_id = auth.uid());
+
+create policy notification_preferences_update_own on notification_preferences for update
+using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+create policy notification_deliveries_select_admin on notification_deliveries for select
 using (is_admin());
 
 create policy audit_select_admin on audit_log for select
@@ -951,6 +1357,13 @@ values
   ('job-photos', 'job-photos', false, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
 on conflict (id) do nothing;
 
+drop policy if exists provider_photos_public_read on storage.objects;
+drop policy if exists provider_photos_owner_write on storage.objects;
+drop policy if exists provider_photos_admin_delete on storage.objects;
+drop policy if exists job_photos_permitted_read on storage.objects;
+drop policy if exists job_photos_owner_insert on storage.objects;
+drop policy if exists job_photos_owner_delete on storage.objects;
+
 create policy provider_photos_public_read on storage.objects for select
 using (bucket_id = 'provider-photos');
 
@@ -984,3 +1397,5 @@ using (
   bucket_id = 'job-photos'
   and (storage.foldername(name))[1] = auth.uid()::text
 );
+
+commit;

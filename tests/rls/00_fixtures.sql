@@ -15,13 +15,13 @@ begin;
 
 insert into auth.users (id, email, raw_user_meta_data)
 values
-  ('aaaaaaaa-0000-4000-8000-000000000001', 'customer@example.com', '{"full_name":"Nina Customer"}'),
-  ('aaaaaaaa-0000-4000-8000-000000000002', 'provider@example.com', '{"full_name":"Petra Provider"}'),
-  ('aaaaaaaa-0000-4000-8000-000000000003', 'provider2@example.com', '{"full_name":"Ade Another"}'),
-  ('aaaaaaaa-0000-4000-8000-000000000004', 'pending@example.com', '{"full_name":"Pau Pending"}'),
-  ('aaaaaaaa-0000-4000-8000-000000000005', 'admin@example.com', '{"full_name":"Admin Person"}'),
-  ('aaaaaaaa-0000-4000-8000-000000000006', 'customer2@example.com', '{"full_name":"Callum Customer"}'),
-  ('aaaaaaaa-0000-4000-8000-000000000007', 'provider3@example.com', '{"full_name":"Robin Runner"}');
+  ('aaaaaaaa-0000-4000-8000-000000000001', 'rls-customer@example.test', '{"full_name":"Nina Customer"}'),
+  ('aaaaaaaa-0000-4000-8000-000000000002', 'rls-provider@example.test', '{"full_name":"Petra Provider"}'),
+  ('aaaaaaaa-0000-4000-8000-000000000003', 'rls-provider2@example.test', '{"full_name":"Ade Another"}'),
+  ('aaaaaaaa-0000-4000-8000-000000000004', 'rls-pending@example.test', '{"full_name":"Pau Pending"}'),
+  ('aaaaaaaa-0000-4000-8000-000000000005', 'rls-admin@example.test', '{"full_name":"Admin Person"}'),
+  ('aaaaaaaa-0000-4000-8000-000000000006', 'rls-customer2@example.test', '{"full_name":"Callum Customer"}'),
+  ('aaaaaaaa-0000-4000-8000-000000000007', 'rls-provider3@example.test', '{"full_name":"Robin Runner"}');
 
 update public.profiles
 set role = 'admin'

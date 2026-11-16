@@ -11,6 +11,8 @@ export interface JobCardJob {
   postcode_district: string;
   timeframe: string;
   status: JobStatus;
+  cancelled_at?: string | null;
+  completed_at?: string | null;
   service_categories?: { name: string } | null;
   provider_offers?: { count: number }[];
 }
@@ -35,6 +37,16 @@ export function JobCard({
       <div className="pr-8">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge kind="job" status={job.status} />
+          {job.completed_at ? (
+            <span className="rounded-full bg-success-bg px-3 py-1 text-sm font-bold text-success-fg">
+              Completed
+            </span>
+          ) : null}
+          {job.cancelled_at && !job.completed_at ? (
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-600">
+              Cancelled
+            </span>
+          ) : null}
           {job.service_categories ? (
             <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold">
               {job.service_categories.name}

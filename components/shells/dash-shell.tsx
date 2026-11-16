@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getSessionContext } from "@/lib/permissions";
+import { getUnreadNotificationCount } from "@/lib/notifications";
 import { studioSans } from "@/lib/fonts";
 import { DashHeader } from "@/components/dash/dash-header";
 import { DashFooter } from "@/components/dash/dash-footer";
@@ -9,13 +10,18 @@ type DashVariant = "customer" | "provider" | "admin";
 
 async function Header({ variant }: { variant: DashVariant }) {
   const context = await getSessionContext();
+  const unreadCount = context.user
+    ? await getUnreadNotificationCount(context.user.id)
+    : 0;
 
   return (
     <DashHeader
       user={context.user}
       name={context.profile?.full_name}
       isProvider={Boolean(context.providerProfile)}
+      isAdmin={context.profile?.role === "admin"}
       providerStatus={context.providerProfile?.status ?? null}
+      unreadCount={unreadCount}
       variant={variant}
     />
   );
