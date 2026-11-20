@@ -1,8 +1,11 @@
-import type {
-  InputHTMLAttributes,
-  ReactNode,
-  SelectHTMLAttributes,
-  TextareaHTMLAttributes,
+import {
+  cloneElement,
+  isValidElement,
+  type InputHTMLAttributes,
+  type ReactElement,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
 } from "react";
 import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -22,6 +25,26 @@ export function Field({
   children: ReactNode;
   className?: string;
 }) {
+  const describedBy =
+    [hint ? `${htmlFor}-hint` : null, error ? `${htmlFor}-error` : null]
+      .filter(Boolean)
+      .join(" ") || undefined;
+
+  const control = isValidElement(children)
+    ? cloneElement(children as ReactElement<Record<string, unknown>>, {
+        "aria-describedby":
+          [
+            (children.props as Record<string, unknown>)["aria-describedby"],
+            describedBy,
+          ]
+            .filter(Boolean)
+            .join(" ") || undefined,
+        "aria-invalid": error
+          ? true
+          : (children.props as Record<string, unknown>)["aria-invalid"],
+      })
+    : children;
+
   return (
     <div className={cn("space-y-1.5", className)}>
       <label htmlFor={htmlFor} className="block text-base font-bold">
@@ -32,10 +55,11 @@ export function Field({
           {hint}
         </p>
       ) : null}
-      {children}
+      {control}
       {error ? (
         <p
           id={`${htmlFor}-error`}
+          role="alert"
           className="flex items-start gap-1.5 text-sm font-bold text-danger-fg"
         >
           <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />

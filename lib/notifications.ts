@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -77,19 +78,21 @@ export async function createNotifications(notifications: NewNotification[]) {
   }
 }
 
-export async function getUnreadNotificationCount(userId: string) {
-  if (!isSupabaseConfigured()) return 0;
+export const getUnreadNotificationCount = cache(
+  async function getUnreadNotificationCount(userId: string) {
+    if (!isSupabaseConfigured()) return 0;
 
-  const supabase = await createServerSupabase();
-  const { count, error } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .is("read_at", null);
+    const supabase = await createServerSupabase();
+    const { count, error } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .is("read_at", null);
 
-  if (error) return 0;
-  return count ?? 0;
-}
+    if (error) return 0;
+    return count ?? 0;
+  },
+);
 
 export async function getNotifications(userId: string, limit = 50) {
   if (!isSupabaseConfigured()) return [];

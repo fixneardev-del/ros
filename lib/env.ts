@@ -34,3 +34,63 @@ export function isSupabaseConfigured() {
   const { supabaseUrl, supabaseAnonKey } = getPublicEnv();
   return Boolean(supabaseUrl && supabaseAnonKey);
 }
+
+export interface EmailConfigResult {
+  configured: boolean;
+  reason?: string;
+}
+
+const EMAIL_ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function emailAddressFrom(value: string) {
+  const bracketed = value.match(/<([^<>]+)>/);
+  const candidate = (bracketed ? bracketed[1] : value).trim();
+  return EMAIL_ADDRESS.test(candidate) ? candidate.toLowerCase() : null;
+}
+
+/**
+ * Checks enough of the email config to avoid pretending a placeholder setup
+ * can send. The check is deliberately conservative: it does not call Resend
+ * and it never throws at import time, so local builds remain unaffected.
+ */
+export function getEmailConfig(): EmailConfigResult {
+  const { resendApiKey, emailFrom } = getServerEnv();
+
+  if (!resendApiKey) {
+    return { configured: false, reason: "RESEND_API_KEY is empty." };
+  }
+
+  if (!/^re_[A-Za-z0-9_-]{16,}$/.test(resendApiKey)) {
+    return {
+      configured: false,
+      reason: "RESEND_API_KEY is not a valid Resend key.",
+    };
+  }
+
+  const address = emailAddressFrom(emailFrom);
+  if (!address) {
+    return {
+      configured: false,
+      reason: "EMAIL_FROM does not contain a valid email address.",
+    };
+  }
+
+  const domain = address.split("@")[1];
+  if (
+    domain === "example.com" ||
+    domain.endsWith(".example.com") ||
+    domain === "localhost" ||
+    domain.endsWith(".localhost")
+  ) {
+    return {
+      configured: false,
+      reason: "EMAIL_FROM uses a placeholder domain.",
+    };
+  }
+
+  return { configured: true };
+}
+
+export function isEmailConfigured() {
+  return getEmailConfig().configured;
+}

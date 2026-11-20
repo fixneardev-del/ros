@@ -202,7 +202,7 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
             <h2 className="s-section-title">
               {category.name} in {postcodeCheck.district}
             </h2>
-            <p className="mt-1 text-muted">
+            <p className="mt-1 text-muted" aria-live="polite">
               {providers.length}{" "}
               {providers.length === 1 ? "approved provider" : "approved providers"}
               {query ? ` matching “${query}”` : ""}

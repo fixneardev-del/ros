@@ -3,6 +3,7 @@ import { AuthShell } from "@/components/mend/auth-shell";
 import { ResetCodeForm, ResetPasswordForm } from "@/components/forms/auth-forms";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { hasResetSession } from "@/lib/reset-session";
 
 export const metadata: Metadata = { title: "Reset password" };
 
@@ -29,14 +30,16 @@ export default async function ResetPasswordPage({
 }: {
   searchParams: SearchParams;
 }) {
-  // A recovery link or code both identify the account being reset. An
-  // unrelated signed-in session is not enough to expose the password form.
+  // A recovery link or code sets a short-lived signed cookie. An unrelated
+  // signed-in session is not enough to expose the password form.
   const params = await searchParams;
   const sessionEmail = await resetSessionEmail();
   const requestedEmail =
     typeof params.email === "string" ? params.email.trim().toLowerCase() : "";
   const canResetPassword = Boolean(
-    sessionEmail && requestedEmail === sessionEmail.toLowerCase(),
+    sessionEmail &&
+      requestedEmail === sessionEmail.toLowerCase() &&
+      (await hasResetSession(requestedEmail)),
   );
 
   return (

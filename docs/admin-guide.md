@@ -128,10 +128,14 @@ suspended. Check **Users**.
 **A job is not showing for a provider.** Check that the provider covers the
 postcode district and offers that service, and that the provider is approved.
 
-**An email did not arrive.** Look at the `notifications` table in Supabase. A
-row with status `failed` and an error explains why. Failed rows can be resent
-from `/api/notifications/retry`, either from an admin session or with the
-`x-cron-secret` header.
+**An email did not arrive.** Look at the `notification_deliveries` table in
+Supabase. A row with status `failed` and an error explains why. Rows can be
+`queued`, `failed`, `sent` or `skipped`; `skipped` means the recipient's
+preferences suppressed an optional email, while `failed` is retryable. The
+daily cron retries up to 5 failed rows per run. You can also call
+`/api/notifications/retry` from an admin session or with the header
+`Authorization: Bearer $CRON_SECRET`. An attempt cap of five prevents a bad row
+from retrying forever.
 
 **Someone cannot reach `/admin`.** They are signed in but their account is not
 an admin. Set `role = 'admin'` on their profile row.

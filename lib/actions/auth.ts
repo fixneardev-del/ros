@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { getPublicEnv, getServerEnv } from "@/lib/env";
+import { getPublicEnv, getEmailConfig } from "@/lib/env";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { fail, ok, fromZodError, errorMessage } from "@/lib/actions/result";
 import type { ActionResult } from "@/lib/actions/result";
@@ -20,6 +20,11 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { buildEmailMessages } from "@/lib/emails/templates";
 import { sendEmail } from "@/lib/emails/send";
 import { emit } from "@/lib/events";
+import {
+  clearResetSession,
+  grantResetSession,
+  hasResetSession,
+} from "@/lib/reset-session";
 
 export async function registerUser(
   _previous: ActionResult<{ next: string }> | null,
@@ -207,94 +212,92 @@ export async function requestPasswordReset(
 
   const email = parsed.data.email;
   const { siteUrl } = getPublicEnv();
-  const { resendApiKey } = getServerEnv();
+  const emailConfig = getEmailConfig();
   const admin = createAdminSupabase();
 
-  // With the server key and Resend available, the link and the one-time code
-  // are generated here and the branded email is sent by this app. Otherwise
-  // Supabase sends its own reset email, which keeps local development and a
-  // deployment without Resend working.
-  if (admin && resendApiKey) {
+  // Supabase always sends a reset email when Resend is unavailable or a
+  // branded send fails. The visitor sees the same result in every case so an
+  // unknown address cannot be distinguished from a failed send.
+  const sendViaSupabase = async () => {
     try {
-      const { data, error } = await admin.auth.admin.generateLink({
-        type: "recovery",
-        email,
+      const supabase = await createServerSupabase();
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
       });
-
-      // An unknown address is not distinguishable from a failed send. The
-      // visitor is always told the same thing.
-      if (error || !data.properties?.hashed_token) {
-        return ok(undefined);
-      }
-
-      const tokenHash = data.properties.hashed_token;
-      const resetUrl = `${siteUrl}/auth/callback?token_hash=${encodeURIComponent(tokenHash)}&type=recovery&next=${encodeURIComponent("/reset-password")}`;
-      const [message] = buildEmailMessages(
-        "auth.password_reset",
-        {
-          email,
-          name:
-            typeof data.user?.user_metadata?.full_name === "string"
-              ? data.user.user_metadata.full_name
-              : "",
-          resetUrl,
-          code: data.properties.email_otp,
-          expiresInMinutes: 60,
-        },
-        siteUrl,
-      );
-
-      if (message) {
-        const task = async () => {
-          const result = await sendEmail({
-            ...message,
-            idempotencyKey: `password-reset/${tokenHash}`,
-          });
-          if (!result.ok) {
-            console.error("Password reset email failed", result.error);
-            const fallback = await admin.auth.resetPasswordForEmail(email, {
-              redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
-            });
-            if (fallback.error) {
-              console.error(
-                "Supabase password reset fallback failed",
-                fallback.error.message,
-              );
-            }
-          }
-        };
-
-        // The reset token must not be persisted, so it is sent directly
-        // rather than written to the notification outbox. The response does
-        // not wait for Resend.
-        try {
-          after(task);
-        } catch {
-          await task();
-        }
+      if (error) {
+        console.error("Password reset request failed", error.message);
       }
     } catch (error) {
-      // Do not reveal whether the address exists.
       console.error("Password reset request failed", errorMessage(error, "unknown"));
     }
+  };
 
+  if (!admin || !emailConfig.configured) {
+    await sendViaSupabase();
     return ok(undefined);
   }
 
   try {
-    const supabase = await createServerSupabase();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
+    const { data, error } = await admin.auth.admin.generateLink({
+      type: "recovery",
+      email,
     });
 
-    // The visitor is not told whether the address exists, but a genuine
-    // failure is still logged so it can be chased.
-    if (error) {
-      console.error("Password reset request failed", error.message);
+    if (error || !data.properties?.hashed_token) {
+      await sendViaSupabase();
+      return ok(undefined);
+    }
+
+    const tokenHash = data.properties.hashed_token;
+    const resetUrl = `${siteUrl}/auth/callback?token_hash=${encodeURIComponent(tokenHash)}&type=recovery&next=${encodeURIComponent("/reset-password")}`;
+    const [message] = buildEmailMessages(
+      "auth.password_reset",
+      {
+        email,
+        name:
+          typeof data.user?.user_metadata?.full_name === "string"
+            ? data.user.user_metadata.full_name
+            : "",
+        resetUrl,
+        code: data.properties.email_otp,
+        expiresInMinutes: 60,
+      },
+      siteUrl,
+    );
+
+    if (!message) {
+      await sendViaSupabase();
+      return ok(undefined);
+    }
+
+    const task = async () => {
+      const result = await sendEmail({
+        ...message,
+        idempotencyKey: `password-reset/${tokenHash}`,
+      });
+
+      if (!result.ok) {
+        // A timeout can happen after Resend accepted the message. A second
+        // token would then leave two valid reset links, so log and stop.
+        console.error("Password reset email failed", result.error);
+      } else if (result.skipped) {
+        console.error("Password reset email skipped", result.reason);
+        await sendViaSupabase();
+      }
+    };
+
+    // The reset token must not be persisted, so it is sent directly rather
+    // than written to the notification outbox. The response does not wait for
+    // Resend.
+    try {
+      after(task);
+    } catch {
+      await task();
     }
   } catch (error) {
     // Do not reveal whether the address exists.
     console.error("Password reset request failed", errorMessage(error, "unknown"));
+    await sendViaSupabase();
   }
 
   return ok(undefined);
@@ -347,7 +350,9 @@ export async function resetPasswordWithCode(
     return fail("RESET_CODE_FAILED", errorMessage(error, "We couldn't check that code."));
   }
 
-  // The code signs the person in, so the reset form can update the password.
+  // The code signs the person in. A signed cookie records that recovery was
+  // proven, so a normal session alone cannot unlock the password form.
+  await grantResetSession(recoveryEmail!);
   redirect(
     `/reset-password?email=${encodeURIComponent(recoveryEmail!)}`,
   );
@@ -372,11 +377,12 @@ export async function resetPassword(
     if (
       userError ||
       !userData.user?.email ||
-      userData.user.email.toLowerCase() !== parsed.data.email.toLowerCase()
+      userData.user.email.toLowerCase() !== parsed.data.email.toLowerCase() ||
+      !(await hasResetSession(parsed.data.email))
     ) {
       return fail(
         "RESET_FAILED",
-        "This reset link is for a different account. Sign out and use the code from the email.",
+        "This reset link is no longer valid. Request a new link or use the code from the email.",
       );
     }
 
@@ -388,6 +394,8 @@ export async function resetPassword(
         "That reset link has expired. Request a new link and try again.",
       );
     }
+
+    await clearResetSession();
   } catch (error) {
     return fail("RESET_FAILED", errorMessage(error, "We couldn't update your password."));
   }

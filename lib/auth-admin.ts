@@ -21,19 +21,28 @@ export async function getAccountState(userId: string) {
   const admin = createAdminSupabase();
   if (!admin) return { role: null as AccountRole, isProvider: false };
 
-  const [{ data: profile }, { data: providerProfile }] = await Promise.all([
-    admin.from("profiles").select("role").eq("id", userId).maybeSingle(),
-    admin
-      .from("provider_profiles")
-      .select("user_id")
-      .eq("user_id", userId)
-      .maybeSingle(),
-  ]);
+  try {
+    const [{ data: profile }, { data: providerProfile }] = await Promise.all([
+      admin.from("profiles").select("role").eq("id", userId).maybeSingle(),
+      admin
+        .from("provider_profiles")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle(),
+    ]);
 
-  return {
-    role: (profile?.role as AccountRole) ?? null,
-    isProvider: Boolean(providerProfile),
-  };
+    return {
+      role: (profile?.role as AccountRole) ?? null,
+      isProvider: Boolean(providerProfile),
+    };
+  } catch (error) {
+    // The session has already been established at this point. A role lookup
+    // failure must not turn a successful sign-in into an authentication error.
+    console.error(
+      `[auth] could not resolve role for ${userId}: ${error instanceof Error ? error.message : "unknown error"}`,
+    );
+    return { role: null as AccountRole, isProvider: false };
+  }
 }
 
 export async function getUserEmails(userIds: string[]) {

@@ -57,7 +57,7 @@ export function PhotoInput({
     <div>
       <label
         htmlFor={name}
-        className="flex min-h-24 cursor-pointer items-center justify-center gap-2 rounded-surface border-2 border-dashed border-line-strong bg-surface px-4 py-6 text-center font-bold hover:border-primary"
+        className="flex min-h-24 cursor-pointer items-center justify-center gap-2 rounded-surface border-2 border-dashed border-line-strong bg-surface px-4 py-6 text-center font-bold hover:border-primary focus-within:border-primary focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
       >
         <ImagePlus className="size-5" aria-hidden />
         {label}
@@ -70,7 +70,8 @@ export function PhotoInput({
           required={required}
           className="sr-only"
           onChange={onChange}
-          aria-describedby={`${name}-hint`}
+          aria-describedby={`${name}-hint${error ? ` ${name}-error` : ""}`}
+          aria-invalid={error ? true : undefined}
         />
       </label>
       <p id={`${name}-hint`} className="mt-1.5 text-sm text-muted">
@@ -78,7 +79,11 @@ export function PhotoInput({
       </p>
 
       {error ? (
-        <p role="alert" className="mt-1.5 text-sm font-bold text-danger-fg">
+        <p
+          id={`${name}-error`}
+          role="alert"
+          className="mt-1.5 text-sm font-bold text-danger-fg"
+        >
           {error}
         </p>
       ) : null}

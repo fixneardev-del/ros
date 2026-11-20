@@ -6,5 +6,11 @@
       "NEXT_PUBLIC_SUPABASE_URL": "https://eohqgkxnjshnzwadglnh.supabase.co",
       "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_p6H_XvCk12XQ8kSmY2rBzQ_4KQWVGFw"
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/notifications/retry",
+      "schedule": "0 6 * * *"
+    }
+  ]
 }

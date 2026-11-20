@@ -1,6 +1,14 @@
 import { Resend } from "resend";
-import { getServerEnv } from "@/lib/env";
+import { getEmailConfig, getServerEnv } from "@/lib/env";
 import type { EmailMessage } from "@/lib/emails/templates";
+
+const reportedReasons = new Set<string>();
+
+function reportSkip(reason?: string) {
+  if (!reason || reportedReasons.has(reason)) return;
+  reportedReasons.add(reason);
+  console.error(`[email] email disabled: ${reason}`);
+}
 
 /**
  * Resend accepts only letters, numbers, underscores and dashes in a tag
@@ -14,9 +22,15 @@ export async function sendEmail(
   input: EmailMessage & { idempotencyKey?: string },
 ) {
   const { resendApiKey, emailFrom, emailReplyTo } = getServerEnv();
+  const config = getEmailConfig();
 
-  if (!resendApiKey) {
-    return { ok: true as const, skipped: true as const };
+  if (!config.configured) {
+    reportSkip(config.reason);
+    return {
+      ok: true as const,
+      skipped: true as const,
+      reason: config.reason,
+    };
   }
 
   const resend = new Resend(resendApiKey);

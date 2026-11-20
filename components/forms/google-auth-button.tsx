@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { FormMessage } from "@/components/mend/form-message";
 import { safeNextPath } from "@/lib/next-path";
-import { getBrowserSupabase } from "@/lib/supabase/browser";
 
 export const ACCEPTED_TERMS_ID = "acceptedTerms";
 
@@ -67,6 +66,9 @@ export function GoogleAuthButton({
       const destination = safeNextPath(next || null, "");
       if (destination) callback.searchParams.set("next", destination);
 
+      // Load the Supabase SDK only when someone actually chooses Google. It
+      // keeps the auth page bundle smaller for password users.
+      const { getBrowserSupabase } = await import("@/lib/supabase/browser");
       const supabase = getBrowserSupabase();
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",

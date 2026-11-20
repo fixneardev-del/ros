@@ -10,6 +10,11 @@ import {
 } from "@/lib/emails/events";
 import { isEmailAllowed } from "@/lib/notifications";
 import { sendEmail } from "@/lib/emails/send";
+import { isCronRequest } from "@/lib/cron-auth";
+
+export const maxDuration = 60;
+
+const MAX_RETRIES_PER_RUN = 5;
 
 interface DeliveryRow {
   id: string;
@@ -46,7 +51,7 @@ async function retry() {
     .in("status", ["queued", "failed"])
     .or(`status.eq.failed,created_at.lt.${staleQueuedBefore}`)
     .order("updated_at", { ascending: true })
-    .limit(50);
+    .limit(MAX_RETRIES_PER_RUN);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -164,7 +169,7 @@ async function retry() {
         .from("notification_deliveries")
         .update({
           status: "failed",
-          error: "Email is not configured (RESEND_API_KEY is empty).",
+          error: result.reason ?? "Email is not configured.",
           attempt_count: notification.attempt_count + 1,
           updated_at: new Date().toISOString(),
         })
@@ -188,11 +193,7 @@ async function retry() {
 }
 
 export async function POST(request: Request) {
-  const secret = request.headers.get("x-cron-secret");
-  const cronSecret = process.env.CRON_SECRET;
-  const isCron = Boolean(secret && cronSecret && secret === cronSecret);
-
-  if (!isCron) {
+  if (!isCronRequest(request)) {
     const context = await getSessionContext();
     if (!context.user || context.profile?.role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });

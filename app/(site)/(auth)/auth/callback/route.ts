@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getAccountState } from "@/lib/auth-admin";
+import { isFirstTimeSignIn } from "@/lib/auth-new-user";
 import { landingPath, safeNextPath } from "@/lib/next-path";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { emit } from "@/lib/events";
+import { grantResetSession } from "@/lib/reset-session";
 
 // Only the types this app issues are accepted. Anything else is treated as a
 // bad link rather than passed through to Supabase.
@@ -20,6 +23,9 @@ function authRedirect(path: string, origin: string) {
     "Cache-Control",
     "private, no-cache, no-store, max-age=0",
   );
+  // Recovery links carry a token in the query string. Never let the redirect
+  // leak the full callback URL as a referrer.
+  response.headers.set("Referrer-Policy", "no-referrer");
   return response;
 }
 
@@ -44,11 +50,14 @@ export async function GET(request: Request) {
 
         if (!error) {
           const recoveryEmail = data.user?.email;
-          const destination =
-            type === "recovery" && recoveryEmail
-              ? `/reset-password?email=${encodeURIComponent(recoveryEmail)}`
-              : next;
-          return authRedirect(destination, url.origin);
+          if (type === "recovery" && recoveryEmail) {
+            await grantResetSession(recoveryEmail);
+            return authRedirect(
+              `/reset-password?email=${encodeURIComponent(recoveryEmail)}`,
+              url.origin,
+            );
+          }
+          return authRedirect(next, url.origin);
         }
       } catch {
         // Fall through to the friendly login error.
@@ -61,7 +70,44 @@ export async function GET(request: Request) {
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (!error) {
-          const sessionEmail = data.user?.email;
+          const user = data.user;
+          const sessionEmail = user?.email;
+
+          // Google sign-up and sign-in share this callback. Every login gets
+          // a security notice; only a fresh account gets a welcome email.
+          if (user?.email) {
+            const metadata = user.user_metadata ?? {};
+            const name =
+              typeof metadata.full_name === "string"
+                ? metadata.full_name
+                : typeof metadata.name === "string"
+                  ? metadata.name
+                  : "";
+
+            try {
+              await emit("auth.signed_in", {
+                email: user.email,
+                name,
+                signedInAt: new Date().toISOString(),
+              });
+
+              if (isFirstTimeSignIn(user)) {
+                await emit("auth.welcome", {
+                  email: user.email,
+                  name,
+                  needsConfirmation: false,
+                });
+              }
+            } catch (noticeError) {
+              console.error(
+                "Google sign-in email could not be queued",
+                noticeError instanceof Error
+                  ? noticeError.message
+                  : "unknown error",
+              );
+            }
+          }
+
           const account = await getAccountState(data.user.id);
           const destination =
             next.startsWith("/reset-password") && sessionEmail

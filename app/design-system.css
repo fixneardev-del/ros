@@ -291,8 +291,9 @@
 }
 
 .l-btn:focus-visible {
-  outline: 3px solid var(--l-yellow);
+  outline: 3px solid var(--l-ink);
   outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--l-yellow);
 }
 
 .l-btn-dark {
@@ -495,8 +496,9 @@
 }
 
 .l-input:focus-visible {
-  outline: 3px solid var(--l-yellow);
+  outline: 3px solid var(--l-ink);
   outline-offset: 1px;
+  box-shadow: 0 0 0 4px var(--l-yellow);
   border-color: var(--l-teal);
 }
 
@@ -556,8 +558,9 @@
 }
 
 .l-tile:focus-visible {
-  outline: 3px solid var(--l-yellow);
+  outline: 3px solid var(--l-ink);
   outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--l-yellow);
 }
 
 .l-tile-icon {

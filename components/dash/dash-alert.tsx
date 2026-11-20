@@ -21,7 +21,10 @@ export function DashAlert({
   const Icon = icons[tone];
 
   return (
-    <div className={`dash-alert dash-alert-${tone}`} role="status">
+    <div
+      className={`dash-alert dash-alert-${tone}`}
+      role={tone === "warning" || tone === "danger" ? "alert" : "status"}
+    >
       <span className="dash-alert-icon">
         <Icon className="size-4" aria-hidden />
       </span>

@@ -35,11 +35,12 @@ Copy `.env.example` to `.env.local` and fill in:
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable (anon) key |
 | `SUPABASE_SECRET_KEY` | Server-only key for admin operations and notifications |
-| `RESEND_API_KEY` | Resend API key; email is skipped when it is empty |
-| `EMAIL_FROM` | Sender shown on transactional email |
+| `RESEND_API_KEY` | Real Resend key; placeholders disable email and keep outbox rows retryable |
+| `EMAIL_FROM` | Verified sender shown on transactional email; `example.com` disables email |
 | `EMAIL_REPLY_TO` | Optional monitored inbox for replies |
 | `ADMIN_NOTIFICATION_EMAIL` | Admin contact and notification address |
-| `CRON_SECRET` | Optional secret for the notification retry endpoint |
+| `RESET_SESSION_SECRET` | Optional signer for the short-lived recovery cookie; defaults to `SUPABASE_SECRET_KEY` |
+| `CRON_SECRET` | Required for scheduled notification retries |
 
 Never expose the service-role key to the browser.
 

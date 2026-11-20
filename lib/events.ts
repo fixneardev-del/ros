@@ -144,8 +144,7 @@ export async function emit(
             .from("notification_deliveries")
             .update({
               status: "failed",
-              error:
-                "Email is not configured (RESEND_API_KEY is empty).",
+              error: result.reason ?? "Email is not configured.",
               attempt_count: 1,
               sent_at: null,
               updated_at: new Date().toISOString(),

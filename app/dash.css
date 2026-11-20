@@ -124,7 +124,7 @@
 }
 
 .dash :focus-visible {
-  outline: 2px solid var(--d-blue);
+  outline: 3px solid var(--d-blue-strong);
   outline-offset: 2px;
   box-shadow: none;
 }
@@ -392,7 +392,7 @@
   align-items: center;
   justify-content: center;
   gap: 5px;
-  min-height: 34px;
+  min-height: 44px;
   padding: 0 13px;
   border-radius: 999px;
   font-size: 11px;
@@ -440,15 +440,15 @@
 }
 
 .dash-avatar:hover {
-  background: var(--d-orange);
+  background: var(--d-orange-strong);
   color: #ffffff;
 }
 
 .dash-icon-button {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   flex: none;
   border: 1px solid var(--d-track);
   border-radius: 50%;
@@ -502,8 +502,8 @@
 .dash-menu summary {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border: 1px solid var(--d-track);
   border-radius: 50%;
   background: var(--d-control);
@@ -1016,7 +1016,7 @@ a.dash-kpi:hover {
 }
 
 .dash-search-submit:hover {
-  background: var(--d-orange);
+  background: var(--d-orange-strong);
 }
 
 .dash-search-meta {
@@ -1227,7 +1227,7 @@ a.dash-kpi:hover {
 /* Buttons -------------------------------------------------------------- */
 
 .dash .btn {
-  min-height: 38px;
+  min-height: 44px;
   padding: 0 16px;
   border: 0;
   border-radius: 999px;
@@ -1354,8 +1354,8 @@ a.dash-kpi:hover {
 .dash input:not([type="checkbox"]):not([type="radio"]):focus-visible,
 .dash select:focus-visible,
 .dash textarea:focus-visible {
-  border-color: var(--d-blue);
-  outline: 2px solid var(--d-blue);
+  border-color: var(--d-blue-strong);
+  outline: 3px solid var(--d-blue-strong);
   outline-offset: 2px;
   box-shadow: none;
 }
