@@ -7,7 +7,7 @@ afterEach(() => {
 
 describe("email configuration", () => {
   it("accepts a real Resend key and verified-style sender", () => {
-    vi.stubEnv("RESEND_API_KEY", "re_abcdefghijklmnopqrst");
+    vi.stubEnv("RESEND_API_KEY", "re_test_key_abcdefghijklmnop");
     vi.stubEnv("EMAIL_FROM", "Repairs and Other Services <hello@repairs.example.co.uk>");
 
     expect(getEmailConfig()).toEqual({ configured: true });
@@ -25,7 +25,7 @@ describe("email configuration", () => {
   });
 
   it("rejects placeholder sender domains", () => {
-    vi.stubEnv("RESEND_API_KEY", "re_abcdefghijklmnopqrst");
+    vi.stubEnv("RESEND_API_KEY", "re_test_key_abcdefghijklmnop");
     vi.stubEnv("EMAIL_FROM", "Repairs and Other Services <hello@example.com>");
 
     expect(getEmailConfig()).toEqual({
@@ -35,7 +35,7 @@ describe("email configuration", () => {
   });
 
   it("rejects malformed sender addresses", () => {
-    vi.stubEnv("RESEND_API_KEY", "re_abcdefghijklmnopqrst");
+    vi.stubEnv("RESEND_API_KEY", "re_test_key_abcdefghijklmnop");
     vi.stubEnv("EMAIL_FROM", "hello at example dot co dot uk");
 
     expect(isEmailConfigured()).toBe(false);
