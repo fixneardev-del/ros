@@ -62,3 +62,8 @@ node_modules/
 
 # Saved sign-in sessions for the end-to-end suite.
 tests/e2e/.auth
+
+# Internal agent and project context is not part of the deployed source.
+/.agents/
+/.context/
+/skills/
