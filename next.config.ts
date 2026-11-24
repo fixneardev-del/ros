@@ -82,6 +82,9 @@ const nextConfig: NextConfig = {
     authInterrupts: true,
   },
   images: {
+    // The E2E stack serves photos from 127.0.0.1:54321. Only the test build
+    // sets this flag; production keeps Next's SSRF guard enabled.
+    dangerouslyAllowLocalIP: process.env.NEXT_ALLOW_LOCAL_IMAGES === "1",
     remotePatterns: [
       {
         protocol: "https",

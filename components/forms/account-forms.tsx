@@ -21,13 +21,18 @@ export function AccountForm({ profile }: { profile: Profile }) {
         fields={fieldsFrom(state)}
         success={state?.ok ? "Your details are saved." : null}
       />
-      <Field label="Your name" htmlFor="fullName">
+      <Field
+        label="Your name"
+        htmlFor="fullName"
+        hint="Set when you signed in. Ask an administrator if it needs changing."
+      >
         <Input
           id="fullName"
           name="fullName"
           defaultValue={profile.full_name}
           autoComplete="name"
-          required
+          readOnly
+          aria-readonly
         />
       </Field>
       <Field

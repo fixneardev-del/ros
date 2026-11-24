@@ -139,6 +139,20 @@ grant anon, authenticated, service_role to postgres;
 SQL
 }
 
+# Existing users created before the default role was configured keep an empty
+# role in auth.users. Patch them in place without touching any other column.
+fix_user_roles() {
+  psql_run -d "$DB" <<'SQL'
+do $$
+begin
+  if to_regclass('auth.users') is not null then
+    update auth.users set role = 'authenticated' where role is null or role = '';
+    update auth.users set aud = 'authenticated' where aud is null or aud = '';
+  end if;
+end; $$;
+SQL
+}
+
 # ---------------------------------------------------------------------------
 # GoTrue environment
 # ---------------------------------------------------------------------------
@@ -158,6 +172,10 @@ auth_env() {
   export GOTRUE_JWT_SECRET="${JWT_SECRET}"
   export GOTRUE_JWT_EXP="3600"
   export GOTRUE_JWT_AUD="authenticated"
+  # GoTrue otherwise issues a JWT with an empty role for users created through
+  # the public sign-up endpoint, and PostgREST cannot map that to a Postgres
+  # role. Demo users are patched in seed.sql; this covers everyone else.
+  export GOTRUE_JWT_DEFAULT_GROUP_NAME="authenticated"
   export GOTRUE_JWT_ISSUER="supabase-local"
   export GOTRUE_DISABLE_SIGNUP="false"
   export GOTRUE_MAILER_AUTOCONFIRM="true"
@@ -382,12 +400,14 @@ case "${1:-start}" in
     if ! psql_run -d "$DB" -tAc "select 1 from service_categories limit 1" >/dev/null 2>&1; then
       load_schema
     fi
+    fix_user_roles
     start_services
     echo "The local Supabase stack is running."
     ;;
   reset)
     write_rest_config
     load_schema
+    fix_user_roles
     start_services
     echo "The local Supabase stack is running."
     print_url

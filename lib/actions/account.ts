@@ -13,18 +13,16 @@ export async function updateAccount(
 ): Promise<ActionResult> {
   const context = await requireUser("/account");
   const parsed = accountSchema.safeParse({
-    fullName: formData.get("fullName"),
-    phone: formData.get("phone"),
+    phone: formData.get("phone") ?? "",
   });
 
   if (!parsed.success) return fromZodError(parsed.error);
 
+  // Never write the name here. Even a forged form submission cannot change it:
+  // the database trigger rejects name edits from non-admins.
   const { error } = await context.supabase
     .from("profiles")
-    .update({
-      full_name: parsed.data.fullName,
-      phone: nullIfBlank(parsed.data.phone),
-    })
+    .update({ phone: nullIfBlank(parsed.data.phone) })
     .eq("id", context.user.id);
 
   if (error) {

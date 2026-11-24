@@ -45,32 +45,8 @@ describe("safeNextPath", () => {
 describe("landingPath", () => {
   it("sends an admin to the admin dashboard", () => {
     expect(landingPath({ role: "admin", isProvider: false })).toBe("/admin");
-    expect(
-      landingPath({ role: "admin", isProvider: false, requested: "" }),
-    ).toBe("/admin");
-  });
-
-  it("never sends an admin to the provider dashboard", () => {
-    expect(
-      landingPath({
-        role: "admin",
-        isProvider: false,
-        requested: "/provide",
-      }),
-    ).toBe("/admin");
-    expect(
-      landingPath({
-        role: "admin",
-        isProvider: false,
-        requested: "/provide/jobs",
-      }),
-    ).toBe("/admin");
-  });
-
-  it("honours a requested page that suits the admin", () => {
-    expect(
-      landingPath({ role: "admin", isProvider: false, requested: "/admin/jobs" }),
-    ).toBe("/admin/jobs");
+    // An admin who also has a provider profile still lands in the admin area.
+    expect(landingPath({ role: "admin", isProvider: true })).toBe("/admin");
   });
 
   it("sends a provider to the provider dashboard", () => {
@@ -79,31 +55,6 @@ describe("landingPath", () => {
 
   it("sends a customer to the account page", () => {
     expect(landingPath({ role: "user", isProvider: false })).toBe("/account");
-  });
-
-  it("honours a requested page for a customer", () => {
-    expect(
-      landingPath({ role: "user", isProvider: false, requested: "/jobs" }),
-    ).toBe("/jobs");
-    expect(
-      landingPath({ role: "user", isProvider: true, requested: "/provide/jobs" }),
-    ).toBe("/provide/jobs");
-  });
-
-  it("ignores an unsafe requested page", () => {
-    expect(
-      landingPath({
-        role: "user",
-        isProvider: false,
-        requested: "//example.com",
-      }),
-    ).toBe("/account");
-    expect(
-      landingPath({
-        role: "admin",
-        isProvider: false,
-        requested: "//example.com",
-      }),
-    ).toBe("/admin");
+    expect(landingPath({ role: null, isProvider: false })).toBe("/account");
   });
 });

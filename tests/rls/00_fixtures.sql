@@ -21,7 +21,9 @@ values
   ('aaaaaaaa-0000-4000-8000-000000000004', 'rls-pending@example.test', '{"full_name":"Pau Pending"}'),
   ('aaaaaaaa-0000-4000-8000-000000000005', 'rls-admin@example.test', '{"full_name":"Admin Person"}'),
   ('aaaaaaaa-0000-4000-8000-000000000006', 'rls-customer2@example.test', '{"full_name":"Callum Customer"}'),
-  ('aaaaaaaa-0000-4000-8000-000000000007', 'rls-provider3@example.test', '{"full_name":"Robin Runner"}');
+  ('aaaaaaaa-0000-4000-8000-000000000007', 'rls-provider3@example.test', '{"full_name":"Robin Runner"}'),
+  -- Google sends `name` rather than `full_name` on some accounts.
+  ('aaaaaaaa-0000-4000-8000-000000000008', 'rls-google@example.test', '{"name":"Gina Google"}');
 
 update public.profiles
 set role = 'admin'

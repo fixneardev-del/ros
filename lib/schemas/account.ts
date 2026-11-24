@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { nameSchema, passwordSchema, phoneSchema } from "@/lib/schemas/common";
+import { passwordSchema, phoneSchema } from "@/lib/schemas/common";
 
+// The name comes from the sign-in provider and is locked in the database.
+// Only contact details are editable from a dashboard.
 export const accountSchema = z.object({
-  fullName: nameSchema,
   phone: phoneSchema,
 });
 

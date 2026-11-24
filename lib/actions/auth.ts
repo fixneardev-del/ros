@@ -55,40 +55,78 @@ export async function registerUser(
   } | null = null;
 
   try {
-    const supabase = await createServerSupabase();
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
+    const admin = createAdminSupabase();
+
+    if (admin) {
+      // The server-only key creates the account without asking GoTrue to send
+      // a confirmation email. Hosted projects apply a strict email send rate
+      // limit, and that limit made every new registration fail with a hidden
+      // 429. The app's own welcome email is sent below instead.
+      const { data, error } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        role: "authenticated",
+        user_metadata: {
           full_name: fullName,
           accepted_terms_at: new Date().toISOString(),
         },
-        emailRedirectTo: `${getPublicEnv().siteUrl}/auth/callback?next=/account`,
-      },
-    });
+      });
 
-    if (error) {
-      if (/already registered/i.test(error.message)) {
-        return fail(
-          "EMAIL_IN_USE",
-          "An account already uses that email. Sign in instead.",
-          { email: "An account already uses that email." },
-        );
+      if (error) {
+        if (/already registered|already exists/i.test(error.message)) {
+          return fail(
+            "EMAIL_IN_USE",
+            "An account already uses that email. Sign in instead.",
+            { email: "An account already uses that email." },
+          );
+        }
+        return fail("SIGN_UP_FAILED", "We couldn't create your account. Check your details and try again.");
       }
-      return fail("SIGN_UP_FAILED", "We couldn't create your account. Check your details and try again.");
-    }
 
-    // Supabase hides whether an address is already registered by returning a
-    // user with no identities. Only a genuine new account gets a welcome
-    // email, otherwise trying to register someone else's address would spam
-    // them.
-    if ((data.user?.identities?.length ?? 0) > 0 && data.user?.email) {
       welcome = {
-        email: data.user.email,
+        email: data.user.email ?? email,
         name: fullName,
-        needsConfirmation: !data.session,
+        needsConfirmation: false,
       };
+    } else {
+      // Local development without a server key still uses the public sign-up
+      // endpoint, which sends its own confirmation email there.
+      const supabase = await createServerSupabase();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            accepted_terms_at: new Date().toISOString(),
+          },
+          emailRedirectTo: `${getPublicEnv().siteUrl}/auth/callback?next=/account`,
+        },
+      });
+
+      if (error) {
+        if (/already registered/i.test(error.message)) {
+          return fail(
+            "EMAIL_IN_USE",
+            "An account already uses that email. Sign in instead.",
+            { email: "An account already uses that email." },
+          );
+        }
+        return fail("SIGN_UP_FAILED", "We couldn't create your account. Check your details and try again.");
+      }
+
+      // Supabase hides whether an address is already registered by returning a
+      // user with no identities. Only a genuine new account gets a welcome
+      // email, otherwise trying to register someone else's address would spam
+      // them.
+      if ((data.user?.identities?.length ?? 0) > 0 && data.user?.email) {
+        welcome = {
+          email: data.user.email,
+          name: fullName,
+          needsConfirmation: !data.session,
+        };
+      }
     }
   } catch (error) {
     return fail("SIGN_UP_FAILED", errorMessage(error, "We couldn't create your account."));
@@ -158,7 +196,6 @@ export async function signIn(
     next = landingPath({
       role: account.role,
       isProvider: account.isProvider,
-      requested: formData.get("next")?.toString(),
     });
 
     signInNotice = {

@@ -4,9 +4,9 @@
 
 **Prepared for:** Repairs and Other Services  
 **Prepared by:** Product and Engineering Delivery  
-**Date:** 16 November 2026  
-**Version:** 1.0  
-**Production environment:** ros-jet.vercel.app
+**Date:** 20 November 2026  
+**Version:** 1.1  
+**Production environment:** https://ros-jet.vercel.app
 
 ---
 
@@ -16,7 +16,7 @@ The Repairs and Other Services pilot MVP is complete and deployed.
 
 The platform delivers the full local services marketplace journey: customers discover approved providers and post jobs, providers apply and send offers, and administrators manage approvals, moderation and pilot coverage from a dedicated back office. The application includes secure accounts, role-based dashboards, transactional notifications, responsive design and automated quality checks.
 
-All scoped application features have been designed, built, tested and deployed. No application development remains in the pilot scope. The platform is ready for client acceptance and pilot launch.
+All scoped application features have been designed, built, tested and deployed. The production build, continuous integration checks and hosted database configuration have been verified, and the application is live on its production domain. No application development remains in the pilot scope. The remaining items are one-time, client-owned configuration in external accounts. The platform is ready for client acceptance and pilot launch.
 
 ---
 
@@ -137,6 +137,7 @@ The platform keeps customers, providers and administrators informed.
 - In-app notification centre with unread counts.
 - Notification preferences for optional job and offer updates.
 - Security, account and moderation email delivered as transactional messages.
+- Email configuration validated before sending, so placeholder credentials never produce a misleading delivery result.
 
 ### Design and accessibility
 
@@ -171,6 +172,8 @@ Security is built into the application and the database.
 - Audit logging for moderation and administrative changes.
 - First-party, cookie-free analytics, disabled by default.
 - Rate limiting on authentication and sensitive actions.
+- Short-lived signed recovery session required before a password can be reset.
+- Timing-safe authentication for the scheduled retry endpoint.
 
 ### Analytics and reporting
 
@@ -220,16 +223,17 @@ The platform has been verified across application logic, database rules, browser
 |---|---|
 | Lint | Pass |
 | Type checking | Pass |
-| Unit tests | 104 pass |
-| End-to-end tests | 44 pass in Chromium locally |
-| Database row-level security tests | Pass |
+| Unit tests | 116 pass |
+| End-to-end tests | 44 pass in Chromium locally; Chromium, Firefox and WebKit in CI |
+| Database row-level security tests | Pass in CI |
+| Hosted Supabase | Schema, reference data and Google provider verified |
 | Production build | Pass |
-| GitHub Actions | All jobs pass |
+| GitHub Actions | All jobs pass (run 44644130295) |
 | Secret scan | Pass |
 | Mobile Lighthouse | Accessibility 100, best practices 100, SEO 100, performance 90–92 |
 | Responsive visual checks | Pass at mobile, tablet and desktop |
 | Accessibility contrast audit | Pass |
-| Production deployment | Live |
+| Production deployment | Live — production routes return 200 |
 
 The automated suite covers public pages, search, registration, the terms gate, protected routes, security headers, signed-in customer, provider and administrator flows, and Google sign-in.
 
@@ -241,11 +245,14 @@ The database suite proves the access rules, including profile creation, role esc
 
 The application is deployed and operational.
 
-- Production environment: ros-jet.vercel.app
+- Production environment: https://ros-jet.vercel.app
 - Hosting: Vercel
 - Database, authentication and storage: Supabase
+- Hosted schema, reference data and authentication settings verified
+- Google sign-in enabled in hosted authentication
 - Source control and CI: GitHub
 - Automated checks on every push
+- GitHub Actions run 44644130295 passed all jobs
 - Environment-specific configuration for development, CI and production
 - Local Supabase stack that runs without Docker
 - Administrative guide for day-to-day operation
@@ -259,11 +266,11 @@ The application is deployed and operational.
 
 ## Client handover
 
-The application is complete and deployed. The settings below are one-time launch configurations in client-owned accounts; they do not require further application development.
+The application is complete and deployed at https://ros-jet.vercel.app. The hosted database is configured and Google sign-in is enabled in hosted authentication. The settings below are one-time launch configurations in client-owned accounts; they do not require further application development.
 
 ### Google authentication
 
-The Google sign-in and sign-up integration is built and deployed. Activation uses the client’s Google Cloud OAuth client:
+The Google sign-in and sign-up integration is built, deployed and enabled in the hosted Supabase project. Activation uses the client’s Google Cloud OAuth client:
 
 - Add the Supabase callback URL as an authorised redirect URI.
 - Confirm the production site as an authorised JavaScript origin.
@@ -285,7 +292,7 @@ The privacy, terms and cookies page framework is complete. The client’s approv
 
 ### Production domain
 
-The application is live on its Vercel production domain. The final client domain can be attached when DNS access is available, followed by the corresponding Supabase redirect URLs and Google origin.
+The application is live on its Vercel production domain at https://ros-jet.vercel.app. The final client domain can be attached when DNS access is available, followed by the corresponding Supabase redirect URLs and Google origin.
 
 ---
 
@@ -327,7 +334,7 @@ The application delivers the agreed marketplace journey, administrative controls
 
 | Item | Location |
 |---|---|
-| Production application | ros-jet.vercel.app |
+| Production application | https://ros-jet.vercel.app |
 | Source repository | GitHub |
 | Administrative guide | docs/admin-guide.md |
 | Manual acceptance script | docs/manual-test-script.md |

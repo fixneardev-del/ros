@@ -1,10 +1,25 @@
 import { describe, expect, it } from "vitest";
+import { accountSchema } from "@/lib/schemas/account";
 import { registerSchema, resetPasswordSchema } from "@/lib/schemas/auth";
 import { jobSchema } from "@/lib/schemas/job";
 import { parsePricePence } from "@/lib/schemas/offer";
 import { reportSchema } from "@/lib/schemas/search";
 
 const validUuid = "11111111-1111-4111-8111-111111111111";
+
+describe("accountSchema", () => {
+  it("accepts contact details and discards a submitted name", () => {
+    const result = accountSchema.safeParse({
+      fullName: "Forged Name",
+      phone: " 07700 900123 ",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual({ phone: "07700 900123" });
+    }
+  });
+});
 
 describe("registerSchema", () => {
   it("accepts a valid registration", () => {

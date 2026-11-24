@@ -15,6 +15,21 @@ begin
 end;
 $$;
 
+-- Google sends `name` on some accounts; that name is stored on the profile.
+do $$
+declare
+  v_name text;
+begin
+  select full_name into v_name
+  from public.profiles
+  where id = 'aaaaaaaa-0000-4000-8000-000000000008';
+
+  if v_name is distinct from 'Gina Google' then
+    raise exception 'FAIL: expected the Google name on the profile, got %', coalesce(v_name, 'none');
+  end if;
+end;
+$$;
+
 -- A customer reads their own profile.
 set local role authenticated;
 set local request.jwt.claim.sub = 'aaaaaaaa-0000-4000-8000-000000000001';
@@ -48,6 +63,42 @@ begin
 end;
 $$;
 
+-- A customer cannot rename themselves, but can update contact details.
+do $$
+begin
+  begin
+    update public.profiles
+    set full_name = 'Renamed By Customer'
+    where id = 'aaaaaaaa-0000-4000-8000-000000000001';
+
+    raise exception 'FAIL: a customer changed their own name';
+  exception
+    when others then
+      if sqlerrm not like 'Name is set by your sign-in provider%' then
+        raise;
+      end if;
+  end;
+end;
+$$;
+
+update public.profiles
+set phone = '07700 900123'
+where id = 'aaaaaaaa-0000-4000-8000-000000000001';
+
+do $$
+declare
+  v_phone text;
+begin
+  select phone into v_phone
+  from public.profiles
+  where id = 'aaaaaaaa-0000-4000-8000-000000000001';
+
+  if v_phone is distinct from '07700 900123' then
+    raise exception 'FAIL: a customer could not update their phone number';
+  end if;
+end;
+$$;
+
 -- A customer cannot promote themselves to admin.
 do $$
 begin
@@ -77,12 +128,18 @@ update public.profiles
 set is_suspended = true
 where id = 'aaaaaaaa-0000-4000-8000-000000000001';
 
+-- An administrator can still correct a name.
+update public.profiles
+set full_name = 'Renamed By Admin'
+where id = 'aaaaaaaa-0000-4000-8000-000000000004';
+
 reset role;
 reset request.jwt.claim.sub;
 
 do $$
 declare
   v_suspended boolean;
+  v_name text;
 begin
   select is_suspended into v_suspended
   from public.profiles
@@ -90,6 +147,14 @@ begin
 
   if v_suspended is not true then
     raise exception 'FAIL: an admin could not suspend an account';
+  end if;
+
+  select full_name into v_name
+  from public.profiles
+  where id = 'aaaaaaaa-0000-4000-8000-000000000004';
+
+  if v_name is distinct from 'Renamed By Admin' then
+    raise exception 'FAIL: an admin could not correct a name';
   end if;
 end;
 $$;

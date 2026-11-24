@@ -109,13 +109,13 @@ export async function GET(request: Request) {
           }
 
           const account = await getAccountState(data.user.id);
+          // A recovery link still needs its email address. Ordinary sign-ins
+          // always open the platform for the account's role, never a page
+          // supplied by the link that started the flow.
           const destination =
             next.startsWith("/reset-password") && sessionEmail
               ? `/reset-password?email=${encodeURIComponent(sessionEmail)}`
-              : landingPath({
-                  ...account,
-                  requested: requestedNext ?? undefined,
-                });
+              : landingPath(account);
           return authRedirect(destination, url.origin);
         }
       } catch {

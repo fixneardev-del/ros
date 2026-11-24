@@ -107,6 +107,20 @@ test.describe("sign in", () => {
     await expect(page).toHaveURL(/\/account/);
   });
 
+  test("a requested provider page does not override a customer's platform", async ({
+    page,
+  }) => {
+    await signIn(page, ACCOUNTS.customer, "/provide");
+    await expect(page).toHaveURL(/\/account/);
+  });
+
+  test("a requested admin page does not override the admin home", async ({
+    page,
+  }) => {
+    await signIn(page, ACCOUNTS.admin, "/admin/jobs");
+    await expect(page).toHaveURL(/\/admin$/);
+  });
+
   test("a signed-out visitor is sent to sign in", async ({ page }) => {
     await page.goto("/admin");
     await expect(page).toHaveURL(/\/login\?next=/);

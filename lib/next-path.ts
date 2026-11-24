@@ -28,26 +28,17 @@ export function safeNextPath(
 export type AccountRole = "admin" | "user" | null;
 
 /**
- * Where a signed-in person should land.
+ * Where a signed-in person lands.
  *
- * The requested page is honoured when it suits the role. An admin never lands
- * on a provider-only page: signing in with an admin account must not drop
- * someone into the provider dashboard, whichever page sent them to sign in.
+ * Sign-in always opens the platform for the account's role. A requested page
+ * never overrides it: a provider link cannot drop an admin into the provider
+ * dashboard, and a customer link cannot bypass their own platform.
  */
 export function landingPath(input: {
   role: AccountRole;
   isProvider: boolean;
-  requested?: string | null;
 }) {
-  const requested = safeNextPath(input.requested, "");
-
-  if (input.role === "admin") {
-    if (!requested || requested.startsWith("/provide")) return "/admin";
-    return requested;
-  }
-
-  if (requested) return requested;
-
+  if (input.role === "admin") return "/admin";
   if (input.isProvider) return "/provide";
   return "/account";
 }
