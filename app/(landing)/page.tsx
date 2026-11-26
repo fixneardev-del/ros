@@ -76,11 +76,7 @@ async function ServiceTiles() {
         }))
   ).map((service) => ({
     ...service,
-    ...(serviceStyles[service.slug] ?? {
-      background: "var(--l-ink)",
-      foreground: "#ffffff",
-      Icon: Sparkles,
-    }),
+    ...(serviceStyles[service.slug] ?? { Icon: Sparkles }),
   }));
 
   if (tiles.length === 0) {
@@ -99,10 +95,6 @@ async function ServiceTiles() {
           key={tile.id}
           href={`/search?service=${tile.slug}`}
           className="l-tile"
-          style={{
-            background: tile.background,
-            "--l-tile-fg": tile.foreground,
-          } as React.CSSProperties}
         >
           <div>
             <span className="l-tile-icon">
@@ -141,14 +133,18 @@ export default function LandingPage() {
     <>
       <section className="l-container l-hero">
         <div>
-          <p className="l-kicker">Glasgow West End pilot</p>
-          <h1 className="l-hero-title">
-            Keep <em>good things</em> working.
-          </h1>
-          <p className="l-lead" style={{ marginTop: 18 }}>
+          <p className="l-hero-intro">
+            Find help with furniture assembly, clothing alterations, hair
+            braiding, decluttering, gardening and more in Scotland
+          </p>
+          <h1 className="l-hero-title">Repairs and Other Services</h1>
+          <p className="l-hero-subtitle">
+            One place to find local help with repairs and everyday services.
+          </p>
+          <p className="l-lead" style={{ marginTop: 12 }}>
             Find local people who repair, alter, restore, organise and teach. Or
-            offer the skills you already have. One place, no commission, and
-            contact details that stay private until you agree on an offer.
+            offer the skills you already have. No commission, and contact details
+            that stay private until you agree on an offer.
           </p>
 
           <div className="l-hero-actions">
@@ -158,19 +154,22 @@ export default function LandingPage() {
             <Link href="/post-job" className="l-btn l-btn-lg">
               Post a job
             </Link>
+            <Link href="/provide/apply" className="l-btn l-btn-lg">
+              Offer your services
+            </Link>
           </div>
 
           <ul className="l-hero-proof">
             <li>
-              <Check size={14} aria-hidden style={{ color: "var(--l-teal)" }} />
-              Approved providers only
+              <Check size={14} aria-hidden style={{ color: "var(--l-ros-green)" }} />
+              Provider applications are reviewed before profiles go live.
             </li>
             <li>
-              <Check size={14} aria-hidden style={{ color: "var(--l-teal)" }} />
+              <Check size={14} aria-hidden style={{ color: "var(--l-ros-green)" }} />
               Contact details stay private
             </li>
             <li>
-              <Check size={14} aria-hidden style={{ color: "var(--l-teal)" }} />
+              <Check size={14} aria-hidden style={{ color: "var(--l-ros-green)" }} />
               No payments taken here
             </li>
           </ul>
@@ -242,31 +241,32 @@ export default function LandingPage() {
       <section className="l-band" data-reveal>
         <div className="l-container l-band-grid">
           <div>
-            <p className="l-kicker" style={{ color: "var(--l-yellow)" }}>
+            <p className="l-kicker" style={{ color: "var(--l-ros-green)" }}>
               Providers
             </p>
             <h2 className="l-band-title" style={{ marginTop: 10 }}>
-              Good with your hands?
+              Have a skill to offer?
               <br />
               Offer your services.
             </h2>
             <p className="l-lead" style={{ marginTop: 14 }}>
-              Join as an individual, sole trader or business. Add photos, choose
-              the services and areas you cover, and send offers when a job
-              fits.
+              Have a skill to offer? You don&apos;t need to run a business to get
+              started. Apply as an individual or a business and choose the
+              services you can confidently provide. Some services may require
+              evidence of qualifications or insurance.
             </p>
 
             <ul className="l-band-list">
               <li>
-                <Check size={15} aria-hidden style={{ color: "var(--l-yellow)" }} />
+                <Check size={15} aria-hidden style={{ color: "var(--l-ros-green)" }} />
                 You choose your own services and postcode areas.
               </li>
               <li>
-                <Check size={15} aria-hidden style={{ color: "var(--l-yellow)" }} />
+                <Check size={15} aria-hidden style={{ color: "var(--l-ros-green)" }} />
                 No commission, no subscription, no ranking to buy.
               </li>
               <li>
-                <Check size={15} aria-hidden style={{ color: "var(--l-yellow)" }} />
+                <Check size={15} aria-hidden style={{ color: "var(--l-ros-green)" }} />
                 An admin reviews every application before you appear in search.
               </li>
             </ul>
@@ -276,6 +276,9 @@ export default function LandingPage() {
                 Start an application
               </Link>
             </div>
+            <p className="l-review-note">
+              We aim to review completed applications within 24 hours.
+            </p>
           </div>
 
           <div className="l-band-panel">
@@ -308,9 +311,8 @@ export default function LandingPage() {
               <li>
                 <Check size={17} aria-hidden />
                 <span>
-                  <strong>Approved providers only</strong>
-                  An admin reviews every application before a profile goes
-                  live.
+                  <strong>Applications are reviewed</strong>
+                  Provider applications are reviewed before profiles go live.
                 </span>
               </li>
               <li>

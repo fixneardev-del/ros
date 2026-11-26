@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RosLogo } from "@/components/landing/ros-logo";
 
 export function LandingFooter({ supportEmail }: { supportEmail: string }) {
   return (
@@ -7,17 +8,7 @@ export function LandingFooter({ supportEmail }: { supportEmail: string }) {
         <div className="l-footer-grid">
           <div>
             <Link href="/" className="l-brand">
-              <span className="l-brand-mark" aria-hidden>
-                <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"
-                    stroke="#0F766E"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeDasharray="2.6 2.2"
-                  />
-                </svg>
-              </span>
+              <RosLogo />
               Repairs &amp; Other Services
             </Link>
             <p className="l-footer-copy">
@@ -64,14 +55,23 @@ export function LandingFooter({ supportEmail }: { supportEmail: string }) {
             <h2>Contact</h2>
             <ul>
               <li>
-                <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
+                {supportEmail ? (
+                  <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
+                ) : (
+                  <span>Contact the administrator through the site</span>
+                )}
               </li>
             </ul>
           </div>
         </div>
 
         <div className="l-footer-bottom">
-          <span>Glasgow pilot. Built for neighbours, students and makers.</span>
+          <span>
+            Have a skill to offer? You don&apos;t need to run a business to get
+            started. Apply as an individual or a business and choose the services
+            you can confidently provide. Some services may require evidence of
+            qualifications or insurance.
+          </span>
           <span>No payments taken. Agree the work and pay the provider directly.</span>
         </div>
       </div>

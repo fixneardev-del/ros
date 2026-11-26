@@ -38,6 +38,7 @@ describe("environment contract", () => {
       emailFrom: "Repairs and Other Services <hello@example.com>",
       emailReplyTo: "",
       adminEmail: "",
+      supportEmail: "",
     });
   });
 });

@@ -49,11 +49,10 @@ async function ApplyContent() {
           </p>
 
           <div className="panel">
-            <h2 className="text-lg font-bold">What we review</h2>
+            <h2 className="text-lg font-bold">What we check</h2>
             <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted">
-              <li>Your name, business name and description.</li>
-              <li>The services you offer and the areas you cover.</li>
-              <li>At least one clear photo of your work.</li>
+              <li>Your profile, photos and chosen services.</li>
+              <li>At least one photo of your work.</li>
               <li>Extra evidence for categories marked as needing checks.</li>
             </ul>
           </div>

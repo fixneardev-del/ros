@@ -7,10 +7,14 @@
  */
 
 .landing {
-  --l-bg: #fcfcf8;
+  --l-bg: #ffffff;
   --l-ink: #111111;
   --l-mut: #666666;
-  --l-teal: #0f766e;
+  /* Interim ROS green. Replace this token when the client supplies the exact
+     brand colour from the official logo. */
+  --l-ros-green: #2fae6b;
+  --l-ros-green-fg: #111111;
+  --l-teal: var(--l-ros-green);
   --l-line: #e7e7e0;
   --l-yellow: #facc15;
   --l-brown: #bc7f4a;
@@ -101,7 +105,7 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgb(252 252 248 / 0.88);
+  background: rgb(255 255 255 / 0.92);
   backdrop-filter: blur(14px);
   border-bottom: 1.5px solid var(--l-ink);
 }
@@ -130,10 +134,13 @@
   place-items: center;
   width: 26px;
   height: 26px;
-  border-radius: 50%;
-  border: 1.5px solid var(--l-ink);
-  background: #ffffff;
   flex: none;
+}
+
+.l-brand-mark img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
 }
 
 .l-nav {
@@ -311,8 +318,8 @@
 }
 
 .l-btn-teal {
-  background: var(--l-teal);
-  color: #ffffff;
+  background: var(--l-ros-green);
+  color: var(--l-ros-green-fg);
   box-shadow: 0 3px 0 var(--l-ink);
 }
 
@@ -345,12 +352,29 @@
   padding-bottom: 40px;
 }
 
+.l-hero-intro {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--l-ros-green);
+  max-width: 70ch;
+}
+
 .l-hero-title {
   margin-top: 14px;
   font-size: 52px;
   font-weight: 900;
   line-height: 0.95;
   letter-spacing: -0.05em;
+}
+
+.l-hero-subtitle {
+  margin-top: 12px;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  max-width: 34ch;
 }
 
 .l-hero-title em {
@@ -547,14 +571,18 @@
   min-height: 210px;
   padding: 14px 12px 12px;
   border-radius: var(--l-radius-card);
-  border: 2px solid var(--l-ink);
-  color: var(--l-tile-fg, #ffffff);
+  border: 1px solid var(--l-line);
+  background: #ffffff;
+  color: var(--l-ink);
   text-decoration: none;
-  transition: transform 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .l-tile:hover {
   transform: translateY(-4px);
+  border-color: var(--l-ros-green);
 }
 
 .l-tile:focus-visible {
@@ -569,8 +597,8 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  border: 1.5px solid currentColor;
-  opacity: 0.7;
+  border: 1.5px solid var(--l-ros-green);
+  color: var(--l-ros-green);
 }
 
 .l-tile-name {
@@ -592,6 +620,7 @@
   margin-top: 12px;
   font-size: 12px;
   font-weight: 700;
+  color: var(--l-ros-green);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -629,17 +658,19 @@
   color: var(--l-mut);
 }
 
-/* Dark band ------------------------------------------------------------ */
+/* Provider band -------------------------------------------------------- */
 
 .l-band {
   margin-top: 56px;
   padding: 40px 0;
-  background: var(--l-ink);
-  color: #ffffff;
+  background: #ffffff;
+  border-top: 1px solid var(--l-line);
+  border-bottom: 1px solid var(--l-line);
+  color: var(--l-ink);
 }
 
 .l-band .l-lead {
-  color: rgb(255 255 255 / 0.78);
+  color: var(--l-mut);
 }
 
 .l-band-grid {
@@ -662,7 +693,7 @@
   gap: 9px;
   font-size: 13px;
   line-height: 1.5;
-  color: rgb(255 255 255 / 0.85);
+  color: var(--l-mut);
 }
 
 .l-band-list li {
@@ -679,8 +710,8 @@
 .l-band-panel {
   padding: 18px;
   border-radius: var(--l-radius-card);
-  border: 1.5px solid rgb(255 255 255 / 0.35);
-  background: rgb(255 255 255 / 0.06);
+  border: 1px solid var(--l-line);
+  background: var(--l-bg);
 }
 
 .l-band-panel h3 {
@@ -688,14 +719,21 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--l-yellow);
+  color: var(--l-ros-green);
 }
 
 .l-band-panel p {
   margin-top: 9px;
   font-size: 13px;
   line-height: 1.55;
-  color: rgb(255 255 255 / 0.82);
+  color: var(--l-mut);
+}
+
+.l-review-note {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--l-ros-green);
 }
 
 /* Trust and waitlist --------------------------------------------------- */

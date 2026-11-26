@@ -14,10 +14,12 @@
 .studio {
   /* Landing tokens, repeated here so the shared .l-* classes work in this
      scope as well as on the landing page. */
-  --l-bg: #fcfcf8;
+  --l-bg: #ffffff;
   --l-ink: #111111;
   --l-mut: #666666;
-  --l-teal: #0f766e;
+  --l-ros-green: #2fae6b;
+  --l-ros-green-fg: #111111;
+  --l-teal: var(--l-ros-green);
   --l-line: #e7e7e0;
   --l-yellow: #facc15;
   --l-brown: #bc7f4a;
@@ -33,7 +35,7 @@
   --l-radius-panel: 14px;
 
   /* Application tokens used by Tailwind utilities and the shared components. */
-  --color-paper: #fcfcf8;
+  --color-paper: #ffffff;
   --color-ink: #111111;
   --color-surface: #ffffff;
 
@@ -41,9 +43,9 @@
   --color-line-strong: #111111;
   --color-muted: #666666;
 
-  --color-primary: #0f766e;
-  --color-primary-hover: #0b5c56;
-  --color-primary-fg: #ffffff;
+  --color-primary: #2fae6b;
+  --color-primary-hover: #238b52;
+  --color-primary-fg: #111111;
   --color-accent: #facc15;
   --color-accent-fg: #111111;
 
@@ -55,8 +57,8 @@
   --color-danger-fg: #8f0f30;
   --color-warning-bg: #fef6d8;
   --color-warning-fg: #7a5a00;
-  --color-info-bg: #e8f4f3;
-  --color-info-fg: #0b5c56;
+  --color-info-bg: #eaf8f0;
+  --color-info-fg: #14643c;
 
   --color-slate-100: #f2f2ec;
   --color-slate-200: #e7e7e0;
@@ -65,8 +67,8 @@
   --color-slate-600: #666666;
 
   /* Older aliases still referenced by a few components. */
-  --color-denim-700: #0f766e;
-  --color-denim-800: #0b5c56;
+  --color-denim-700: #2fae6b;
+  --color-denim-800: #238b52;
   --color-thread-100: #fef6d8;
   --color-thread-400: #facc15;
   --color-thread-700: #7a5a00;
@@ -76,7 +78,7 @@
   --color-patch-100: #fdecef;
   --color-patch-600: #e91e4d;
   --color-patch-800: #8f0f30;
-  --color-info-100: #e8f4f3;
+  --color-info-100: #eaf8f0;
 
   --font-display: var(--font-studio-sans), system-ui, sans-serif;
   --font-sans: var(--font-studio-sans), system-ui, sans-serif;

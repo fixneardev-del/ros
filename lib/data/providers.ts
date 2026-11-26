@@ -5,7 +5,10 @@ import type { ProviderPhoto, ProviderProfile, ServiceCategory } from "@/lib/type
 
 export interface ProviderServiceRow {
   category_id: string;
-  service_categories: Pick<ServiceCategory, "id" | "name" | "slug"> | null;
+  service_categories: Pick<
+    ServiceCategory,
+    "id" | "name" | "slug" | "requires_extra_checks"
+  > | null;
 }
 
 export interface ProviderWithRelations extends ProviderProfile {
@@ -69,7 +72,7 @@ export async function searchProviders(
 // suspender), so the embed has to name the one it means. Without the hint
 // PostgREST cannot resolve the relationship and the query fails.
 const providerSelect =
-  "*, profiles!provider_profiles_user_id_fkey(full_name), provider_services(category_id, service_categories(id, name, slug)), provider_photos(*)";
+  "*, profiles!provider_profiles_user_id_fkey(full_name), provider_services(category_id, service_categories(id, name, slug, requires_extra_checks)), provider_photos(*)";
 
 export async function getProviderById(providerId: string) {
   if (!isSupabaseConfigured()) return null;

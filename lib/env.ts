@@ -27,6 +27,7 @@ export function getServerEnv() {
       process.env.EMAIL_FROM || "Repairs and Other Services <hello@example.com>",
     emailReplyTo: process.env.EMAIL_REPLY_TO || "",
     adminEmail: process.env.ADMIN_NOTIFICATION_EMAIL || "",
+    supportEmail: process.env.SUPPORT_EMAIL || "",
   };
 }
 

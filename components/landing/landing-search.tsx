@@ -35,7 +35,7 @@ export function LandingSearch({
   return (
     <form action="/search" method="get" className="l-ticket">
       <div className="l-ticket-head">
-        <p className="l-ticket-title">What needs fixing?</p>
+        <p className="l-ticket-title">What do you need help with?</p>
         <p className="l-ticket-note">Takes a minute</p>
       </div>
 
@@ -95,10 +95,10 @@ export function LandingSearch({
           aria-hidden
           style={{ flex: "none", marginTop: 2 }}
         >
-          <circle cx="8" cy="8" r="6.5" stroke="#0F766E" strokeWidth="1.4" />
+          <circle cx="8" cy="8" r="6.5" stroke="var(--l-ros-green)" strokeWidth="1.4" />
           <path
             d="M8 7.2v4M8 5.1v.1"
-            stroke="#0F766E"
+            stroke="var(--l-ros-green)"
             strokeWidth="1.6"
             strokeLinecap="round"
           />

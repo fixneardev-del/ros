@@ -50,7 +50,8 @@ export default function LandingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supportEmail = getServerEnv().adminEmail || "hello@example.com";
+  const env = getServerEnv();
+  const supportEmail = env.supportEmail || env.adminEmail;
 
   return (
     <div className={`landing ${inter.variable} ${serif.variable}`}>

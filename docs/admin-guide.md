@@ -33,7 +33,10 @@ email and whether analytics are on.
 
 ### Providers
 
-The provider queue. Filter by status and, at the same time, by service.
+The provider queue. Filter by status and, at the same time, by service. New
+applications appear here as **pending** immediately after submission. The
+administrator also gets an in-app notification and an email alert, so a new
+application does not depend on someone opening the queue.
 
 Open a provider to see their application, photos, services, areas and review
 history. From there you can:

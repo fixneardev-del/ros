@@ -5,7 +5,12 @@ test.describe("public pages", () => {
     await page.goto("/");
 
     await expect(
-      page.getByRole("heading", { name: "Keep good things working." }),
+      page.getByRole("heading", { name: "Repairs and Other Services", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(
+        "One place to find local help with repairs and everyday services.",
+      ),
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Post a job" }).first(),

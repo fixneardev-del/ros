@@ -57,51 +57,16 @@ export const starterServices: LandingService[] = [
 ];
 
 /**
- * Each tile carries its own foreground colour. White fails contrast on the
- * lighter backgrounds, so those tiles use ink instead.
- *
- * The hair braiding tile uses a slightly deeper red than the brand red. On
- * the brand red, ink reaches 4.28:1 and white 4.41:1, so neither clears the
- * 4.5:1 needed for small text. The deeper red clears it with white at 4.71:1
- * and is the same hue to the eye.
+ * Every service uses the same white card with a green icon. The category is
+ * carried by its name and copy, not by a different card colour, so the
+ * palette stays calm and the text keeps AA contrast throughout.
  */
-export const serviceStyles: Record<
-  string,
-  { background: string; foreground: string; Icon: typeof Armchair }
-> = {
-  "furniture-repair": {
-    background: "var(--l-blue)",
-    foreground: "#ffffff",
-    Icon: Armchair,
-  },
-  "clothing-alterations": {
-    background: "var(--l-orange)",
-    foreground: "var(--l-ink)",
-    Icon: Scissors,
-  },
-  "household-repairs": {
-    background: "var(--l-green)",
-    foreground: "var(--l-ink)",
-    Icon: Hammer,
-  },
-  "decluttering-organising": {
-    background: "var(--l-brown)",
-    foreground: "var(--l-ink)",
-    Icon: Archive,
-  },
-  "gardening-outdoor-help": {
-    background: "var(--l-teal)",
-    foreground: "#ffffff",
-    Icon: Leaf,
-  },
-  "other-skills-hobbies": {
-    background: "var(--l-purple)",
-    foreground: "#ffffff",
-    Icon: GraduationCap,
-  },
-  "hair-braiding": {
-    background: "#e2184a",
-    foreground: "#ffffff",
-    Icon: Brush,
-  },
+export const serviceStyles: Record<string, { Icon: typeof Armchair }> = {
+  "furniture-repair": { Icon: Armchair },
+  "clothing-alterations": { Icon: Scissors },
+  "household-repairs": { Icon: Hammer },
+  "decluttering-organising": { Icon: Archive },
+  "gardening-outdoor-help": { Icon: Leaf },
+  "other-skills-hobbies": { Icon: GraduationCap },
+  "hair-braiding": { Icon: Brush },
 };

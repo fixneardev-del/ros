@@ -4,6 +4,7 @@ import { getSessionContext } from "@/lib/permissions";
 import { studioSans, studioSerif } from "@/lib/fonts";
 import { LandingHeader } from "@/components/landing/landing-header";
 import { LandingFooter } from "@/components/landing/landing-footer";
+import { RosLogo } from "@/components/landing/ros-logo";
 
 const inter = studioSans;
 const serif = studioSerif;
@@ -25,17 +26,7 @@ function HeaderFallback() {
     <header className="l-header">
       <div className="l-container l-header-row">
         <span className="l-brand">
-          <span className="l-brand-mark" aria-hidden>
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"
-                stroke="#0F766E"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeDasharray="2.6 2.2"
-              />
-            </svg>
-          </span>
+          <RosLogo />
           Repairs &amp; Other Services
         </span>
         <span className="text-sm text-muted">Loading menu…</span>
@@ -56,7 +47,8 @@ export function StudioShell({
   children: React.ReactNode;
   hideAuthLinks?: boolean;
 }) {
-  const supportEmail = getServerEnv().adminEmail || "hello@example.com";
+  const env = getServerEnv();
+  const supportEmail = env.supportEmail || env.adminEmail;
 
   return (
     <div className={`studio ${inter.variable} ${serif.variable}`}>

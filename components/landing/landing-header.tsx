@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { signOut } from "@/lib/actions/auth";
+import { RosLogo } from "@/components/landing/ros-logo";
 
 /**
  * The mobile menu uses a details element rather than state, so it opens
@@ -41,17 +42,7 @@ export function LandingHeader({
     <header className="l-header">
       <div className="l-container l-header-row">
         <Link href="/" className="l-brand">
-          <span className="l-brand-mark" aria-hidden>
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"
-                stroke="#0F766E"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeDasharray="2.6 2.2"
-              />
-            </svg>
-          </span>
+          <RosLogo />
           Repairs &amp; Other Services
         </Link>
 

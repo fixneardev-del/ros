@@ -31,7 +31,8 @@ Vercel for staging and production. `.env.local` is optional and overrides
 | `RESEND_API_KEY` | yes | Must be a real Resend key. Placeholders disable email and keep outbox rows failed for retry. |
 | `EMAIL_FROM` | yes | A verified sending address. `example.com` and localhost addresses disable email. |
 | `EMAIL_REPLY_TO` | no | A monitored inbox for replies. Falls back to `EMAIL_FROM`. |
-| `ADMIN_NOTIFICATION_EMAIL` | yes | Where admin notifications go. Also the contact address in the footer. |
+| `ADMIN_NOTIFICATION_EMAIL` | yes | Where admin notifications go. Used as the footer contact address when `SUPPORT_EMAIL` is empty. |
+| `SUPPORT_EMAIL` | no | The agreed ROS support mailbox shown in the public footer. No placeholder is rendered until it or `ADMIN_NOTIFICATION_EMAIL` is set. |
 | `RESET_SESSION_SECRET` | no | Signs the short-lived password-recovery cookie. Falls back to `SUPABASE_SECRET_KEY`. Set explicitly in production if you want it separate. |
 | `CRON_SECRET` | yes for retries | Vercel Cron sends `Authorization: Bearer <CRON_SECRET>` to `/api/notifications/retry`. |
 
@@ -90,7 +91,17 @@ authorised. An administrator can also trigger the endpoint from the dashboard.
 
 ## Domain and email
 
-- Point a domain at Vercel and let Vercel issue the certificate.
+- The client needs to choose the branded ROS domain and give access to its DNS
+  host. Add it in **Vercel → Project → Domains** and use the A/CNAME record
+  Vercel supplies; Vercel issues the certificate. Keep `ros-jet.vercel.app`
+  live for testing until the branded domain has been checked.
+- After the domain is attached, set `NEXT_PUBLIC_SITE_URL` to the branded URL,
+  add its `/auth/callback` and `/reset-password` URLs to Supabase, and add it
+  to the Google client's authorised JavaScript origins. Test sign-in and
+  password reset on the branded domain before public launch.
+- Agree the ROS support mailbox and decide who creates it. Set `SUPPORT_EMAIL`
+  to that address and verify that messages sent to it are received. The app
+  does not create the mailbox.
 - Verify the sending domain in Resend and add the SPF and DKIM records it
   gives you at the DNS host.
 - Add `EMAIL_FROM` using the verified domain, not a free Resend address.

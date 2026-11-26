@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, BadgeCheck, MapPin, ShieldCheck } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Check, MapPin, ShieldCheck } from "lucide-react";
 import { getProviderById } from "@/lib/data/providers";
 import { providerPhotoUrl } from "@/lib/storage";
 import { getSessionContext } from "@/lib/permissions";
@@ -185,6 +185,46 @@ async function ProviderProfileContent({ params }: { params: Params }) {
               Post a job
             </ButtonLink>
           </div>
+        </div>
+
+        <div className="panel">
+          <h2 className="text-lg font-bold">Checks completed</h2>
+          <ul className="mt-3 space-y-2 text-sm">
+            <li className="flex items-start gap-2">
+              <Check
+                className={provider.status === "approved" ? "mt-0.5 size-4 shrink-0 text-success" : "mt-0.5 size-4 shrink-0 text-muted"}
+                aria-hidden
+              />
+              <span>
+                {provider.status === "approved"
+                  ? "Application reviewed before going live"
+                  : "Application awaiting review"}
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Check
+                className={photos.length > 0 ? "mt-0.5 size-4 shrink-0 text-success" : "mt-0.5 size-4 shrink-0 text-muted"}
+                aria-hidden
+              />
+              <span>
+                {photos.length > 0 ? "Photo of work added" : "No photo added yet"}
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Check
+                className={services.length > 0 && provider.service_districts.length > 0 ? "mt-0.5 size-4 shrink-0 text-success" : "mt-0.5 size-4 shrink-0 text-muted"}
+                aria-hidden
+              />
+              <span>Services and pilot areas listed</span>
+            </li>
+          </ul>
+          {services.some((service) => service.requires_extra_checks) ? (
+            <p className="mt-3 text-xs text-muted">
+              Extra evidence was requested for categories marked as needing
+              checks. Providers are independent; we do not guarantee
+              qualifications, insurance or checks unless a profile says so.
+            </p>
+          ) : null}
         </div>
 
         <PilotNotice>
