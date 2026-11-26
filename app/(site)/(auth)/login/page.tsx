@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { AuthShell } from "@/components/mend/auth-shell";
+import { AuthErrorCleaner } from "@/components/forms/auth-error-cleaner";
 import { LoginForm } from "@/components/forms/auth-forms";
 import { safeNextPath } from "@/lib/next-path";
 
@@ -39,6 +40,7 @@ async function LoginContent({ searchParams }: { searchParams: SearchParams }) {
         </>
       }
     >
+      <AuthErrorCleaner />
       {params.registered ? (
         <p
           role="status"

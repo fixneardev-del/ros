@@ -46,7 +46,11 @@ Vercel for staging and production. `.env.local` is optional and overrides
    missing, set `SUPABASE_SECRET_KEY` and run
    `ALLOW_DEMO_ACCOUNTS=1 npm run hosted:accounts -- --yes`.
    Do not run the demo-account command against production.
-3. In **Authentication → URL Configuration**, set the site URL and add these
+3. In **Authentication → URL Configuration**, set **Site URL** to the real
+   deployment (`https://ros-jet.vercel.app`, or that address with `/login` if
+   you want Supabase's OAuth error fragment to land on the sign-in page). A
+   localhost site URL sends failed Google sign-ins back to
+   `http://localhost:3000/login#error=...`. Then add these
    redirect URLs for every environment:
    - `http://localhost:3001/auth/callback`
    - `http://localhost:3001/reset-password`
@@ -68,6 +72,10 @@ Vercel for staging and production. `.env.local` is optional and overrides
    `https://eohqgkxnjshnzwadglnh.supabase.co/auth/v1/callback`, and the app
    callback is `https://ros-jet.vercel.app/auth/callback`. Keep the Google
    client secret in Supabase; it is never an application environment variable.
+   If GoTrue reports `Unable to exchange external code`, the client ID and
+   secret in Supabase do not match the Google web client that holds those two
+   authorised values, or the redirect URI is still wrong. Fix that before
+   changing application code.
 8. Google sign-in emits a sign-in notice on every login and a welcome email on
    the first login. Password sign-up still records terms acceptance; Google
    consent is shown as clickwrap and is not recorded as `accepted_terms_at`.
@@ -131,5 +139,6 @@ authorised. An administrator can also trigger the endpoint from the dashboard.
 | `tests/rls/` | The access rules, written as SQL. |
 | `docs/admin-guide.md` | How to run the pilot. |
 | `docs/manual-test-script.md` | The acceptance run. |
+| `docs/client-login-details.md` | Demo sign-in details for client review. |
 | `.context/progress.md` | Current state, decisions and open questions. |
 | `DECISIONS.md` | Why the build looks the way it does. |
