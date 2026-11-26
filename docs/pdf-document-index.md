@@ -8,6 +8,7 @@ client. Each PDF is rendered from the matching Markdown source in `docs/`.
 | PDF | Source | Purpose |
 |---|---|---|
 | `project-access-and-technical-handover.pdf` | `project-access-and-technical-handover.md` | Access, environment variables, services, database, backups, outstanding work and handover checklist |
+| `services-used.pdf` | `services-used.md` | Third-party services in use, ownership and cost status, and services not used |
 | `requirements-audit-2026-11-26.pdf` | `requirements-audit-2026-11-26.md` | Consolidated audit of landing review, one-login flow and handover status |
 | `reply-to-access-update-2026-11-26.pdf` | `reply-to-access-update-2026-11-26.md` | Draft reply confirming ownership, access and transfer requests |
 | `reply-to-handover-questions-2026-11-26.pdf` | `reply-to-handover-questions-2026-11-26.md` | Full section-by-section reply to questions 3.1 to 3.8 |
