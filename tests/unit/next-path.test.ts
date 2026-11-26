@@ -75,23 +75,23 @@ describe("landingPath", () => {
         isProvider: true,
         activeDashboard: "customer",
       }),
-    ).toBe("/account");
+    ).toBe("/jobs");
   });
 
-  it("sends a customer to the account page", () => {
+  it("sends a customer to the customer dashboard", () => {
     expect(
       landingPath({
         role: "user",
         isProvider: false,
         activeDashboard: "customer",
       }),
-    ).toBe("/account");
+    ).toBe("/jobs");
     expect(
       landingPath({
         role: null,
         isProvider: false,
         activeDashboard: "customer",
       }),
-    ).toBe("/account");
+    ).toBe("/jobs");
   });
 });

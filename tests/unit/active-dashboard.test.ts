@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { readActiveDashboard } from "@/lib/supabase/active-dashboard";
+import {
+  dashboardCookieValue,
+  readActiveDashboard,
+  readDashboardCookie,
+} from "@/lib/supabase/active-dashboard";
 
 function clientWith(result: unknown) {
   const maybeSingle = vi.fn().mockResolvedValue(result);
@@ -22,21 +26,59 @@ describe("readActiveDashboard", () => {
     expect(eq).toHaveBeenCalledWith("id", "user-id");
   });
 
-  it("returns customer while the column is missing", async () => {
+  it("returns the saved customer dashboard", async () => {
     const { client } = clientWith({
-      data: null,
-      error: { code: "42703", message: "column profiles.active_dashboard does not exist" },
+      data: { active_dashboard: "customer" },
+      error: null,
     });
 
     await expect(readActiveDashboard(client, "user-id")).resolves.toBe("customer");
   });
 
-  it("returns customer for an unexpected saved value", async () => {
+  it("returns provider while the column is missing", async () => {
+    const { client } = clientWith({
+      data: null,
+      error: { code: "42703", message: "column profiles.active_dashboard does not exist" },
+    });
+
+    await expect(readActiveDashboard(client, "user-id")).resolves.toBe("provider");
+  });
+
+  it("returns provider for an unexpected saved value", async () => {
     const { client } = clientWith({
       data: { active_dashboard: "something-else" },
       error: null,
     });
 
-    await expect(readActiveDashboard(client, "user-id")).resolves.toBe("customer");
+    await expect(readActiveDashboard(client, "user-id")).resolves.toBe("provider");
+  });
+
+  it("uses the user's switched choice instead of the database value", async () => {
+    const { client, select } = clientWith({
+      data: { active_dashboard: "provider" },
+      error: null,
+    });
+
+    await expect(
+      readActiveDashboard(client, "user-id", "customer"),
+    ).resolves.toBe("customer");
+    expect(select).not.toHaveBeenCalled();
+  });
+});
+
+describe("readDashboardCookie", () => {
+  it("reads a choice saved for this user", () => {
+    expect(
+      readDashboardCookie(dashboardCookieValue("user-id", "provider"), "user-id"),
+    ).toBe("provider");
+    expect(
+      readDashboardCookie(dashboardCookieValue("user-id", "customer"), "user-id"),
+    ).toBe("customer");
+  });
+
+  it("ignores another user's choice or a malformed value", () => {
+    expect(readDashboardCookie("user-id:provider", "other-id")).toBeNull();
+    expect(readDashboardCookie("user-id:admin", "user-id")).toBeNull();
+    expect(readDashboardCookie(undefined, "user-id")).toBeNull();
   });
 });

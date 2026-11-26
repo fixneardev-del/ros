@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { forbidden, redirect } from "next/navigation";
 import { connection } from "next/server";
+import { readDashboardCookieForUser } from "@/lib/dashboard-cookie";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createServerSupabase } from "@/lib/supabase/server";
 import type { Profile, ProviderProfile } from "@/lib/types";
@@ -44,19 +45,29 @@ export const getSessionContext = cache(async () => {
     return { supabase, user: null, profile: null, providerProfile: null };
   }
 
-  const [{ data: profile }, { data: providerProfile }] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-    supabase
-      .from("provider_profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle(),
-  ]);
+  const [{ data: profile }, { data: providerProfile }, savedFromCookie] =
+    await Promise.all([
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+      supabase
+        .from("provider_profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      readDashboardCookieForUser(user.id),
+    ]);
+
+  // A switch made before the hosted migration exists lives only in the cookie.
+  const profileWithChoice = profile
+    ? ({
+        ...profile,
+        active_dashboard: savedFromCookie ?? profile.active_dashboard,
+      } as Profile)
+    : null;
 
   return {
     supabase,
     user,
-    profile: (profile as Profile | null) ?? null,
+    profile: profileWithChoice,
     providerProfile: (providerProfile as ProviderProfile | null) ?? null,
   };
 });

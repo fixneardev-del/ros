@@ -31,9 +31,10 @@ export type ActiveDashboard = "customer" | "provider";
 /**
  * Where a signed-in person lands.
  *
- * Sign-in opens the dashboard saved on the account. A requested page never
- * overrides it: a provider link cannot drop an admin into the provider
- * dashboard, and an approved provider who is viewing customer jobs stays there.
+ * Sign-in opens the dashboard for the account's role: `/admin` for admins,
+ * `/provide` for approved providers and `/jobs` for customers. `/account` is
+ * settings, not a dashboard. A provider who switched to the customer dashboard
+ * lands there until they switch back.
  */
 export function landingPath(input: {
   role: AccountRole;
@@ -44,5 +45,5 @@ export function landingPath(input: {
   if (input.isProvider && input.activeDashboard === "provider") {
     return "/provide";
   }
-  return "/account";
+  return "/jobs";
 }

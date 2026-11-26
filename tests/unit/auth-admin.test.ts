@@ -120,7 +120,7 @@ describe("getAccountState", () => {
     });
   });
 
-  it("falls back to customer when a provider's saved dashboard cannot be read", async () => {
+  it("opens the provider dashboard when a provider's saved dashboard cannot be read", async () => {
     vi.mocked(createClient).mockReturnValue(
       clientWith({
         "profiles:role": { data: { role: "user" } },
@@ -137,7 +137,7 @@ describe("getAccountState", () => {
     await expect(getAccountState(userId, "access-token")).resolves.toEqual({
       role: "user",
       isProvider: true,
-      activeDashboard: "customer",
+      activeDashboard: "provider",
     });
   });
 });

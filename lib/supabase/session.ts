@@ -1,7 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getPublicEnv } from "@/lib/env";
-import { readActiveDashboard } from "@/lib/supabase/active-dashboard";
+import {
+  ACTIVE_DASHBOARD_COOKIE,
+  readActiveDashboard,
+  readDashboardCookie,
+} from "@/lib/supabase/active-dashboard";
 
 const PROTECTED_PREFIXES = [
   "/post-job",
@@ -41,7 +45,7 @@ type DashboardRole = "admin" | "provider" | "customer";
 function homeFor(role: DashboardRole) {
   if (role === "admin") return "/admin";
   if (role === "provider") return "/provide";
-  return "/account";
+  return "/jobs";
 }
 
 /**
@@ -124,7 +128,15 @@ export async function updateSession(request: NextRequest) {
     let role: DashboardRole = profile?.role === "admin" ? "admin" : "customer";
 
     if (role === "customer" && isApprovedProvider) {
-      const savedDashboard = await readActiveDashboard(supabase, user.id);
+      const savedFromCookie = readDashboardCookie(
+        request.cookies.get(ACTIVE_DASHBOARD_COOKIE)?.value,
+        user.id,
+      );
+      const savedDashboard = await readActiveDashboard(
+        supabase,
+        user.id,
+        savedFromCookie,
+      );
       if (savedDashboard === "provider") role = "provider";
     }
 

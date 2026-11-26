@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { setDashboardCookie } from "@/lib/dashboard-cookie";
 import {
   availableDashboards,
   isActiveDashboard,
@@ -62,8 +63,9 @@ export async function changePassword(
 }
 
 /**
- * Switch the dashboard an approved provider is currently viewing. The saved
- * choice is read by the proxy and by server components, so both sides agree.
+ * Switch the dashboard an approved provider is currently viewing. The choice
+ * is saved on the profile and in a cookie, so the proxy and server components
+ * agree even while the hosted database lacks the new column.
  */
 export async function switchDashboard(formData: FormData) {
   const context = await requireUser("/account");
@@ -79,9 +81,18 @@ export async function switchDashboard(formData: FormData) {
     .update({ active_dashboard: target })
     .eq("id", context.user.id);
 
-  if (error) {
+  // Before the hosted migration runs, the column is absent. PostgREST reports
+  // that as 42703 on reads and PGRST204 on writes; the cookie keeps the switch
+  // working in both cases. Any other write failure is still a real error.
+  const missingColumn =
+    error?.code === "42703" ||
+    error?.code === "PGRST204" ||
+    error?.message.includes("active_dashboard");
+  if (error && !missingColumn) {
     redirect("/account?error=dashboard-switch");
   }
+
+  await setDashboardCookie(context.user.id, target);
 
   revalidatePath("/account");
   revalidatePath("/jobs");

@@ -339,7 +339,7 @@ Recommended additions:
 
 ### Known bugs and operational issues
 
-1. **Hosted database still needs the saved-dashboard migration.** `supabase/migrations/0003_active_dashboard.sql` has not yet been applied to hosted Supabase, so live dashboard switching will not work until it is applied. Admin and customer access are unaffected: role lookup no longer depends on the new column, and an unreadable saved dashboard falls back to `customer`. The local stack applies all migrations and seeds the approved provider correctly.
+1. **Hosted database still needs the saved-dashboard migration.** `supabase/migrations/0003_active_dashboard.sql` has not yet been applied to hosted Supabase, so the choice is not stored on the profile there. A live switch still works via the `ros-dashboard` cookie, and approved providers land on the provider dashboard by default because role lookup no longer depends on the new column and an unreadable saved dashboard falls back to `provider`. Admin and customer access are unaffected. The local stack applies all migrations and seeds the approved provider correctly.
 2. **Google OAuth hosted configuration still needs final domain alignment.** The previously observed localhost error was caused by Supabase/Google redirect and origin configuration, not application code. The production and branded-domain Site URL, redirect URLs and Google authorised origins must match.
 3. **Resend is not configured.** Email delivery is disabled until a real API key, verified sending domain and sender address are set. The outbox still records failed rows for later retry.
 4. **`NEXT_PUBLIC_SITE_URL` is still tied to the Vercel test domain.** `vercel.json` hardcodes `https://ros-jet.vercel.app` in build env; update this before branded launch.
@@ -348,7 +348,7 @@ Recommended additions:
 
 ### Technical debt
 
-- Hosted Supabase must apply `0003_active_dashboard.sql` before the reversible customer/provider switcher works live. Admin access works without it because role lookup falls back cleanly. The code, migration and local test stack are already updated.
+- Hosted Supabase must apply `0003_active_dashboard.sql` before the reversible customer/provider switcher is stored on the profile. Until then the choice is held in a user-scoped cookie; admin access works and approved providers default to the provider dashboard because role lookup falls back cleanly. The code, migration and local test stack are already updated.
 - Interim ROS monogram logo/favicon assets are in `public/ros-logo.svg` and `app/icon.svg`; the official logo and exact brand green are still needed.
 - Legal pages contain pilot copy and need approved final text.
 - Hosted data repair steps are not fully scripted.

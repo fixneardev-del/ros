@@ -26,18 +26,16 @@ export function availableDashboards(context: RoleContext): DashboardRole[] {
 }
 
 /**
- * The dashboard currently in use. An approved provider keeps using the
- * dashboard saved on their profile until they switch.
+ * The dashboard currently in use. An approved provider keeps using the saved
+ * choice until they switch; if the saved value is not available yet (the
+ * hosted migration is still pending), they open the provider dashboard so
+ * sign-in and the provider pages agree.
  */
 export function dashboardRole(context: RoleContext): DashboardRole {
   if (context.profile?.role === "admin") return "admin";
-  if (
-    context.profile?.active_dashboard === "provider" &&
-    isApprovedProvider(context)
-  ) {
-    return "provider";
-  }
-  return "customer";
+  if (!isApprovedProvider(context)) return "customer";
+  if (context.profile?.active_dashboard === "customer") return "customer";
+  return "provider";
 }
 
 export function canSwitchDashboard(context: RoleContext) {

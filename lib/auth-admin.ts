@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { createAdminSupabase } from "@/lib/supabase/admin";
+import { readDashboardCookieForUser } from "@/lib/dashboard-cookie";
 import { readActiveDashboard } from "@/lib/supabase/active-dashboard";
 import { getPublicEnv } from "@/lib/env";
 import type { AccountRole, ActiveDashboard } from "@/lib/next-path";
@@ -46,6 +47,7 @@ function createTokenClient(accessToken: string) {
 async function readAccountState(
   client: ReturnType<typeof createAdminSupabase> | ReturnType<typeof createTokenClient>,
   userId: string,
+  savedFromCookie: AccountState["activeDashboard"] | null,
 ): Promise<AccountState | null> {
   if (!client) return null;
 
@@ -66,7 +68,7 @@ async function readAccountState(
   const activeDashboard =
     profile?.role === "admin"
       ? "customer"
-      : await readActiveDashboard(client, userId);
+      : await readActiveDashboard(client, userId, savedFromCookie);
 
   return {
     role: (profile?.role as AccountRole) ?? null,
@@ -89,9 +91,15 @@ export async function getAccountState(
   userId: string,
   accessToken?: string | null,
 ): Promise<AccountState> {
+  const savedFromCookie = await readDashboardCookieForUser(userId);
+
   if (accessToken) {
     try {
-      const state = await readAccountState(createTokenClient(accessToken), userId);
+      const state = await readAccountState(
+        createTokenClient(accessToken),
+        userId,
+        savedFromCookie,
+      );
       if (state) return state;
     } catch (error) {
       console.error(
@@ -104,7 +112,7 @@ export async function getAccountState(
   if (!admin) return emptyState;
 
   try {
-    return (await readAccountState(admin, userId)) ?? emptyState;
+    return (await readAccountState(admin, userId, savedFromCookie)) ?? emptyState;
   } catch (error) {
     // The session has already been established at this point. A role lookup
     // failure must not turn a successful sign-in into an authentication error.

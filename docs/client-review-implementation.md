@@ -45,8 +45,8 @@ Review received from Fisayo on 26 November 2026 against
 - The two “View site” links in `components/dash/dash-header.tsx` were removed.
 - Role lookups read `role` without depending on `active_dashboard`, so an admin
   still lands on `/admin` and can open the portal while the hosted migration is
-  pending. The saved-dashboard read falls back to `customer` when the column is
-  absent.
+  pending. The saved-dashboard read falls back to `provider` for an approved
+  provider when the column is absent, matching the migration's backfill.
 
 Historical estimate for this item was **1–2 engineering days** for
 implementation, tests and documentation; no currency figure was given because
@@ -56,11 +56,12 @@ no client rate basis was supplied.
 
 `supabase/migrations/0003_active_dashboard.sql` adds the saved-choice column and
 backfill. It must be applied to the hosted Supabase project before live
-dashboard switching works. Admin and customer access are unaffected until then:
-the runtime reads `role` separately and treats an unreadable saved dashboard as
-`customer`. `scripts/hosted-accounts.mjs` now creates the approved demo provider
-profile and sets its saved dashboard, so re-running the demo seed does not
-regress.
+dashboard switching persists. Until then, approved providers land on the
+provider dashboard by default because the runtime reads `role` and provider
+approval separately and treats an unreadable saved dashboard as `provider`;
+admins and customers are unaffected. `scripts/hosted-accounts.mjs` now creates
+the approved demo provider profile and sets its saved dashboard, so re-running
+the demo seed does not regress.
 
 ## Testing status
 

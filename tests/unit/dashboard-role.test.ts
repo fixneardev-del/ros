@@ -36,6 +36,15 @@ describe("dashboardRole", () => {
     expect(canSwitchDashboard(context)).toBe(true);
   });
 
+  it("opens the provider dashboard when the saved choice is unavailable", () => {
+    expect(
+      dashboardRole({
+        profile: { role: "user", active_dashboard: undefined } as never,
+        providerProfile: { status: "approved" } as never,
+      }),
+    ).toBe("provider");
+  });
+
   it("does not open the provider dashboard for an unapproved application", () => {
     for (const status of ["pending", "rejected", "suspended"]) {
       const context = {
