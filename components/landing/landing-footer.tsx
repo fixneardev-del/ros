@@ -55,6 +55,9 @@ export function LandingFooter({ supportEmail }: { supportEmail: string }) {
             <h2>Contact</h2>
             <ul>
               <li>
+                <Link href="/contact">Contact us</Link>
+              </li>
+              <li>
                 {supportEmail ? (
                   <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
                 ) : (

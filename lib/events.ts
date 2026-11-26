@@ -26,6 +26,7 @@ export type DomainEvent =
   | "offer.declined"
   | "job.removed"
   | "waitlist.joined"
+  | "contact.submitted"
   | "report.created";
 
 export interface EmitOptions {

@@ -233,6 +233,28 @@ test.describe("acceptance matrix", () => {
     await context.close();
   });
 
+  test("T05d an approved provider sees both dashboards on the account page", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ storageState: providerState });
+    const page = await context.newPage();
+
+    await page.goto("/account");
+
+    const dashboardCard = page.locator("aside").first();
+    await expect(
+      dashboardCard.getByRole("link", { name: "Customer dashboard" }),
+    ).toBeVisible();
+    await expect(
+      dashboardCard.getByRole("link", { name: "Provider dashboard" }),
+    ).toBeVisible();
+    await expect(
+      dashboardCard.getByRole("button", { name: /Switch to (Find help|Provide services)/ }),
+    ).toBeVisible();
+
+    await context.close();
+  });
+
   test.use({ storageState: adminState });
 
   test("T06 customer submits a job and the administrator sees it", async ({

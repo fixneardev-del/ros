@@ -27,6 +27,7 @@ export function eventForTemplate(template: string): DomainEvent | null {
   if (template === "job.completed") return "job.completed";
   if (template === "job.removed") return "job.removed";
   if (template === "waitlist.joined") return "waitlist.joined";
+  if (template === "contact.submitted") return "contact.submitted";
   if (template === "report.created") return "report.created";
   return null;
 }

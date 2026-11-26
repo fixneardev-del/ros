@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { accountSchema } from "@/lib/schemas/account";
+import { contactSchema } from "@/lib/schemas/contact";
 import { registerSchema, resetPasswordSchema } from "@/lib/schemas/auth";
 import { jobSchema } from "@/lib/schemas/job";
 import { parsePricePence } from "@/lib/schemas/offer";
@@ -18,6 +19,29 @@ describe("accountSchema", () => {
     if (result.success) {
       expect(result.data).toEqual({ phone: "07700 900123" });
     }
+  });
+});
+
+describe("contactSchema", () => {
+  const valid = {
+    name: "Nina Patel",
+    email: "nina@example.com",
+    subject: "Provider application question",
+    message: "How long does the admin review usually take?",
+  };
+
+  it("accepts a complete message", () => {
+    expect(contactSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("rejects a short message", () => {
+    const result = contactSchema.safeParse({ ...valid, message: "Hi" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a filled honeypot", () => {
+    const result = contactSchema.safeParse({ ...valid, company: "Spam bot" });
+    expect(result.success).toBe(false);
   });
 });
 

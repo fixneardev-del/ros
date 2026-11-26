@@ -240,13 +240,15 @@ export function buildEmailMessages(
       const name = text("providerName");
       if (!email) break;
       const heading = "You're approved";
-      const body = `${paragraph(`Your provider profile is now public, ${name}. You can see open jobs that match your services and areas.`)}${paragraph("Send an offer when a job suits you. The customer will see your message and price.")}`;
+      const body = `${paragraph(`Your provider profile is now public, ${name}. You can see open jobs that match your services and areas.`)}${paragraph("Send an offer when a job suits you. The customer will see your message and price.")}${paragraph("Your customer dashboard is still available. Use the switch on My account or in the dashboard menu to move between Find help and Provide services.")}`;
       messages.push({
         template: "provider.approved",
         to: email,
         subject: "You're approved on Repairs and Other Services",
         html: layout(heading, body, { label: "See open jobs", url: `${siteUrl}/provide/jobs` }),
-        text: textLayout(heading, `Your provider profile is now public, ${name}. You can see open jobs that match your services and areas.`, {
+        text: textLayout(heading, `Your provider profile is now public, ${name}. You can see open jobs that match your services and areas. Send an offer when a job suits you. The customer will see your message and price.
+
+Your customer dashboard is still available. Use the switch on My account or in the dashboard menu to move between Find help and Provide services.`, {
           label: "See open jobs",
           url: `${siteUrl}/provide/jobs`,
         }),
@@ -504,6 +506,26 @@ export function buildEmailMessages(
         subject: "New waitlist signup",
         html: layout(heading, body),
         text: textLayout(heading, `${text("signupEmail")} asked to be told when we reach ${text("postcode")}.`),
+      });
+      break;
+    }
+
+    case "contact.submitted": {
+      const email = text("adminEmail");
+      if (!email) break;
+      const senderName = text("senderName");
+      const senderEmail = text("senderEmail");
+      const subject = text("subject");
+      const message = text("message");
+      const heading = "New contact message";
+      const summary = `${senderName} (${senderEmail}) sent a message about "${subject}".`;
+      const body = `${paragraph(summary)}${quote(message)}${paragraph("Reply directly to the sender to answer.")}`;
+      messages.push({
+        template: "contact.submitted",
+        to: email,
+        subject: `Contact message: ${subject}`,
+        html: layout(heading, body),
+        text: textLayout(heading, `${summary}\n\n${message}\n\nReply directly to the sender to answer.`),
       });
       break;
     }

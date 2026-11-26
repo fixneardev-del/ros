@@ -40,6 +40,29 @@ describe("marketplace email templates", () => {
     expect(message.to).toBe("petra@example.com");
     expect(message.html).toContain(`${siteUrl}/provide/jobs`);
     expect(message.text).toContain(`${siteUrl}/provide/jobs`);
+    expect(message.html).toContain("Your customer dashboard is still available");
+    expect(message.text).toContain("Your customer dashboard is still available");
+  });
+
+  it("sends a contact message to the admin with a reply prompt", () => {
+    const [message] = buildEmailMessages(
+      "contact.submitted",
+      {
+        adminEmail: "admin@example.com",
+        senderName: "Nina",
+        senderEmail: "nina@example.com",
+        subject: "Question about applications",
+        message: "How long does provider review take?",
+      },
+      siteUrl,
+    );
+
+    expect(message.template).toBe("contact.submitted");
+    expect(message.to).toBe("admin@example.com");
+    expect(message.subject).toContain("Question about applications");
+    expect(message.html).toContain("nina@example.com");
+    expect(message.html).toContain("How long does provider review take?");
+    expect(message.text).toContain("Reply directly to the sender");
   });
 
   it("sends one rejection email with the reason", () => {
@@ -209,6 +232,7 @@ describe("notification retry mapping", () => {
     ["job.completed", "job.completed"],
     ["job.removed", "job.removed"],
     ["waitlist.joined", "waitlist.joined"],
+    ["contact.submitted", "contact.submitted"],
     ["report.created", "report.created"],
   ] as const)("maps %s back to %s", (template, event) => {
     expect(eventForTemplate(template)).toBe(event);

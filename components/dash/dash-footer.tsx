@@ -12,6 +12,7 @@ export function DashFooter({
         <Link href="/privacy">Privacy</Link>
         <Link href="/terms">Terms</Link>
         <Link href="/cookies">Cookies</Link>
+        <Link href="/contact">Contact</Link>
         {variant === "customer" ? <Link href="/search">Find help</Link> : null}
         {variant === "admin" ? <Link href="/admin">Admin</Link> : null}
       </nav>

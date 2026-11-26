@@ -143,21 +143,21 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
                 : "Post jobs, review offers and manage your account here."}
           </p>
           <div className="mt-4 flex flex-col gap-3 text-sm">
+            {role === "customer" || canSwitch ? (
+              <Link
+                href="/jobs"
+                className="font-bold text-primary underline underline-offset-4"
+              >
+                Customer dashboard
+              </Link>
+            ) : null}
             {role === "customer" ? (
-              <>
-                <Link
-                  href="/jobs"
-                  className="font-bold text-primary underline underline-offset-4"
-                >
-                  Customer dashboard
-                </Link>
-                <Link
-                  href="/post-job"
-                  className="font-bold text-primary underline underline-offset-4"
-                >
-                  Post a job
-                </Link>
-              </>
+              <Link
+                href="/post-job"
+                className="font-bold text-primary underline underline-offset-4"
+              >
+                Post a job
+              </Link>
             ) : null}
             <Link
               href="/account/notifications"
@@ -165,7 +165,7 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
             >
               Notifications and email settings
             </Link>
-            {role === "provider" ? (
+            {role === "provider" || canSwitch ? (
               <Link
                 href="/provide"
                 className="font-bold text-primary underline underline-offset-4"
@@ -180,14 +180,20 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
               </p>
             ) : null}
             {canSwitch ? (
-              <form action={switchDashboard}>
-                <input type="hidden" name="dashboard" value={switchTarget} />
-                <Button type="submit" variant="secondary">
-                  {switchTarget === "provider"
-                    ? "Switch to Provide services"
-                    : "Switch to Find help"}
-                </Button>
-              </form>
+              <>
+                <p className="-mt-1 text-xs text-muted">
+                  Both dashboards are available. Use the switch below to change
+                  views.
+                </p>
+                <form action={switchDashboard}>
+                  <input type="hidden" name="dashboard" value={switchTarget} />
+                  <Button type="submit" variant="secondary">
+                    {switchTarget === "provider"
+                      ? "Switch to Provide services"
+                      : "Switch to Find help"}
+                  </Button>
+                </form>
+              </>
             ) : null}
             {role === "admin" ? (
               <Link
