@@ -7,6 +7,13 @@ const buckets = new Map<string, Bucket>();
  * first line of defence rather than a distributed guarantee.
  */
 export function checkRateLimit(key: string, limit: number, windowMs: number) {
+  // The browser suite signs the same demo accounts in once per engine against
+  // one server instance. A production throttle would fail the last engine for
+  // reasons unrelated to the app.
+  if (process.env.E2E_TEST === "1") {
+    return { allowed: true, remaining: limit };
+  }
+
   const now = Date.now();
   const bucket = buckets.get(key);
 

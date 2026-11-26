@@ -93,6 +93,9 @@ const env = {
   NEXT_PUBLIC_SITE_URL:
     process.env.NEXT_PUBLIC_SITE_URL ?? `http://127.0.0.1:${port}`,
   NEXT_ALLOW_LOCAL_IMAGES: "1",
+  // Browser engines share this server, so the production sign-in throttle
+  // must not fail the last engine for using the same demo accounts.
+  E2E_TEST: "1",
   // The tests read the environment file themselves.
   E2E_SUPABASE_URL: stackEnv.NEXT_PUBLIC_SUPABASE_URL,
   E2E_SUPABASE_SECRET_KEY: stackEnv.SUPABASE_SECRET_KEY,
