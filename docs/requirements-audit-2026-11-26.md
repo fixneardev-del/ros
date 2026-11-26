@@ -12,7 +12,7 @@ technical-handover checklist.
 | Landing review items 1–3 and 5 | Implemented and verified live |
 | Landing review item 4 (domain, branded-domain email tests, support mailbox) | Blocked on client-supplied domain, DNS access and mailbox decision |
 | One login for both roles | Yes; approved providers can switch without signing out |
-| Ownership and admin access transfers | Not complete; must be accepted into client-controlled accounts |
+| Ownership and admin access transfers | GitHub confirmed by client; Vercel, Supabase, Resend, domain/DNS and billing still need verified client-side admin access |
 | Source code, setup, deployment, architecture, schema and maintenance notes | Complete in the repository |
 | Secrets handover | Process documented; no secret values are in the repository |
 | Backup/PITR and restore drill | Not verified/documented; must be confirmed with the client’s Supabase account |
@@ -147,10 +147,10 @@ customer sign-in → `/jobs` with no switch control; admin sign-in → `/admin`.
 
 | Service | What can be confirmed from the repository | Transfer needed |
 |---|---|---|
-| GitHub | Repo `fixneardev-del/ros`, public, `main` branch | Add client as Owner/Admin, then transfer to a client-owned user or org |
-| Vercel | Project `ros` under the `fixneardev-del` scope; site `ros-jet.vercel.app` | Invite client as Admin, transfer project and env vars, attach domain |
-| Supabase | Project ref `eohqgkxnjshnzwadglnh`; owner/billing not visible | Invite client as Owner/Admin, transfer project, rotate secret key |
-| Resend | Not configured in the repository | Invite client as Owner/Admin, verify domain, supply API key securely |
+| GitHub | Repo `fixneardev-del/ros`, public, `main` branch. Client confirmed full ownership via `fixneardev@gmail.com`; the shared password must be rotated and is not recorded. | No transfer needed if `fixneardev-del` is the client-controlled org; confirm final visibility. |
+| Vercel | Project `ros` under the `fixneardev-del` scope; site `ros-jet.vercel.app`. Client reports SSO access and all env vars in Vercel. | Grant admin access to the configuring account, then attach the domain. |
+| Supabase | Project ref `eohqgkxnjshnzwadglnh`; client reports SSO access. | Grant Owner/Admin access, rotate secret key, verify billing. |
+| Resend | Not configured in the repository; client reports SSO access. | Grant admin access, verify domain, enter API key securely in Vercel. |
 | Google OAuth | Configured in Supabase Auth; Google Cloud project not visible | Confirm client-owned Google Cloud project and OAuth client |
 | Domain / DNS | None attached | Provide domain and DNS admin access |
 | GitHub Actions CI | In the repository | Transfers with the repo |
@@ -272,7 +272,7 @@ a restore drill, and keep production secrets in a client-controlled vault.
 1. Official ROS logo and exact brand green.
 2. Branded domain, DNS access and Vercel/Resend/Supabase/Google URL updates.
 3. ROS support mailbox decision and address; Resend key/domain/SPF/DKIM.
-4. Direct client ownership/admin access on all platforms; secrets rotated.
+4. Verified client-side admin access on Vercel, Supabase and Resend; rotate the password shared in chat and all platform secrets. GitHub ownership is already confirmed by the client.
 5. Apply `supabase/migrations/0003_active_dashboard.sql` to hosted Supabase so
    dashboard switching persists on the profile. Until then it persists in a
    user-scoped cookie and approved providers default to `/provide`.

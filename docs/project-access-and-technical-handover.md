@@ -4,7 +4,7 @@
 **Repository:** `https://github.com/fixneardev-del/ros`  
 **Latest production application:** latest commit on `main` at the time of the 26 November 2026 audit; all CI checks passed and the changes were verified on the live Vercel deployment.  
 **Live test deployment:** `https://ros-jet.vercel.app`  
-**Status:** Code and documentation are ready. External account ownership, billing and DNS control still need client confirmation and transfer.
+**Status:** Code and documentation are ready. GitHub ownership/access has been confirmed by the client through the `fixneardev@gmail.com` account. Vercel, Supabase, Resend, domain and billing still need verified client-side admin access; DNS control is not yet configured.
 
 This document is a handover response based on the current repository, GitHub deployment status and repository documentation. Account ownership, billing and DNS control cannot be proven from source code, so those items are marked as requiring client verification rather than assumed.
 
@@ -14,10 +14,10 @@ This document is a handover response based on the current repository, GitHub dep
 
 | Service | Current evidence | Owner / control confirmed? | Transfer or access needed |
 |---|---|---|---|
-| GitHub | Repository `fixneardev-del/ros`, public, default branch `main`, origin `https://github.com/fixneardev-del/ros.git` | **Not client-confirmed.** GitHub shows the owner as `fixneardev-del`. | Add the client account as Owner/Admin, then transfer the repository to the client-owned personal account or organisation. Confirm desired visibility after transfer. |
-| Vercel | Project `ros` deploys from GitHub. Site: `https://ros-jet.vercel.app`. | **Not client-confirmed.** The project URL indicates the `fixneardev-del` Vercel scope; billing role cannot be verified from the repository. | Invite the client Vercel account as Admin to the project/team, transfer the project and its environment variables, then attach the branded domain. |
-| Supabase | Project ref `eohqgkxnjshnzwadglnh`; URL `https://eohqgkxnjshnzwadglnh.supabase.co`; publishable key is in `.env.example` and `vercel.json`. | **Not client-confirmed.** | Invite the client Supabase account as Owner/Admin to the organisation/project, transfer the project, rotate the service-role key after transfer, and confirm Auth, Storage and billing ownership. |
-| Resend | Application uses the `resend` npm package and expects `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` and `ADMIN_NOTIFICATION_EMAIL`. No key or sending domain is configured in the repository. | **Not confirmed.** | Invite the client Resend account as Owner/Admin, verify the sending domain, add SPF/DKIM at DNS, and provide the API key through a secure channel. |
+| GitHub | Repository `fixneardev-del/ros`, public, default branch `main`, origin `https://github.com/fixneardev-del/ros.git` | **Client-confirmed.** The client confirmed full ownership/access through `fixneardev@gmail.com`. The password was shared in chat and must be rotated; it is not recorded here. | No transfer needed if `fixneardev-del` is the client-controlled organisation. Confirm desired visibility after the audit. |
+| Vercel | Project `ros` deploys from GitHub. Site: `https://ros-jet.vercel.app`. Client reports SSO access through the same account and that all environment variables are stored in Vercel. | **Not independently verified from the repository.** The project URL indicates the `fixneardev-del` scope; billing role cannot be verified. | Grant admin access to the account that will configure the deployment, then attach the branded domain. Do not send secrets in chat. |
+| Supabase | Project ref `eohqgkxnjshnzwadglnh`; URL `https://eohqgkxnjshnzwadglnh.supabase.co`; publishable key is in `.env.example` and `vercel.json`. Client reports SSO access through the same account. | **Not independently verified from the repository.** | Grant Owner/Admin access to the account that will configure Auth, Storage and the hosted migration, then rotate the service-role key. |
+| Resend | Application uses the `resend` npm package and expects `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` and `ADMIN_NOTIFICATION_EMAIL`. No key or sending domain is configured in the repository. Client reports SSO access through the same account. | **Not independently verified from the repository.** | Grant admin access, verify the sending domain, add SPF/DKIM at DNS, and enter the API key directly in Vercel or a client-controlled vault. |
 | Google OAuth | Google sign-in is configured in Supabase Auth. The Google client secret is intentionally not an application environment variable. | **Not confirmed.** Google Cloud project and OAuth client are not visible in the repository. | Confirm the client-owned Google Cloud project, OAuth client ID/secret, authorised JavaScript origins and redirect URI. The secret should remain in Supabase. |
 | Domain and DNS | No branded ROS domain is attached. The live address is the Vercel-generated `ros-jet.vercel.app`. | **Not confirmed.** No registrar or DNS account is visible in the repository. | Provide the domain name and either registrar/DNS admin access or the DNS records Vercel and Resend require. |
 | GitHub Actions CI | `.github/workflows/ci.yml` runs on pushes and pull requests to `main`/`master`. | Included in GitHub repository ownership. | Transfers with the repository; client should confirm workflow permissions after transfer. |
@@ -26,13 +26,12 @@ This document is a handover response based on the current repository, GitHub dep
 
 ### Information and invitations needed from the client
 
-Please provide the following. **Do not send passwords or API keys in email, chat or a shared document.**
+Please provide the following. **Do not send passwords or API keys in email, chat or a shared document.** Because an account password was previously shared in chat, it should be rotated and must not be reused for automation. For Vercel, Supabase and Resend, grant admin access by inviting the account that will perform the configuration, or have the client perform the steps while I give exact instructions.
 
-1. **GitHub**
-   - Client GitHub username or organisation name.
-   - Email address to receive the collaborator/Owner invitation.
-   - Confirmation whether the repository should be personal or organisation-owned.
-   - Confirmation whether the repository should remain public or become private.
+1. **GitHub — confirmed**
+   - The client confirmed full ownership/access through `fixneardev@gmail.com`.
+   - The password was shared in chat and must be rotated; it is deliberately not recorded in this repository.
+   - Confirmation is still needed on whether `fixneardev-del` is the final client-controlled organisation and whether the repository should remain public or become private.
 
 2. **Vercel**
    - Client Vercel account email or team ID.
