@@ -64,16 +64,6 @@ export function LandingFooter({ supportEmail }: { supportEmail: string }) {
             </ul>
           </div>
         </div>
-
-        <div className="l-footer-bottom">
-          <span>
-            Have a skill to offer? You don&apos;t need to run a business to get
-            started. Apply as an individual or a business and choose the services
-            you can confidently provide. Some services may require evidence of
-            qualifications or insurance.
-          </span>
-          <span>No payments taken. Agree the work and pay the provider directly.</span>
-        </div>
       </div>
     </footer>
   );

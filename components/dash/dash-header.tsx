@@ -109,7 +109,7 @@ export function DashHeader({
 
       <div className="dash-header-actions">
         {variant === "customer" ? (
-          <Link href="/post-job" className="dash-action-dark">
+          <Link href="/post-job" className="dash-action-primary">
             <Plus className="size-3.5" aria-hidden />
             Post a job
           </Link>

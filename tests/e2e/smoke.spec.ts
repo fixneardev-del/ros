@@ -66,7 +66,15 @@ test.describe("public pages", () => {
   test("the legal pages are reachable from the footer", async ({ page }) => {
     await page.goto("/");
 
-    await page.getByRole("contentinfo").getByRole("link", { name: "Privacy" }).click();
+    const footer = page.getByRole("contentinfo");
+    await expect(
+      footer.getByText(/Have a skill to offer\? You don't need to run a business/),
+    ).toHaveCount(0);
+    await expect(
+      footer.getByText(/No payments taken\. Agree the work and pay the provider directly/),
+    ).toHaveCount(0);
+
+    await footer.getByRole("link", { name: "Privacy" }).click();
     await expect(
       page.getByRole("heading", { name: "Privacy notice" }),
     ).toBeVisible();

@@ -850,18 +850,6 @@
   max-width: 34ch;
 }
 
-.l-footer-bottom {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  justify-content: space-between;
-  margin-top: 26px;
-  padding-top: 14px;
-  border-top: 1px solid var(--l-line);
-  font-size: 11px;
-  color: var(--l-mut);
-}
-
 /* Motion --------------------------------------------------------------- */
 
 /*
