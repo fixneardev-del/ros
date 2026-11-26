@@ -1,0 +1,68 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createClient } from "@supabase/supabase-js";
+import { getAccountState } from "@/lib/auth-admin";
+
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminSupabase: () => null,
+}));
+
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: vi.fn(),
+}));
+
+const userId = "328dbf74-b3a3-4386-9bd4-f1ac911be2de";
+
+function clientWith(responses: Record<string, unknown>) {
+  const from = vi.fn((table: string) => ({
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn().mockResolvedValue(responses[table] ?? { data: null }),
+  }));
+
+  return { from } as never;
+}
+
+describe("getAccountState", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "publishable-key");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("reads the provider profile through the sign-in token without a service key", async () => {
+    vi.mocked(createClient).mockReturnValue(
+      clientWith({
+        profiles: { data: { role: "user" } },
+        provider_profiles: { data: { user_id: userId, status: "approved" } },
+      }),
+    );
+
+    await expect(getAccountState(userId, "access-token")).resolves.toEqual({
+      role: "user",
+      isProvider: true,
+    });
+
+    expect(createClient).toHaveBeenCalledWith(
+      "https://example.supabase.co",
+      "publishable-key",
+      expect.objectContaining({
+        global: { headers: { Authorization: "Bearer access-token" } },
+      }),
+    );
+  });
+
+  it("keeps a customer as a customer when they have no provider profile", async () => {
+    vi.mocked(createClient).mockReturnValue(
+      clientWith({ profiles: { data: { role: "user" } } }),
+    );
+
+    await expect(getAccountState(userId, "access-token")).resolves.toEqual({
+      role: "user",
+      isProvider: false,
+    });
+  });
+});

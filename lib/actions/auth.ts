@@ -191,7 +191,10 @@ export async function signIn(
     // The landing page depends on the role, so it is resolved here rather than
     // in the browser. An admin is sent to the admin dashboard, never to the
     // provider dashboard, whatever page asked them to sign in.
-    const account = await getAccountState(data.user.id);
+    const account = await getAccountState(
+      data.user.id,
+      data.session?.access_token,
+    );
 
     next = landingPath({
       role: account.role,

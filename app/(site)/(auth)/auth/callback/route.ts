@@ -122,7 +122,10 @@ export async function GET(request: Request) {
             }
           }
 
-          const account = await getAccountState(data.user.id);
+          const account = await getAccountState(
+            data.user.id,
+            data.session?.access_token,
+          );
           // A recovery link still needs its email address. Ordinary sign-ins
           // always open the platform for the account's role, never a page
           // supplied by the link that started the flow.
