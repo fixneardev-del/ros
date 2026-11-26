@@ -17,7 +17,7 @@ export default async function AdminLayout({
   await requireAdmin();
 
   return (
-    <DashShell variant="admin">
+    <DashShell>
       <div className="dash-page">
         <div className="dash-page-top">
           <p className="dash-kicker">Administration</p>

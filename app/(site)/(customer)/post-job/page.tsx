@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { requireUser } from "@/lib/permissions";
+import { requireCustomer } from "@/lib/permissions";
 import { getCategories } from "@/lib/data/categories";
 import { CreateJobForm } from "@/components/forms/job-forms";
 import { DashAlert } from "@/components/dash/dash-alert";
@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Post a job" };
 const card = "dash-card";
 
 async function PostJobContent() {
-  const context = await requireUser("/post-job");
+  const context = await requireCustomer("/post-job");
   const categories = await getCategories();
 
   return (

@@ -100,6 +100,13 @@ admin role.
 | <http://localhost:3001/provide/offers> | Offers the provider sent |
 | <http://localhost:3001/provide/apply> | Provider application |
 
+Each signed-in account belongs to exactly one dashboard: admin, provider or
+customer. A provider or admin account is redirected away from `/jobs` and
+`/post-job`; a customer or admin account is redirected away from the `/provide`
+pages. Open `/jobs/<job-id>` is shared by a job's owner, an admin and a provider
+with a claim on it. `/provide/apply` is public onboarding in the site shell, not
+a provider dashboard page.
+
 A provider detail page looks like
 `/admin/providers/<user-id>`. The local accounts' ids are in `auth.users`.
 

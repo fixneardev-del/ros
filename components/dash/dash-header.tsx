@@ -13,11 +13,9 @@ import {
   Plus,
   Search,
   ShieldCheck,
-  UserPlus,
   Wrench,
   X,
 } from "lucide-react";
-import type { ProviderStatus } from "@/lib/types";
 import { signOut } from "@/lib/actions/auth";
 import { initials } from "@/lib/initials";
 
@@ -43,45 +41,14 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/**
- * A compact segmented control for accounts that both hire and offer services.
- * It navigates between the two dashboards; it does not change the account.
- */
-function ProfileSwitch({ variant }: { variant: "customer" | "provider" }) {
-  return (
-    <span className="dash-switcher" role="group" aria-label="Switch profile">
-      <Link
-        href="/jobs"
-        aria-current={variant === "customer" ? "page" : undefined}
-        aria-label="Switch to customer dashboard"
-      >
-        Customer
-      </Link>
-      <Link
-        href="/provide"
-        aria-current={variant === "provider" ? "page" : undefined}
-        aria-label="Switch to provider dashboard"
-      >
-        Provider
-      </Link>
-    </span>
-  );
-}
-
 export function DashHeader({
   user,
   name,
-  isProvider = false,
-  isAdmin = false,
-  providerStatus = null,
   unreadCount = 0,
   variant = "customer",
 }: {
   user: { email?: string | null } | null;
   name?: string | null;
-  isProvider?: boolean;
-  isAdmin?: boolean;
-  providerStatus?: ProviderStatus | null;
   unreadCount?: number;
   variant?: DashVariant;
 }) {
@@ -97,23 +64,19 @@ export function DashHeader({
     }
   }, [pathname]);
 
-  const providerLabel =
-    providerStatus && providerStatus !== "approved"
-      ? "Provider application"
-      : "Provider dashboard";
-
   const links: NavLink[] =
     variant === "provider"
       ? [
           { href: "/provide/jobs", label: "Matching jobs", Icon: Briefcase },
           { href: "/provide/offers", label: "My offers", Icon: MessageSquare },
           { href: "/provide", label: "My profile", Icon: Wrench },
-          { href: "/search", label: "Find help", Icon: Search },
         ]
-      : [
-          { href: "/jobs", label: "My jobs", Icon: Briefcase },
-          { href: "/search", label: "Find help", Icon: Search },
-        ];
+      : variant === "customer"
+        ? [
+            { href: "/jobs", label: "My jobs", Icon: Briefcase },
+            { href: "/search", label: "Find help", Icon: Search },
+          ]
+        : [];
 
   // The admin area has its own section navigation, so it stays out of the
   // main menu. The account page still links to it.
@@ -139,12 +102,6 @@ export function DashHeader({
               {link.label}
             </Link>
           ))}
-
-          {isProvider ? (
-            <ProfileSwitch variant={variant} />
-          ) : isAdmin ? null : (
-            <Link href="/provide/apply">Become a provider</Link>
-          )}
         </nav>
       ) : null}
 
@@ -210,26 +167,6 @@ export function DashHeader({
                     </Link>
                   ))
                 : null}
-
-              {variant !== "admin" ? (
-                isProvider ? (
-                  <Link href={variant === "provider" ? "/jobs" : "/provide"}>
-                    {variant === "provider" ? (
-                      <Briefcase className="size-4" aria-hidden />
-                    ) : (
-                      <Wrench className="size-4" aria-hidden />
-                    )}
-                    {variant === "provider"
-                      ? "Switch to customer dashboard"
-                      : `Switch to ${providerLabel.toLowerCase()}`}
-                  </Link>
-                ) : isAdmin ? null : (
-                  <Link href="/provide/apply">
-                    <UserPlus className="size-4" aria-hidden />
-                    Become a provider
-                  </Link>
-                )
-              ) : null}
 
               {variant === "customer" ? (
                 <Link href="/post-job">

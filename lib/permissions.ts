@@ -4,6 +4,10 @@ import { connection } from "next/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createServerSupabase } from "@/lib/supabase/server";
 import type { Profile, ProviderProfile } from "@/lib/types";
+import { dashboardRole } from "@/lib/dashboard-role";
+
+export { dashboardRole };
+export type { DashboardRole } from "@/lib/dashboard-role";
 
 type ServerSupabase = Awaited<ReturnType<typeof createServerSupabase>>;
 
@@ -74,7 +78,7 @@ export async function requireAdmin() {
 
   // A signed-in non-admin gets a real 403 on every admin route. An anonymous
   // visitor is sent to sign in first.
-  if (context.profile.role !== "admin") {
+  if (context.profile?.role !== "admin") {
     forbidden();
   }
 
@@ -83,17 +87,26 @@ export async function requireAdmin() {
 
 export async function requireProvider() {
   const context = await requireUser("/provide");
+  const role = dashboardRole(context);
 
-  if (!context.providerProfile) {
-    // An admin who does not offer services has no provider dashboard. The
-    // application form is not a sensible place to send them either.
-    if (context.profile.role === "admin") {
-      redirect("/admin");
-    }
-    redirect("/provide/apply");
-  }
+  if (role === "admin") redirect("/admin");
+  if (role === "customer") redirect("/account");
 
   return { ...context, providerProfile: context.providerProfile as ProviderProfile };
+}
+
+/**
+ * Customer-only pages and actions. A provider or an admin has no customer
+ * dashboard, even when the account is allowed to open a shared job detail page.
+ */
+export async function requireCustomer(next = "/account") {
+  const context = await requireUser(next);
+  const role = dashboardRole(context);
+
+  if (role === "admin") redirect("/admin");
+  if (role === "provider") redirect("/provide");
+
+  return context;
 }
 
 export async function requireApprovedProvider() {

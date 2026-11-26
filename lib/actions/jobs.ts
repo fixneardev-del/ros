@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireUser } from "@/lib/permissions";
+import { requireCustomer, requireUser } from "@/lib/permissions";
 import { jobSchema, jobUpdateSchema } from "@/lib/schemas/job";
 import { reportSchema } from "@/lib/schemas/search";
 import { validatePostcodeForAction } from "@/lib/actions/search";
@@ -20,7 +20,7 @@ export async function createJob(
   _previous: ActionResult<{ id: string }> | null,
   formData: FormData,
 ): Promise<ActionResult<{ id: string }>> {
-  const context = await requireUser("/post-job");
+  const context = await requireCustomer("/post-job");
   const parsed = jobSchema.safeParse({
     categoryId: formData.get("categoryId"),
     title: formData.get("title"),
@@ -168,7 +168,7 @@ export async function updateJob(
   _previous: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  const context = await requireUser("/jobs");
+  const context = await requireCustomer("/jobs");
   const id = formData.get("id")?.toString() ?? "";
   const parsed = jobUpdateSchema.safeParse({
     title: formData.get("title"),
@@ -220,7 +220,7 @@ export async function closeJob(
   _previous: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  const context = await requireUser("/jobs");
+  const context = await requireCustomer("/jobs");
   const id = formData.get("id")?.toString() ?? "";
 
   if (!id) return fail("NOT_FOUND", "That job could not be found.");
@@ -298,7 +298,7 @@ export async function markJobComplete(
   _previous: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  const context = await requireUser("/jobs");
+  const context = await requireCustomer("/jobs");
   const id = formData.get("id")?.toString() ?? "";
 
   if (!id) return fail("NOT_FOUND", "That job could not be found.");
@@ -401,7 +401,7 @@ export async function deleteJobPhoto(
   _previous: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  const context = await requireUser("/jobs");
+  const context = await requireCustomer("/jobs");
   const photoId = formData.get("photoId")?.toString() ?? "";
 
   if (!photoId) return fail("NOT_FOUND", "That photo could not be found.");

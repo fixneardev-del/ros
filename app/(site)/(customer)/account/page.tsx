@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ShieldAlert } from "lucide-react";
-import { requireUser } from "@/lib/permissions";
+import { dashboardRole, requireUser } from "@/lib/permissions";
 import { signOut } from "@/lib/actions/auth";
 import { AccountForm, PasswordForm } from "@/components/forms/account-forms";
 import { Button } from "@/components/ui/button";
@@ -24,15 +24,16 @@ function initials(name?: string | null, email?: string | null) {
 async function AccountContent({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const context = await requireUser("/account");
-  const isAdmin = context.profile.role === "admin";
+  const role = dashboardRole(context);
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
       <div>
         <h1>My account</h1>
         <p className="mt-2 text-muted">
-          Keep your contact details up to date so a provider can reach you after
-          you accept an offer.
+          {role === "customer"
+            ? "Keep your contact details up to date so a provider can reach you after you accept an offer."
+            : "Keep your contact details and notification settings up to date."}
         </p>
 
         <section className="dash-profile-card mt-6">
@@ -44,7 +45,7 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
             <p>{context.user.email}</p>
           </div>
           <span className="dash-chip">
-            {context.profile.role === "admin" ? "Admin" : "Customer"}
+            {role === "admin" ? "Admin" : role === "provider" ? "Provider" : "Customer"}
           </span>
         </section>
 
@@ -107,33 +108,38 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
 
       <aside className="space-y-4">
         <div className="rounded-surface border border-line bg-surface p-5">
-          <h2>Your profiles</h2>
+          <h2>Your dashboard</h2>
           <p className="mt-1 text-sm text-muted">
-            One account can hire help and offer services. Switch whenever you
-            like.
+            {role === "admin"
+              ? "You have full access to the administration area."
+              : role === "provider"
+                ? "Manage your provider profile and offers from one place."
+                : "Post jobs, review offers and manage your account here."}
           </p>
           <div className="mt-4 flex flex-col gap-3 text-sm">
-            {!isAdmin ? (
-              <Link
-                href="/jobs"
-                className="font-bold text-primary underline underline-offset-4"
-              >
-                Customer dashboard
-              </Link>
+            {role === "customer" ? (
+              <>
+                <Link
+                  href="/jobs"
+                  className="font-bold text-primary underline underline-offset-4"
+                >
+                  Customer dashboard
+                </Link>
+                <Link
+                  href="/post-job"
+                  className="font-bold text-primary underline underline-offset-4"
+                >
+                  Post a job
+                </Link>
+              </>
             ) : null}
-            <Link
-              href="/post-job"
-              className="font-bold text-primary underline underline-offset-4"
-            >
-              Post a job
-            </Link>
             <Link
               href="/account/notifications"
               className="font-bold text-primary underline underline-offset-4"
             >
               Notifications and email settings
             </Link>
-            {context.providerProfile ? (
+            {role === "provider" && context.providerProfile ? (
               <>
                 <Link
                   href="/provide"
@@ -146,15 +152,8 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
                   {context.providerProfile.status.replace("_", " ")}
                 </p>
               </>
-            ) : !isAdmin ? (
-              <Link
-                href="/provide/apply"
-                className="font-bold text-primary underline underline-offset-4"
-              >
-                Become a provider
-              </Link>
             ) : null}
-            {context.profile.role === "admin" ? (
+            {role === "admin" ? (
               <Link
                 href="/admin"
                 className="font-bold text-primary underline underline-offset-4"

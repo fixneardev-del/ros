@@ -20,6 +20,29 @@ function isAdminPath(pathname: string) {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
+// /provide/apply is the public onboarding page reached from the site header.
+// It is not part of the provider dashboard.
+function isProviderOnlyPath(pathname: string) {
+  return (
+    pathname === "/provide" ||
+    (pathname.startsWith("/provide/") && pathname !== "/provide/apply")
+  );
+}
+
+// A job detail page is shared: its owner, an admin and a provider with a
+// claim on it all need to open it. The job list and posting are customer only.
+function isCustomerOnlyPath(pathname: string) {
+  return pathname === "/jobs" || pathname.startsWith("/post-job");
+}
+
+type DashboardRole = "admin" | "provider" | "customer";
+
+function homeFor(role: DashboardRole) {
+  if (role === "admin") return "/admin";
+  if (role === "provider") return "/provide";
+  return "/account";
+}
+
 /**
  * Copies the session cookies onto a response that replaces the original one,
  * so a refreshed session is not lost by a redirect or a rewrite.
@@ -81,20 +104,41 @@ export async function updateSession(request: NextRequest) {
     return withCookies(response, NextResponse.redirect(loginUrl(request)));
   }
 
-  // A signed-in person without the admin role gets a real 403 on every admin
-  // route. The check runs here, before anything renders, because a check
-  // inside a Suspense boundary runs after the shell has streamed and the
-  // response would be a 200.
-  if (user && isAdminPath(pathname)) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
+  // Role checks run here, before anything renders. A redirect from a Suspense
+  // boundary arrives after the dashboard shell has already streamed, and is
+  // why the wrong dashboard flashed into view.
+  if (user && isProtected(pathname)) {
+    const [{ data: profile }, { data: providerProfile }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("provider_profiles")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]);
 
-    if (profile?.role !== "admin") {
+    const role: DashboardRole =
+      profile?.role === "admin"
+        ? "admin"
+        : providerProfile
+          ? "provider"
+          : "customer";
+
+    if (isAdminPath(pathname) && role !== "admin") {
       const denied = NextResponse.rewrite(new URL("/admin-denied", request.url));
       return withCookies(response, denied);
+    }
+
+    if (
+      (isProviderOnlyPath(pathname) && role !== "provider") ||
+      (isCustomerOnlyPath(pathname) && role !== "customer")
+    ) {
+      const home = NextResponse.redirect(new URL(homeFor(role), request.url));
+      return withCookies(response, home);
     }
   }
 

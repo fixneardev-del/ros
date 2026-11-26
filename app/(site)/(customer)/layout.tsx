@@ -5,5 +5,5 @@ export default function CustomerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <DashShell variant="customer">{children}</DashShell>;
+  return <DashShell>{children}</DashShell>;
 }

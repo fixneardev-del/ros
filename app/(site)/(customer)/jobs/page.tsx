@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Briefcase, CheckCircle2, MessageSquare } from "lucide-react";
-import { requireUser } from "@/lib/permissions";
+import { requireCustomer } from "@/lib/permissions";
 import { getCustomerJobs } from "@/lib/data/jobs";
 import { JobCard } from "@/components/mend/job-card";
 import { EmptyState } from "@/components/mend/tag";
@@ -16,7 +16,7 @@ type SearchParams = Promise<{ q?: string }>;
 
 async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const context = await requireUser("/jobs");
+  const context = await requireCustomer("/jobs");
   const jobs = await getCustomerJobs(context.user.id);
   const query = normaliseQuery(params.q);
 

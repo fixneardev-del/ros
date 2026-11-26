@@ -1,10 +1,9 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ShieldAlert } from "lucide-react";
-import { requireUser } from "@/lib/permissions";
+import { requireProvider } from "@/lib/permissions";
 import { getCategories } from "@/lib/data/categories";
 import { getDistricts } from "@/lib/data/locations";
 import { getProviderById } from "@/lib/data/providers";
@@ -41,44 +40,7 @@ function statusCopy(status: string) {
 
 async function ProvideContent({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const context = await requireUser("/provide");
-
-  // An admin who does not offer services has no provider dashboard to open.
-  // Send them to the one they do have.
-  if (context.profile.role === "admin" && !context.providerProfile) {
-    redirect("/admin");
-  }
-
-  // A customer can land here from the header. Explain what a provider profile
-  // is rather than dropping them straight into the application form.
-  if (!context.providerProfile) {
-    return (
-      <div className="max-w-2xl">
-        <p className="dash-kicker">Offer your services</p>
-        <h1 className="mt-2">Good with your hands?</h1>
-        <p className="mt-4 text-sm text-muted">
-          Apply to join the marketplace. Tell us what you do, which services
-          you offer, the areas you cover and add photos of your work. An admin
-          reviews every application before you appear in search.
-        </p>
-        <ul className="mt-6 space-y-2 text-sm text-muted">
-          <li>You choose your own services and postcode areas.</li>
-          <li>You send offers and agree the work directly with the customer.</li>
-          <li>There is no commission and no subscription.</li>
-        </ul>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <ButtonLink href="/provide/apply">Start an application</ButtonLink>
-          <ButtonLink href="/search" variant="secondary">
-            Find work first
-          </ButtonLink>
-        </div>
-        <p className="mt-6 text-sm text-muted">
-          Providers are independent. We do not guarantee qualifications,
-          insurance or checks unless a profile says so.
-        </p>
-      </div>
-    );
-  }
+  const context = await requireProvider();
 
   const provider = await getProviderById(context.user.id);
 

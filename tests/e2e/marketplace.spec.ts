@@ -340,6 +340,28 @@ test.describe("the admin dashboard", () => {
     await expect(
       page.getByRole("link", { name: "Become a provider", exact: true }),
     ).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "My jobs", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Post a job", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Matching jobs", exact: true }),
+    ).toHaveCount(0);
+  });
+
+  test("the admin account cannot open the other dashboards", async ({
+    page,
+  }) => {
+    await page.goto("/provide");
+    await expect(page).toHaveURL(/\/admin$/);
+
+    await page.goto("/jobs");
+    await expect(page).toHaveURL(/\/admin$/);
+
+    await page.goto("/post-job");
+    await expect(page).toHaveURL(/\/admin$/);
   });
 
   test("a signed-in customer cannot reach the admin area", async ({
@@ -486,9 +508,7 @@ test.describe("profiles and posting a job", () => {
   test.describe("a customer without a provider profile", () => {
     test.use({ storageState: customerState });
 
-    test("sees how to become a provider and posts a job in the dashboard", async ({
-      page,
-    }) => {
+    test("posts a job without seeing provider features", async ({ page }) => {
       await page.goto("/jobs");
 
       const dashboardNav = page.getByRole("navigation", {
@@ -497,8 +517,14 @@ test.describe("profiles and posting a job", () => {
       });
       await expect(dashboardNav).toBeVisible();
       await expect(
-        dashboardNav.getByRole("link", { name: "Become a provider" }),
+        dashboardNav.getByRole("link", { name: "My jobs" }),
       ).toBeVisible();
+      await expect(
+        dashboardNav.getByRole("link", { name: "Become a provider" }),
+      ).toHaveCount(0);
+      await expect(
+        dashboardNav.getByRole("link", { name: "Matching jobs" }),
+      ).toHaveCount(0);
 
       await page.goto("/post-job");
 
@@ -514,35 +540,38 @@ test.describe("profiles and posting a job", () => {
       await expect(page.getByLabel("What do you need?")).toBeVisible();
       await expect(page.getByLabel("Job title")).toBeVisible();
     });
+
+    test("cannot open the provider dashboard", async ({ page }) => {
+      await page.goto("/provide");
+      await expect(page).toHaveURL(/\/account$/);
+      await expect(
+        page.getByRole("link", { name: "Matching jobs", exact: true }),
+      ).toHaveCount(0);
+    });
   });
 
-  test.describe("a provider who can also hire", () => {
+  test.describe("a provider with one dashboard", () => {
     test.use({ storageState: providerState });
 
-    test("switches between the customer and provider dashboards", async ({
-      page,
-    }) => {
-      await page.goto("/provide");
-
-      const switcher = page.getByRole("group", { name: "Switch profile" });
-      await expect(switcher).toBeVisible();
-
-      await switcher
-        .getByRole("link", { name: "Switch to customer dashboard" })
-        .click();
-      await expect(page).toHaveURL(/\/jobs$/);
-      await expect(
-        page.getByRole("heading", { name: "My jobs" }),
-      ).toBeVisible();
-
-      await page
-        .getByRole("group", { name: "Switch profile" })
-        .getByRole("link", { name: "Switch to provider dashboard" })
-        .click();
+    test("cannot open the customer dashboard", async ({ page }) => {
+      await page.goto("/jobs");
       await expect(page).toHaveURL(/\/provide$/);
       await expect(
         page.getByRole("heading", { name: "Petra Mends" }),
       ).toBeVisible();
+
+      await page.goto("/post-job");
+      await expect(page).toHaveURL(/\/provide$/);
+
+      await expect(
+        page.getByRole("group", { name: "Switch profile" }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole("link", { name: "My jobs", exact: true }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole("link", { name: "Post a job", exact: true }),
+      ).toHaveCount(0);
     });
   });
 });

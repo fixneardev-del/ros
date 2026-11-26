@@ -1,14 +1,17 @@
 import { Suspense } from "react";
-import { getSessionContext } from "@/lib/permissions";
+import { dashboardRole, getSessionContext } from "@/lib/permissions";
 import { getUnreadNotificationCount } from "@/lib/notifications";
 import { studioSans } from "@/lib/fonts";
 import { DashHeader } from "@/components/dash/dash-header";
 import { DashFooter } from "@/components/dash/dash-footer";
 import "@/app/dash.css";
 
-type DashVariant = "customer" | "provider" | "admin";
-
-async function Header({ variant }: { variant: DashVariant }) {
+/**
+ * The chrome follows the account's one dashboard, not the URL that happens to
+ * be open. Reading the role here, inside Suspense, keeps shared pages such as
+ * /account and a job detail page from showing another dashboard's navigation.
+ */
+async function Header() {
   const context = await getSessionContext();
   const unreadCount = context.user
     ? await getUnreadNotificationCount(context.user.id)
@@ -18,16 +21,18 @@ async function Header({ variant }: { variant: DashVariant }) {
     <DashHeader
       user={context.user}
       name={context.profile?.full_name}
-      isProvider={Boolean(context.providerProfile)}
-      isAdmin={context.profile?.role === "admin"}
-      providerStatus={context.providerProfile?.status ?? null}
       unreadCount={unreadCount}
-      variant={variant}
+      variant={dashboardRole(context)}
     />
   );
 }
 
-function HeaderFallback({ variant }: { variant: DashVariant }) {
+async function Footer() {
+  const context = await getSessionContext();
+  return <DashFooter variant={dashboardRole(context)} />;
+}
+
+function HeaderFallback() {
   return (
     <header className="dash-header">
       <span className="dash-brand">
@@ -36,9 +41,6 @@ function HeaderFallback({ variant }: { variant: DashVariant }) {
           &amp;
         </span>{" "}
         Other Services
-        {variant === "admin" ? (
-          <span className="dash-brand-chip">Admin</span>
-        ) : null}
       </span>
       <span className="dash-loading">Loading dashboard…</span>
     </header>
@@ -49,26 +51,22 @@ function HeaderFallback({ variant }: { variant: DashVariant }) {
  * Shell for the customer, provider and admin dashboards. It uses the Movexa
  * dashboard design system scoped under `.dash`.
  */
-export function DashShell({
-  children,
-  variant = "customer",
-}: {
-  children: React.ReactNode;
-  variant?: DashVariant;
-}) {
+export function DashShell({ children }: { children: React.ReactNode }) {
   return (
     <div className={`dash ${studioSans.variable}`}>
       <div className="dash-shell">
         <div className="dash-inner">
-          <Suspense fallback={<HeaderFallback variant={variant} />}>
-            <Header variant={variant} />
+          <Suspense fallback={<HeaderFallback />}>
+            <Header />
           </Suspense>
 
           <main id="main" className="dash-main">
             {children}
           </main>
 
-          <DashFooter variant={variant} />
+          <Suspense fallback={null}>
+            <Footer />
+          </Suspense>
         </div>
       </div>
     </div>
