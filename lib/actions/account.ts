@@ -1,7 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/lib/permissions";
+import { redirect } from "next/navigation";
+import {
+  availableDashboards,
+  isActiveDashboard,
+  requireUser,
+} from "@/lib/permissions";
 import { accountSchema, passwordChangeSchema } from "@/lib/schemas/account";
 import { fail, fromZodError, ok } from "@/lib/actions/result";
 import type { ActionResult } from "@/lib/actions/result";
@@ -54,4 +59,34 @@ export async function changePassword(
   }
 
   return ok(undefined);
+}
+
+/**
+ * Switch the dashboard an approved provider is currently viewing. The saved
+ * choice is read by the proxy and by server components, so both sides agree.
+ */
+export async function switchDashboard(formData: FormData) {
+  const context = await requireUser("/account");
+  const target = formData.get("dashboard");
+  const allowed = availableDashboards(context);
+
+  if (!isActiveDashboard(target) || !allowed.includes(target)) {
+    redirect("/account?error=dashboard-switch");
+  }
+
+  const { error } = await context.supabase
+    .from("profiles")
+    .update({ active_dashboard: target })
+    .eq("id", context.user.id);
+
+  if (error) {
+    redirect("/account?error=dashboard-switch");
+  }
+
+  revalidatePath("/account");
+  revalidatePath("/jobs");
+  revalidatePath("/post-job");
+  revalidatePath("/provide");
+
+  redirect(target === "provider" ? "/provide" : "/search");
 }

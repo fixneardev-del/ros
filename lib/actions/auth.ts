@@ -199,6 +199,7 @@ export async function signIn(
     next = landingPath({
       role: account.role,
       isProvider: account.isProvider,
+      activeDashboard: account.activeDashboard,
     });
 
     signInNotice = {

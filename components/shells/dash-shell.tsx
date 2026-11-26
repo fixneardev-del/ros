@@ -1,5 +1,9 @@
 import { Suspense } from "react";
-import { dashboardRole, getSessionContext } from "@/lib/permissions";
+import {
+  canSwitchDashboard,
+  dashboardRole,
+  getSessionContext,
+} from "@/lib/permissions";
 import { getUnreadNotificationCount } from "@/lib/notifications";
 import { studioSans } from "@/lib/fonts";
 import { DashHeader } from "@/components/dash/dash-header";
@@ -23,6 +27,7 @@ async function Header() {
       name={context.profile?.full_name}
       unreadCount={unreadCount}
       variant={dashboardRole(context)}
+      canSwitch={canSwitchDashboard(context)}
     />
   );
 }

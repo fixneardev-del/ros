@@ -23,29 +23,30 @@ async function ReportsContent({ searchParams }: { searchParams: SearchParams }) 
 
   return (
     <div>
-      <div>
-        <h1>
-          Reports
-        </h1>
-        <p className="mt-3 text-muted">
-          Reports are raised by customers and providers from public profiles and
-          job pages. Mark them reviewed or dismissed once handled.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1>
+            Reports
+          </h1>
+          <p className="mt-3 text-muted">
+            Reports are raised by customers and providers from public profiles and
+            job pages. Mark them reviewed or dismissed once handled.
+          </p>
+        </div>
+        <div className="w-full sm:w-auto">
+          <SearchBox
+            action="/admin/reports"
+            query={query}
+            label="Search reports by type, status or reason"
+            placeholder="Type, status or reason"
+            resultCount={reports.length}
+            noun="report"
+          />
+        </div>
       </div>
 
       {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
       {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
-
-      <div className="mt-6">
-        <SearchBox
-          action="/admin/reports"
-          query={query}
-          label="Search reports by type, status or reason"
-          placeholder="Type, status or reason"
-          resultCount={reports.length}
-          noun="report"
-        />
-      </div>
 
       {reports.length > 0 ? (
         <div className="mt-6 space-y-4">

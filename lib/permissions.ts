@@ -6,7 +6,13 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import type { Profile, ProviderProfile } from "@/lib/types";
 import { dashboardRole } from "@/lib/dashboard-role";
 
-export { dashboardRole };
+export {
+  availableDashboards,
+  canSwitchDashboard,
+  dashboardRole,
+  isActiveDashboard,
+  isApprovedProvider,
+} from "@/lib/dashboard-role";
 export type { DashboardRole } from "@/lib/dashboard-role";
 
 type ServerSupabase = Awaited<ReturnType<typeof createServerSupabase>>;

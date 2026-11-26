@@ -252,12 +252,15 @@ create or replace function storage.foldername(name text) returns text[] language
   select string_to_array(name, '/'); $$;
 SQL
 
-  echo "Applying the project migration..."
-  psql_run -d "$DB" -f "$ROOT/supabase/migrations/0001_init.sql" >"$STACK/migration.out" 2>&1 || {
-    echo "The migration failed:" >&2
-    tail -30 "$STACK/migration.out" >&2
-    exit 1
-  }
+  echo "Applying the project migrations..."
+  for migration in "$ROOT"/supabase/migrations/*.sql; do
+    [ -f "$migration" ] || continue
+    psql_run -d "$DB" -f "$migration" >"$STACK/migration.out" 2>&1 || {
+      echo "The migration $(basename "$migration") failed:" >&2
+      tail -30 "$STACK/migration.out" >&2
+      exit 1
+    }
+  done
 
   echo "Applying the seed..."
   psql_run -d "$DB" -f "$ROOT/supabase/seed.sql" >"$STACK/seed.out" 2>&1 || {
@@ -296,6 +299,7 @@ update public.profiles set full_name = 'Nina Customer' where id in (select id fr
 update public.profiles set full_name = 'Petra Provider' where id in (select id from auth.users where email = 'provider@example.com');
 update public.profiles set full_name = 'Admin Person' where id in (select id from auth.users where email = 'admin@example.com');
 update public.profiles set role = 'admin' where id in (select id from auth.users where email = 'admin@example.com');
+update public.profiles set active_dashboard = 'provider' where id in (select id from auth.users where email = 'provider@example.com');
 SQL
 }
 

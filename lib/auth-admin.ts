@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { getPublicEnv } from "@/lib/env";
-import type { AccountRole } from "@/lib/next-path";
+import type { AccountRole, ActiveDashboard } from "@/lib/next-path";
 
 export async function getUserEmail(userId: string) {
   const admin = createAdminSupabase();
@@ -12,9 +12,17 @@ export async function getUserEmail(userId: string) {
   return data.user?.email ?? null;
 }
 
-type AccountState = { role: AccountRole; isProvider: boolean };
+type AccountState = {
+  role: AccountRole;
+  isProvider: boolean;
+  activeDashboard: ActiveDashboard;
+};
 
-const emptyState: AccountState = { role: null, isProvider: false };
+const emptyState: AccountState = {
+  role: null,
+  isProvider: false,
+  activeDashboard: "customer",
+};
 
 /**
  * A client scoped to the user's freshly issued access token.
@@ -41,10 +49,14 @@ async function readAccountState(
   if (!client) return null;
 
   const [{ data: profile }, { data: providerProfile }] = await Promise.all([
-    client.from("profiles").select("role").eq("id", userId).maybeSingle(),
+    client
+      .from("profiles")
+      .select("role, active_dashboard")
+      .eq("id", userId)
+      .maybeSingle(),
     client
       .from("provider_profiles")
-      .select("user_id")
+      .select("user_id, status")
       .eq("user_id", userId)
       .maybeSingle(),
   ]);
@@ -53,7 +65,11 @@ async function readAccountState(
 
   return {
     role: (profile?.role as AccountRole) ?? null,
-    isProvider: Boolean(providerProfile),
+    // Pending applicants are not providers yet. Only an approved profile can
+    // use the provider dashboard.
+    isProvider: providerProfile?.status === "approved",
+    activeDashboard:
+      (profile?.active_dashboard as ActiveDashboard | null) ?? "customer",
   };
 }
 

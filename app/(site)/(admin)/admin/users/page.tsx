@@ -33,27 +33,28 @@ async function UsersContent({ searchParams }: { searchParams: SearchParams }) {
 
   return (
     <div>
-      <div>
-        <h1>Users</h1>
-        <p className="mt-3 text-muted">
-          Suspend an account to block posting jobs, sending offers and accessing
-          admin areas. Suspension does not delete data.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1>Users</h1>
+          <p className="mt-3 text-muted">
+            Suspend an account to block posting jobs, sending offers and accessing
+            admin areas. Suspension does not delete data.
+          </p>
+        </div>
+        <div className="w-full sm:w-auto">
+          <SearchBox
+            action="/admin/users"
+            query={query}
+            label="Search users by name, email or role"
+            placeholder="Name, email or role"
+            resultCount={visible.length}
+            noun="user"
+          />
+        </div>
       </div>
 
       {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
       {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
-
-      <div className="mt-6">
-        <SearchBox
-          action="/admin/users"
-          query={query}
-          label="Search users by name, email or role"
-          placeholder="Name, email or role"
-          resultCount={visible.length}
-          noun="user"
-        />
-      </div>
 
       {visible.length > 0 ? (
         <div className="mt-6 space-y-3">

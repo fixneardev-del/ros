@@ -44,17 +44,54 @@ describe("safeNextPath", () => {
 
 describe("landingPath", () => {
   it("sends an admin to the admin dashboard", () => {
-    expect(landingPath({ role: "admin", isProvider: false })).toBe("/admin");
+    expect(
+      landingPath({
+        role: "admin",
+        isProvider: false,
+        activeDashboard: "customer",
+      }),
+    ).toBe("/admin");
     // An admin who also has a provider profile still lands in the admin area.
-    expect(landingPath({ role: "admin", isProvider: true })).toBe("/admin");
+    expect(
+      landingPath({
+        role: "admin",
+        isProvider: true,
+        activeDashboard: "provider",
+      }),
+    ).toBe("/admin");
   });
 
-  it("sends a provider to the provider dashboard", () => {
-    expect(landingPath({ role: "user", isProvider: true })).toBe("/provide");
+  it("sends an approved provider to their saved dashboard", () => {
+    expect(
+      landingPath({
+        role: "user",
+        isProvider: true,
+        activeDashboard: "provider",
+      }),
+    ).toBe("/provide");
+    expect(
+      landingPath({
+        role: "user",
+        isProvider: true,
+        activeDashboard: "customer",
+      }),
+    ).toBe("/account");
   });
 
   it("sends a customer to the account page", () => {
-    expect(landingPath({ role: "user", isProvider: false })).toBe("/account");
-    expect(landingPath({ role: null, isProvider: false })).toBe("/account");
+    expect(
+      landingPath({
+        role: "user",
+        isProvider: false,
+        activeDashboard: "customer",
+      }),
+    ).toBe("/account");
+    expect(
+      landingPath({
+        role: null,
+        isProvider: false,
+        activeDashboard: "customer",
+      }),
+    ).toBe("/account");
   });
 });

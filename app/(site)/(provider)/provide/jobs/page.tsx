@@ -30,20 +30,19 @@ async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
             offered on are not shown here.
           </p>
         </div>
-        <ButtonLink href="/provide/offers" variant="secondary">
-          My offers
-        </ButtonLink>
-      </div>
-
-      <div className="mt-6">
-        <SearchBox
-          action="/provide/jobs"
-          query={query}
-          label="Search matching jobs by title, service or postcode"
-          placeholder="Title, service or postcode"
-          resultCount={jobs.length}
-          noun="job"
-        />
+        <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:items-end">
+          <ButtonLink href="/provide/offers" variant="secondary">
+            My offers
+          </ButtonLink>
+          <SearchBox
+            action="/provide/jobs"
+            query={query}
+            label="Search matching jobs by title, service or postcode"
+            placeholder="Title, service or postcode"
+            resultCount={jobs.length}
+            noun="job"
+          />
+        </div>
       </div>
 
       {jobs.length > 0 ? (

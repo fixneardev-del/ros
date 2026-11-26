@@ -2,14 +2,19 @@ import { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ShieldAlert } from "lucide-react";
-import { dashboardRole, requireUser } from "@/lib/permissions";
+import {
+  canSwitchDashboard,
+  dashboardRole,
+  requireUser,
+} from "@/lib/permissions";
+import { switchDashboard } from "@/lib/actions/account";
 import { signOut } from "@/lib/actions/auth";
 import { AccountForm, PasswordForm } from "@/components/forms/account-forms";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "My account" };
 
-type SearchParams = Promise<{ error?: string }>;
+type SearchParams = Promise<{ applied?: string; error?: string }>;
 
 function initials(name?: string | null, email?: string | null) {
   const source = name?.trim() || email?.split("@")[0] || "You";
@@ -25,6 +30,8 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
   const params = await searchParams;
   const context = await requireUser("/account");
   const role = dashboardRole(context);
+  const canSwitch = canSwitchDashboard(context);
+  const switchTarget = role === "provider" ? "customer" : "provider";
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
@@ -67,6 +74,25 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
             <p className="font-bold">That area is for admins</p>
             <p className="mt-1 text-sm">
               Your account does not have admin access.
+            </p>
+          </div>
+        ) : null}
+
+        {params.applied === "1" ? (
+          <div className="mt-6 rounded-surface bg-success-bg p-5 text-success-fg">
+            <p className="font-bold">Provider application submitted</p>
+            <p className="mt-1 text-sm">
+              You can keep using your customer dashboard while we review it.
+              We aim to check completed applications within 24 hours.
+            </p>
+          </div>
+        ) : null}
+
+        {params.error === "dashboard-switch" ? (
+          <div className="mt-6 rounded-surface bg-warning-bg p-5 text-warning-fg">
+            <p className="font-bold">That switch is not available</p>
+            <p className="mt-1 text-sm">
+              You can switch once your provider application is approved.
             </p>
           </div>
         ) : null}
@@ -139,19 +165,29 @@ async function AccountContent({ searchParams }: { searchParams: SearchParams }) 
             >
               Notifications and email settings
             </Link>
-            {role === "provider" && context.providerProfile ? (
-              <>
-                <Link
-                  href="/provide"
-                  className="font-bold text-primary underline underline-offset-4"
-                >
-                  Provider dashboard
-                </Link>
-                <p className="-mt-1 text-xs text-muted">
-                  Application status:{" "}
-                  {context.providerProfile.status.replace("_", " ")}
-                </p>
-              </>
+            {role === "provider" ? (
+              <Link
+                href="/provide"
+                className="font-bold text-primary underline underline-offset-4"
+              >
+                Provider dashboard
+              </Link>
+            ) : null}
+            {context.providerProfile ? (
+              <p className="-mt-1 text-xs text-muted">
+                Provider application:{" "}
+                {context.providerProfile.status.replace("_", " ")}
+              </p>
+            ) : null}
+            {canSwitch ? (
+              <form action={switchDashboard}>
+                <input type="hidden" name="dashboard" value={switchTarget} />
+                <Button type="submit" variant="secondary">
+                  {switchTarget === "provider"
+                    ? "Switch to Provide services"
+                    : "Switch to Find help"}
+                </Button>
+              </form>
             ) : null}
             {role === "admin" ? (
               <Link

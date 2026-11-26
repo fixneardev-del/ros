@@ -68,11 +68,23 @@ async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
 
   return (
     <div>
-      <div>
-        <h1>My jobs</h1>
-        <p className="mt-2 text-muted">
-          Jobs you have posted, with their status and offers.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1>My jobs</h1>
+          <p className="mt-2 text-muted">
+            Jobs you have posted, with their status and offers.
+          </p>
+        </div>
+        <div className="w-full sm:w-auto">
+          <SearchBox
+            action="/jobs"
+            query={query}
+            label="Search your jobs by title, service or postcode"
+            placeholder="Title, service or postcode"
+            resultCount={visible.length}
+            noun="job"
+          />
+        </div>
       </div>
 
       <div className="dash-kpi-grid dash-kpi-grid-3 mt-8">
@@ -88,17 +100,6 @@ async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
             <span className="dash-kpi-meta">Across your jobs</span>
           </div>
         ))}
-      </div>
-
-      <div className="mt-8">
-        <SearchBox
-          action="/jobs"
-          query={query}
-          label="Search your jobs by title, service or postcode"
-          placeholder="Title, service or postcode"
-          resultCount={visible.length}
-          noun="job"
-        />
       </div>
 
       {visible.length > 0 ? (

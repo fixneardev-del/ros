@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import {
-  ArrowUpRight,
   Bell,
   Briefcase,
   LogOut,
@@ -16,6 +15,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
+import { switchDashboard } from "@/lib/actions/account";
 import { signOut } from "@/lib/actions/auth";
 import { initials } from "@/lib/initials";
 
@@ -46,11 +46,13 @@ export function DashHeader({
   name,
   unreadCount = 0,
   variant = "customer",
+  canSwitch = false,
 }: {
   user: { email?: string | null } | null;
   name?: string | null;
   unreadCount?: number;
   variant?: DashVariant;
+  canSwitch?: boolean;
 }) {
   const pathname = usePathname();
   const menuRef = useRef<HTMLDetailsElement>(null);
@@ -111,12 +113,7 @@ export function DashHeader({
             <Plus className="size-3.5" aria-hidden />
             Post a job
           </Link>
-        ) : (
-          <Link href="/" className="dash-action-light">
-            View site
-            <ArrowUpRight className="size-3.5" aria-hidden />
-          </Link>
-        )}
+        ) : null}
         <Link
           href="/account/notifications"
           className="dash-icon-button dash-notification-button"
@@ -173,12 +170,26 @@ export function DashHeader({
                   <Plus className="size-4" aria-hidden />
                   Post a job
                 </Link>
-              ) : (
-                <Link href="/">
-                  <ArrowUpRight className="size-4" aria-hidden />
-                  View site
-                </Link>
-              )}
+              ) : null}
+              {canSwitch ? (
+                <form action={switchDashboard}>
+                  <input
+                    type="hidden"
+                    name="dashboard"
+                    value={variant === "provider" ? "customer" : "provider"}
+                  />
+                  <button type="submit">
+                    {variant === "provider" ? (
+                      <Search className="size-4" aria-hidden />
+                    ) : (
+                      <Wrench className="size-4" aria-hidden />
+                    )}
+                    {variant === "provider"
+                      ? "Switch to Find help"
+                      : "Switch to Provide services"}
+                  </button>
+                </form>
+              ) : null}
               <Link href="/account/notifications">
                 <Bell className="size-4" aria-hidden />
                 Notifications

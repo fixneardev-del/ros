@@ -33,24 +33,23 @@ async function OffersContent({ searchParams }: { searchParams: SearchParams }) {
             it from the customer.
           </p>
         </div>
-        <ButtonLink href="/api/admin/export/offers" variant="secondary">
-          Export CSV
-        </ButtonLink>
+        <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:items-end">
+          <ButtonLink href="/api/admin/export/offers" variant="secondary">
+            Export CSV
+          </ButtonLink>
+          <SearchBox
+            action="/admin/offers"
+            query={query}
+            label="Search offers by provider, job or message"
+            placeholder="Provider, job or message"
+            resultCount={offers.length}
+            noun="offer"
+          />
+        </div>
       </div>
 
       {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
       {params.error ? <DashAlert tone="danger">{params.error}</DashAlert> : null}
-
-      <div className="mt-6">
-        <SearchBox
-          action="/admin/offers"
-          query={query}
-          label="Search offers by provider, job or message"
-          placeholder="Provider, job or message"
-          resultCount={offers.length}
-          noun="offer"
-        />
-      </div>
 
       {offers.length > 0 ? (
         <div className="mt-6 space-y-4">

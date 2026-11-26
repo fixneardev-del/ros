@@ -59,9 +59,20 @@ async function ProvidersContent({ searchParams }: { searchParams: SearchParams }
             Review applications and manage approved provider profiles.
           </p>
         </div>
-        <ButtonLink href="/api/admin/export/providers" variant="secondary">
-          Export CSV
-        </ButtonLink>
+        <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:items-end">
+          <ButtonLink href="/api/admin/export/providers" variant="secondary">
+            Export CSV
+          </ButtonLink>
+          <SearchBox
+            action="/admin/providers"
+            query={query}
+            label="Search providers by name, service or area"
+            placeholder="Name, service or area"
+            hidden={{ status, category }}
+            resultCount={providers.length}
+            noun="provider"
+          />
+        </div>
       </div>
 
       {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
@@ -81,18 +92,6 @@ async function ProvidersContent({ searchParams }: { searchParams: SearchParams }
           );
         })}
       </nav>
-
-      <div className="mt-4">
-        <SearchBox
-          action="/admin/providers"
-          query={query}
-          label="Search providers by name, service or area"
-          placeholder="Name, service or area"
-          hidden={{ status, category }}
-          resultCount={providers.length}
-          noun="provider"
-        />
-      </div>
 
       <form
         method="get"

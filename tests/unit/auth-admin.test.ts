@@ -33,17 +33,20 @@ describe("getAccountState", () => {
     vi.unstubAllEnvs();
   });
 
-  it("reads the provider profile through the sign-in token without a service key", async () => {
+  it("reads the approved provider state and saved dashboard through the sign-in token", async () => {
     vi.mocked(createClient).mockReturnValue(
       clientWith({
-        profiles: { data: { role: "user" } },
-        provider_profiles: { data: { user_id: userId, status: "approved" } },
+        profiles: { data: { role: "user", active_dashboard: "provider" } },
+        provider_profiles: {
+          data: { user_id: userId, status: "approved" },
+        },
       }),
     );
 
     await expect(getAccountState(userId, "access-token")).resolves.toEqual({
       role: "user",
       isProvider: true,
+      activeDashboard: "provider",
     });
 
     expect(createClient).toHaveBeenCalledWith(
@@ -57,12 +60,30 @@ describe("getAccountState", () => {
 
   it("keeps a customer as a customer when they have no provider profile", async () => {
     vi.mocked(createClient).mockReturnValue(
-      clientWith({ profiles: { data: { role: "user" } } }),
+      clientWith({
+        profiles: { data: { role: "user", active_dashboard: "customer" } },
+      }),
     );
 
     await expect(getAccountState(userId, "access-token")).resolves.toEqual({
       role: "user",
       isProvider: false,
+      activeDashboard: "customer",
+    });
+  });
+
+  it("does not treat a pending application as a provider account", async () => {
+    vi.mocked(createClient).mockReturnValue(
+      clientWith({
+        profiles: { data: { role: "user", active_dashboard: "customer" } },
+        provider_profiles: { data: { user_id: userId, status: "pending" } },
+      }),
+    );
+
+    await expect(getAccountState(userId, "access-token")).resolves.toEqual({
+      role: "user",
+      isProvider: false,
+      activeDashboard: "customer",
     });
   });
 });

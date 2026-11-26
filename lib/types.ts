@@ -1,4 +1,5 @@
 export type AppRole = "user" | "admin";
+export type ActiveDashboard = "customer" | "provider";
 export type ProviderType = "individual" | "sole_trader" | "business";
 export type ProviderStatus = "pending" | "approved" | "rejected" | "suspended";
 export type JobStatus = "open" | "receiving_offers" | "closed" | "removed";
@@ -8,6 +9,7 @@ export type ReportStatus = "open" | "reviewed" | "dismissed";
 export interface Profile {
   id: string;
   role: AppRole;
+  active_dashboard: ActiveDashboard;
   full_name: string;
   phone: string | null;
   is_suspended: boolean;

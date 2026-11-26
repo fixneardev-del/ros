@@ -56,7 +56,17 @@ async function OffersContent({ searchParams }: { searchParams: SearchParams }) {
             while it is still submitted.
           </p>
         </div>
-        <ButtonLink href="/provide/jobs">Find more jobs</ButtonLink>
+        <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:items-end">
+          <ButtonLink href="/provide/jobs">Find more jobs</ButtonLink>
+          <SearchBox
+            action="/provide/offers"
+            query={query}
+            label="Search your offers by job, area or message"
+            placeholder="Job, area or message"
+            resultCount={visible.length}
+            noun="offer"
+          />
+        </div>
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2 text-sm">
@@ -73,17 +83,6 @@ async function OffersContent({ searchParams }: { searchParams: SearchParams }) {
             {label}: {counts[key] ?? 0}
           </span>
         ))}
-      </div>
-
-      <div className="mt-5">
-        <SearchBox
-          action="/provide/offers"
-          query={query}
-          label="Search your offers by job, area or message"
-          placeholder="Job, area or message"
-          resultCount={visible.length}
-          noun="offer"
-        />
       </div>
 
       {visible.length > 0 ? (

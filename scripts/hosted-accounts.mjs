@@ -173,6 +173,47 @@ const { error: roleError } = await admin
   .eq("id", ids.get("admin@example.com"));
 if (roleError) fail(`Setting the admin role failed: ${roleError.message}`);
 
+// The provider demo needs an approved profile, not just an auth user. Without
+// this the login works but the account has no provider dashboard to open.
+const providerId = ids.get("provider@example.com");
+const now = new Date().toISOString();
+
+const { error: activeError } = await admin
+  .from("profiles")
+  .update({ active_dashboard: "provider" })
+  .eq("id", providerId);
+if (activeError) fail(`Setting the provider dashboard failed: ${activeError.message}`);
+
+const { error: providerError } = await admin.from("provider_profiles").upsert(
+  {
+    user_id: providerId,
+    provider_type: "individual",
+    display_name: "Petra Mends",
+    bio: "Upholstery, small woodwork and home repairs. Ten years on the sofa.",
+    service_districts: ["G12", "G11"],
+    price_note: "From £25 for a repair",
+    status: "approved",
+    declaration_accepted_at: now,
+    updated_at: now,
+  },
+  { onConflict: "user_id" },
+);
+if (providerError) fail(`Creating the provider profile failed: ${providerError.message}`);
+
+const { data: categories, error: categoryError } = await admin
+  .from("service_categories")
+  .select("id")
+  .in("slug", ["furniture-repair", "woodwork-joinery", "small-home-fixes"]);
+if (categoryError) fail(`Reading service categories failed: ${categoryError.message}`);
+
+if (categories?.length) {
+  const { error: servicesError } = await admin.from("provider_services").upsert(
+    categories.map(({ id }) => ({ provider_id: providerId, category_id: id })),
+    { onConflict: "provider_id,category_id" },
+  );
+  if (servicesError) fail(`Setting provider services failed: ${servicesError.message}`);
+}
+
 // Sign in with the publishable key, the same way the browser does, so this
 // also proves that hosted password auth and the profile read work.
 for (const account of accounts) {

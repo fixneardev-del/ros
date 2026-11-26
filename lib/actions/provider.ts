@@ -192,13 +192,15 @@ export async function submitProviderApplication(
     return fail("APPLY_FAILED", "We couldn't send your application. Check your connection and try again.");
   }
 
+  revalidatePath("/account");
   revalidatePath("/provide");
   revalidatePath("/admin/providers");
   revalidatePath("/search");
 
+  // The applicant is still a customer while the application is reviewed.
   // The redirect happens on the server, so it does not depend on the browser
   // being ready to navigate.
-  redirect("/provide?applied=1");
+  redirect("/account?applied=1");
 }
 
 export async function updateProviderProfile(

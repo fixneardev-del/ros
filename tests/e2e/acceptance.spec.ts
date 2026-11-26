@@ -125,8 +125,11 @@ test.describe("acceptance matrix", () => {
       .check();
     await page.getByRole("button", { name: "Send application" }).click();
 
-    await expect(page).toHaveURL(/\/provide\?applied=1/);
-    await expect(page.getByText("Waiting for review")).toBeVisible();
+    await expect(page).toHaveURL(/\/account\?applied=1/);
+    await expect(page.getByText("Provider application submitted")).toBeVisible();
+    await expect(
+      page.getByText("Provider application: pending"),
+    ).toBeVisible();
 
     const profiles = await rowsFor("provider_profiles", "display_name", displayName);
     expect(profiles).toHaveLength(1);
@@ -178,6 +181,41 @@ test.describe("acceptance matrix", () => {
 
     await page.goto("/search?service=furniture-repair&postcode=G12%208QQ");
     await expect(page.getByRole("heading", { name: displayName })).toBeVisible();
+  });
+
+  test("T05b an approved provider switches dashboards from the account menu", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    await signIn(page, providerEmail);
+    await expect(page).toHaveURL(/\/account/);
+    await expect(
+      page.getByText("Provider application: approved"),
+    ).toBeVisible();
+
+    await page.getByRole("button", { name: "Switch to Provide services" }).click();
+    await expect(page).toHaveURL(/\/provide$/);
+
+    await page.setViewportSize({ width: 900, height: 900 });
+    await page
+      .locator("header.dash-header")
+      .first()
+      .getByLabel("Open dashboard menu")
+      .click();
+    await page.getByRole("button", { name: "Switch to Find help" }).click();
+    await expect(page).toHaveURL(/\/search$/);
+
+    const { data: profile, error } = await adminClient()
+      .from("profiles")
+      .select("active_dashboard")
+      .eq("id", providerUserId)
+      .single();
+    expect(error).toBeNull();
+    expect(profile?.active_dashboard).toBe("customer");
+
+    await context.close();
   });
 
   test.use({ storageState: adminState });

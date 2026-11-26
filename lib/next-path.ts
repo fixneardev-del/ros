@@ -26,19 +26,23 @@ export function safeNextPath(
 }
 
 export type AccountRole = "admin" | "user" | null;
+export type ActiveDashboard = "customer" | "provider";
 
 /**
  * Where a signed-in person lands.
  *
- * Sign-in always opens the platform for the account's role. A requested page
- * never overrides it: a provider link cannot drop an admin into the provider
- * dashboard, and a customer link cannot bypass their own platform.
+ * Sign-in opens the dashboard saved on the account. A requested page never
+ * overrides it: a provider link cannot drop an admin into the provider
+ * dashboard, and an approved provider who is viewing customer jobs stays there.
  */
 export function landingPath(input: {
   role: AccountRole;
   isProvider: boolean;
+  activeDashboard?: ActiveDashboard;
 }) {
   if (input.role === "admin") return "/admin";
-  if (input.isProvider) return "/provide";
+  if (input.isProvider && input.activeDashboard === "provider") {
+    return "/provide";
+  }
   return "/account";
 }

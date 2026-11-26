@@ -72,8 +72,10 @@ if [ -z "$CUSTOMER" ] || [ -z "$PROVIDER" ] || [ -z "$ADMIN" ]; then
   exit 1
 fi
 
-# The site owner is the only account with the admin role.
+# The site owner is the only account with the admin role. The approved demo
+# provider opens the provider dashboard; everyone else starts as a customer.
 psql_run -c "update public.profiles set role = 'admin' where id = '${ADMIN}'::uuid;" >/dev/null
+psql_run -c "update public.profiles set active_dashboard = 'provider' where id = '${PROVIDER}'::uuid;" >/dev/null
 
 psql_run <<SQL
 -- An approved provider with services.

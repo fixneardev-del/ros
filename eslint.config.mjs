@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "playwright-report/**",
     "test-results/**",
+    // Generated agent skill assets are not application source.
+    ".agents/**",
   ]),
 ]);
 

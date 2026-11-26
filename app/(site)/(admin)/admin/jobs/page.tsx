@@ -47,9 +47,20 @@ async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
             emails the customer.
           </p>
         </div>
-        <ButtonLink href="/api/admin/export/jobs" variant="secondary">
-          Export CSV
-        </ButtonLink>
+        <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:items-end">
+          <ButtonLink href="/api/admin/export/jobs" variant="secondary">
+            Export CSV
+          </ButtonLink>
+          <SearchBox
+            action="/admin/jobs"
+            query={query}
+            label="Search jobs by title, customer or postcode"
+            placeholder="Title, customer or postcode"
+            hidden={{ status }}
+            resultCount={jobs.length}
+            noun="job"
+          />
+        </div>
       </div>
 
       {params.ok ? <DashAlert tone="success">{params.ok}</DashAlert> : null}
@@ -74,18 +85,6 @@ async function JobsContent({ searchParams }: { searchParams: SearchParams }) {
           );
         })}
       </nav>
-
-      <div className="mt-4">
-        <SearchBox
-          action="/admin/jobs"
-          query={query}
-          label="Search jobs by title, customer or postcode"
-          placeholder="Title, customer or postcode"
-          hidden={{ status }}
-          resultCount={jobs.length}
-          noun="job"
-        />
-      </div>
 
       {jobs.length > 0 ? (
         <div className="mt-6 space-y-4">

@@ -111,20 +111,21 @@ export async function updateSession(request: NextRequest) {
     const [{ data: profile }, { data: providerProfile }] = await Promise.all([
       supabase
         .from("profiles")
-        .select("role")
+        .select("role, active_dashboard")
         .eq("id", user.id)
         .maybeSingle(),
       supabase
         .from("provider_profiles")
-        .select("user_id")
+        .select("user_id, status")
         .eq("user_id", user.id)
         .maybeSingle(),
     ]);
 
+    const isApprovedProvider = providerProfile?.status === "approved";
     const role: DashboardRole =
       profile?.role === "admin"
         ? "admin"
-        : providerProfile
+        : profile?.active_dashboard === "provider" && isApprovedProvider
           ? "provider"
           : "customer";
 

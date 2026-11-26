@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { dashboardRole, requireUser } from "@/lib/permissions";
+import { requireUser } from "@/lib/permissions";
 import { getCategories } from "@/lib/data/categories";
 import { getDistricts } from "@/lib/data/locations";
 import { ProviderApplicationForm } from "@/components/forms/provider-forms";
@@ -10,13 +10,12 @@ export const metadata: Metadata = { title: "Apply to offer services" };
 
 async function ApplyContent() {
   const context = await requireUser("/provide/apply");
-  const role = dashboardRole(context);
 
-  // This is the public application path for a customer, not a provider
-  // dashboard. Accounts that already belong to another dashboard go back to it.
-  if (role !== "customer") {
-    redirect(role === "admin" ? "/admin" : "/provide");
-  }
+  // This is the public application path for someone who has not applied yet.
+  // An existing application is tracked on the account page, whether it is
+  // pending or approved, so the form is never shown twice.
+  if (context.profile.role === "admin") redirect("/admin");
+  if (context.providerProfile) redirect("/account");
 
   const [categories, districts] = await Promise.all([
     getCategories(),
