@@ -3,6 +3,12 @@
 Review received from Fisayo on 26 November 2026 against
 `https://ros-jet.vercel.app/`.
 
+Live verification on 26 November 2026 confirmed the homepage copy, buttons,
+search label, provider wording, approval wording, 24-hour review note, dark
+text, white cards and ROS green (`#2fae6b`) accents on the deployed site. The
+browser tab now uses the same interim ROS mark as the header and footer; the
+official logo file and exact brand green are still awaited from the client.
+
 ## Implemented in code
 
 | Review item | Change |
@@ -70,9 +76,9 @@ All checks pass in this workspace:
 
 - `npm run lint`
 - `npm run typecheck`
-- `npm test` — 132 tests
+- `npm test` — 137 tests
 - `npm run build`
-- `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' npm run test:e2e` — 59 tests
+- `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' npm run test:e2e` — 171 tests
 
 The browser tests include the updated homepage headline, the service search
 that still carries the postcode through to the results page, the
