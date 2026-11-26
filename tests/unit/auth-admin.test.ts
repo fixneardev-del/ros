@@ -13,11 +13,26 @@ vi.mock("@supabase/supabase-js", () => ({
 const userId = "328dbf74-b3a3-4386-9bd4-f1ac911be2de";
 
 function clientWith(responses: Record<string, unknown>) {
-  const from = vi.fn((table: string) => ({
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    maybeSingle: vi.fn().mockResolvedValue(responses[table] ?? { data: null }),
-  }));
+  const from = vi.fn((table: string) => {
+    let selected = "";
+    const builder = {
+      select: vi.fn((columns: string) => {
+        selected = columns;
+        return builder;
+      }),
+      eq: vi.fn(),
+      maybeSingle: vi.fn(),
+    };
+
+    builder.eq.mockReturnValue(builder);
+    builder.maybeSingle.mockImplementation(() =>
+      Promise.resolve(
+        responses[`${table}:${selected}`] ?? responses[table] ?? { data: null },
+      ),
+    );
+
+    return builder;
+  });
 
   return { from } as never;
 }
@@ -83,6 +98,45 @@ describe("getAccountState", () => {
     await expect(getAccountState(userId, "access-token")).resolves.toEqual({
       role: "user",
       isProvider: false,
+      activeDashboard: "customer",
+    });
+  });
+
+  it("keeps an admin as an admin before the dashboard column is deployed", async () => {
+    vi.mocked(createClient).mockReturnValue(
+      clientWith({
+        "profiles:role": { data: { role: "admin" } },
+        "profiles:active_dashboard": {
+          data: null,
+          error: { code: "42703", message: "column does not exist" },
+        },
+      }),
+    );
+
+    await expect(getAccountState(userId, "access-token")).resolves.toEqual({
+      role: "admin",
+      isProvider: false,
+      activeDashboard: "customer",
+    });
+  });
+
+  it("falls back to customer when a provider's saved dashboard cannot be read", async () => {
+    vi.mocked(createClient).mockReturnValue(
+      clientWith({
+        "profiles:role": { data: { role: "user" } },
+        "profiles:active_dashboard": {
+          data: null,
+          error: { code: "42703", message: "column does not exist" },
+        },
+        provider_profiles: {
+          data: { user_id: userId, status: "approved" },
+        },
+      }),
+    );
+
+    await expect(getAccountState(userId, "access-token")).resolves.toEqual({
+      role: "user",
+      isProvider: true,
       activeDashboard: "customer",
     });
   });

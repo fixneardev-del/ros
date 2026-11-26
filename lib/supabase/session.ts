@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getPublicEnv } from "@/lib/env";
+import { readActiveDashboard } from "@/lib/supabase/active-dashboard";
 
 const PROTECTED_PREFIXES = [
   "/post-job",
@@ -108,12 +109,10 @@ export async function updateSession(request: NextRequest) {
   // boundary arrives after the dashboard shell has already streamed, and is
   // why the wrong dashboard flashed into view.
   if (user && isProtected(pathname)) {
+    // Read `role` on its own so the absent `active_dashboard` column cannot
+    // turn an admin into a customer while the hosted migration is pending.
     const [{ data: profile }, { data: providerProfile }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("role, active_dashboard")
-        .eq("id", user.id)
-        .maybeSingle(),
+      supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
       supabase
         .from("provider_profiles")
         .select("user_id, status")
@@ -122,12 +121,12 @@ export async function updateSession(request: NextRequest) {
     ]);
 
     const isApprovedProvider = providerProfile?.status === "approved";
-    const role: DashboardRole =
-      profile?.role === "admin"
-        ? "admin"
-        : profile?.active_dashboard === "provider" && isApprovedProvider
-          ? "provider"
-          : "customer";
+    let role: DashboardRole = profile?.role === "admin" ? "admin" : "customer";
+
+    if (role === "customer" && isApprovedProvider) {
+      const savedDashboard = await readActiveDashboard(supabase, user.id);
+      if (savedDashboard === "provider") role = "provider";
+    }
 
     if (isAdminPath(pathname) && role !== "admin") {
       const denied = NextResponse.rewrite(new URL("/admin-denied", request.url));

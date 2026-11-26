@@ -43,6 +43,10 @@ Review received from Fisayo on 26 November 2026 against
   “Switch to Provide services” / “Switch to Find help”. Switching saves the
   choice and opens the selected dashboard.
 - The two “View site” links in `components/dash/dash-header.tsx` were removed.
+- Role lookups read `role` without depending on `active_dashboard`, so an admin
+  still lands on `/admin` and can open the portal while the hosted migration is
+  pending. The saved-dashboard read falls back to `customer` when the column is
+  absent.
 
 Historical estimate for this item was **1–2 engineering days** for
 implementation, tests and documentation; no currency figure was given because
@@ -51,10 +55,12 @@ no client rate basis was supplied.
 ## Deployment note
 
 `supabase/migrations/0003_active_dashboard.sql` adds the saved-choice column and
-backfill. It must be applied to the hosted Supabase project before the live
-sign-in and switching behaviour works. `scripts/hosted-accounts.mjs` now creates
-the approved demo provider profile and sets its saved dashboard, so re-running
-the demo seed does not regress.
+backfill. It must be applied to the hosted Supabase project before live
+dashboard switching works. Admin and customer access are unaffected until then:
+the runtime reads `role` separately and treats an unreadable saved dashboard as
+`customer`. `scripts/hosted-accounts.mjs` now creates the approved demo provider
+profile and sets its saved dashboard, so re-running the demo seed does not
+regress.
 
 ## Testing status
 
@@ -62,7 +68,7 @@ All checks pass in this workspace:
 
 - `npm run lint`
 - `npm run typecheck`
-- `npm test` — 127 tests
+- `npm test` — 132 tests
 - `npm run build`
 - `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' npm run test:e2e` — 59 tests
 

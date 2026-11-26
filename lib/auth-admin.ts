@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { createAdminSupabase } from "@/lib/supabase/admin";
+import { readActiveDashboard } from "@/lib/supabase/active-dashboard";
 import { getPublicEnv } from "@/lib/env";
 import type { AccountRole, ActiveDashboard } from "@/lib/next-path";
 
@@ -48,12 +49,11 @@ async function readAccountState(
 ): Promise<AccountState | null> {
   if (!client) return null;
 
+  // `role` is always present, even before the dashboard migration is applied.
+  // Reading it separately keeps an admin from being downgraded to a customer
+  // just because the newer `active_dashboard` column is not live yet.
   const [{ data: profile }, { data: providerProfile }] = await Promise.all([
-    client
-      .from("profiles")
-      .select("role, active_dashboard")
-      .eq("id", userId)
-      .maybeSingle(),
+    client.from("profiles").select("role").eq("id", userId).maybeSingle(),
     client
       .from("provider_profiles")
       .select("user_id, status")
@@ -63,13 +63,17 @@ async function readAccountState(
 
   if (!profile && !providerProfile) return null;
 
+  const activeDashboard =
+    profile?.role === "admin"
+      ? "customer"
+      : await readActiveDashboard(client, userId);
+
   return {
     role: (profile?.role as AccountRole) ?? null,
     // Pending applicants are not providers yet. Only an approved profile can
     // use the provider dashboard.
     isProvider: providerProfile?.status === "approved",
-    activeDashboard:
-      (profile?.active_dashboard as ActiveDashboard | null) ?? "customer",
+    activeDashboard,
   };
 }
 
