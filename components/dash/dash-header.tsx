@@ -77,6 +77,18 @@ export function DashHeader({
         ? [
             { href: "/jobs", label: "My jobs", Icon: Briefcase },
             { href: "/search", label: "Find help", Icon: Search },
+            // A provider who is back in the customer view already has the
+            // dashboard switcher. Everyone else needs a signed-in way to
+            // start the provider application.
+            ...(canSwitch
+              ? []
+              : [
+                  {
+                    href: "/provide/apply",
+                    label: "Provide services",
+                    Icon: Wrench,
+                  },
+                ]),
           ]
         : [];
 
@@ -104,6 +116,15 @@ export function DashHeader({
               {link.label}
             </Link>
           ))}
+          {variant === "customer" && canSwitch ? (
+            <form action={switchDashboard}>
+              <input type="hidden" name="dashboard" value="provider" />
+              <button type="submit">
+                <Wrench className="size-3.5" aria-hidden />
+                Provide services
+              </button>
+            </form>
+          ) : null}
         </nav>
       ) : null}
 
@@ -165,6 +186,12 @@ export function DashHeader({
                   ))
                 : null}
 
+              {variant === "customer" && !canSwitch ? (
+                <Link href="/provide/apply">
+                  <Wrench className="size-4" aria-hidden />
+                  Provide services
+                </Link>
+              ) : null}
               {variant === "customer" ? (
                 <Link href="/post-job">
                   <Plus className="size-4" aria-hidden />

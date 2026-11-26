@@ -215,6 +215,24 @@ test.describe("acceptance matrix", () => {
     await context.close();
   });
 
+  test("T05c customer dashboard links to the provider application", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ storageState: customerState });
+    const page = await context.newPage();
+
+    await page.goto("/jobs");
+
+    const nav = page.getByRole("navigation", { name: "Dashboard" });
+    const link = nav.getByRole("link", { name: "Provide services" });
+    await expect(link).toHaveAttribute("href", "/provide/apply");
+
+    await link.click();
+    await expect(page).toHaveURL(/\/provide\/apply$/);
+
+    await context.close();
+  });
+
   test.use({ storageState: adminState });
 
   test("T06 customer submits a job and the administrator sees it", async ({

@@ -328,20 +328,31 @@
   vertical-align: middle;
 }
 
-.dash-header-nav a {
+.dash-header-nav a,
+.dash-header-nav button {
   padding: 8px 13px;
+  border: 0;
   border-radius: 999px;
+  background: transparent;
   color: var(--d-muted);
+  font-family: inherit;
   font-size: 12px;
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
   transition:
     background-color 180ms ease,
     color 180ms ease;
 }
 
-.dash-header-nav a:hover {
+.dash-header-nav form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.dash-header-nav a:hover,
+.dash-header-nav button:hover {
   background: var(--d-control);
   color: var(--d-ink);
 }
