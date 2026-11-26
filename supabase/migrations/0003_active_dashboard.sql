@@ -2,8 +2,11 @@
 -- decides which dashboard opens after sign-in and which role checks apply.
 -- Admins keep the admin dashboard regardless of this value.
 
+-- Only approved providers use this value. Defaulting to 'provider' means an
+-- approval opens their own dashboard; an explicit switch to customer is saved
+-- as 'customer'. Accounts without an approved profile ignore the column.
 alter table public.profiles
-  add column if not exists active_dashboard text not null default 'customer';
+  add column if not exists active_dashboard text not null default 'provider';
 
 do $$
 begin

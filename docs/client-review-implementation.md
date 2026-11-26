@@ -28,8 +28,9 @@ Review received from Fisayo on 26 November 2026 against
 ## Item 5 — delivered behaviour
 
 - `profiles.active_dashboard` stores `customer` or `provider`. New accounts
-  default to `customer`; the migration backfills accounts that already had an
-  approved provider profile.
+  default to `provider` so approval opens the provider dashboard; a provider
+  who switches to “Find help” is saved as `customer`. Accounts without an
+  approved provider profile always use the customer dashboard.
 - The switch is available only to a non-admin account with an approved provider
   profile. Pending, rejected and suspended applicants remain on the customer
   dashboard and see their application status on `/account`.
