@@ -102,16 +102,16 @@ test.describe("sign in", () => {
     await expect(page).toHaveURL(/\/provide/);
   });
 
-  test("a customer lands on the account page", async ({ page }) => {
+  test("a customer lands on the customer dashboard", async ({ page }) => {
     await signIn(page, ACCOUNTS.customer);
-    await expect(page).toHaveURL(/\/account/);
+    await expect(page).toHaveURL(/\/jobs$/);
   });
 
   test("a requested provider page does not override a customer's platform", async ({
     page,
   }) => {
     await signIn(page, ACCOUNTS.customer, "/provide");
-    await expect(page).toHaveURL(/\/account/);
+    await expect(page).toHaveURL(/\/jobs$/);
   });
 
   test("a requested admin page does not override the admin home", async ({
@@ -547,7 +547,7 @@ test.describe("profiles and posting a job", () => {
 
     test("cannot open the provider dashboard", async ({ page }) => {
       await page.goto("/provide");
-      await expect(page).toHaveURL(/\/account$/);
+      await expect(page).toHaveURL(/\/jobs$/);
       await expect(
         page.getByRole("link", { name: "Matching jobs", exact: true }),
       ).toHaveCount(0);

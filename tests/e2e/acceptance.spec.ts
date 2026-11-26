@@ -101,7 +101,7 @@ test.describe("acceptance matrix", () => {
     await expect(page).toHaveURL(/\/login\?registered=1/);
 
     await signIn(page, providerEmail);
-    await expect(page).toHaveURL(/\/account/);
+    await expect(page).toHaveURL(/\/jobs$/);
 
     await page.goto("/provide/apply");
     await page.getByLabel("I am a").selectOption("individual");
@@ -190,13 +190,15 @@ test.describe("acceptance matrix", () => {
     const page = await context.newPage();
 
     await signIn(page, providerEmail);
-    await expect(page).toHaveURL(/\/account/);
+    await expect(page).toHaveURL(/\/provide$/);
+
+    await page.goto("/account");
     await expect(
       page.getByText("Provider application: approved"),
     ).toBeVisible();
 
-    await page.getByRole("button", { name: "Switch to Provide services" }).click();
-    await expect(page).toHaveURL(/\/provide$/);
+    await page.getByRole("button", { name: "Switch to Find help" }).click();
+    await expect(page).toHaveURL(/\/search$/);
 
     await page.setViewportSize({ width: 900, height: 900 });
     await page
@@ -204,8 +206,8 @@ test.describe("acceptance matrix", () => {
       .first()
       .getByLabel("Open dashboard menu")
       .click();
-    await page.getByRole("button", { name: "Switch to Find help" }).click();
-    await expect(page).toHaveURL(/\/search$/);
+    await page.getByRole("button", { name: "Switch to Provide services" }).click();
+    await expect(page).toHaveURL(/\/provide$/);
 
     const { data: profile, error } = await adminClient()
       .from("profiles")
@@ -213,7 +215,7 @@ test.describe("acceptance matrix", () => {
       .eq("id", providerUserId)
       .single();
     expect(error).toBeNull();
-    expect(profile?.active_dashboard).toBe("customer");
+    expect(profile?.active_dashboard).toBe("provider");
 
     await context.close();
   });
