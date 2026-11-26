@@ -62,7 +62,7 @@ All checks pass in this workspace:
 
 - `npm run lint`
 - `npm run typecheck`
-- `npm test` — 125 tests
+- `npm test` — 127 tests
 - `npm run build`
 - `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' npm run test:e2e` — 59 tests
 

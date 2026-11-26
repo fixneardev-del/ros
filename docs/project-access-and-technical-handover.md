@@ -2,7 +2,7 @@
 
 **Prepared:** 26 November 2026  
 **Repository:** `https://github.com/fixneardev-del/ros`  
-**Latest production commit:** `eb6e4ad` (`fix(auth): resolve landing role from sign-in token`)  
+**Latest production application commit:** `d9f8bd2` (`fix(e2e): keep browser engines inside the sign-in rate limit`)  
 **Live test deployment:** `https://ros-jet.vercel.app`  
 **Status:** Code and documentation are ready. External account ownership, billing and DNS control still need client confirmation and transfer.
 
@@ -15,7 +15,7 @@ This document is a handover response based on the current repository, GitHub dep
 | Service | Current evidence | Owner / control confirmed? | Transfer or access needed |
 |---|---|---|---|
 | GitHub | Repository `fixneardev-del/ros`, public, default branch `main`, origin `https://github.com/fixneardev-del/ros.git` | **Not client-confirmed.** GitHub shows the owner as `fixneardev-del`. | Add the client account as Owner/Admin, then transfer the repository to the client-owned personal account or organisation. Confirm desired visibility after transfer. |
-| Vercel | Project `ros` deploys from GitHub. Latest successful Vercel check for `eb6e4ad`: `https://vercel.com/fixneardev-del/ros/DdH2pbVboDxoNQxYCfutP32UQRis`. Site: `https://ros-jet.vercel.app`. | **Not client-confirmed.** The project URL indicates the `fixneardev-del` Vercel scope; billing role cannot be verified from the repository. | Invite the client Vercel account as Admin to the project/team, transfer the project and its environment variables, then attach the branded domain. |
+| Vercel | Project `ros` deploys from GitHub. Latest successful Vercel check for `d9f8bd2`: `https://vercel.com/fixneardev-del/ros/6rERoEXTYYPtd841NmCjLon1FzxU`. Site: `https://ros-jet.vercel.app`. | **Not client-confirmed.** The project URL indicates the `fixneardev-del` Vercel scope; billing role cannot be verified from the repository. | Invite the client Vercel account as Admin to the project/team, transfer the project and its environment variables, then attach the branded domain. |
 | Supabase | Project ref `eohqgkxnjshnzwadglnh`; URL `https://eohqgkxnjshnzwadglnh.supabase.co`; publishable key is in `.env.example` and `vercel.json`. | **Not client-confirmed.** | Invite the client Supabase account as Owner/Admin to the organisation/project, transfer the project, rotate the service-role key after transfer, and confirm Auth, Storage and billing ownership. |
 | Resend | Application uses the `resend` npm package and expects `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` and `ADMIN_NOTIFICATION_EMAIL`. No key or sending domain is configured in the repository. | **Not confirmed.** | Invite the client Resend account as Owner/Admin, verify the sending domain, add SPF/DKIM at DNS, and provide the API key through a secure channel. |
 | Google OAuth | Google sign-in is configured in Supabase Auth. The Google client secret is intentionally not an application environment variable. | **Not confirmed.** Google Cloud project and OAuth client are not visible in the repository. | Confirm the client-owned Google Cloud project, OAuth client ID/secret, authorised JavaScript origins and redirect URI. The secret should remain in Supabase. |
@@ -72,7 +72,7 @@ The requested outcome is **direct client ownership or admin control on every pla
 
 ### Is the GitHub repository complete and current?
 
-Yes, for application source code. At the time of writing, the working tree is clean and the latest production code has been pushed to `main` as commit `eb6e4ad`. GitHub reports the Vercel deployment check for that commit as successful.
+Yes, for application source code. The application source is pushed to `main` at commit `d9f8bd2`. GitHub reports all three CI checks and the Vercel deployment check for that commit as successful.
 
 The repository contains:
 
@@ -411,7 +411,7 @@ Please confirm the IP assignment clause in the engagement terms if a formal owne
 | Item | Status | Notes |
 |---|---|---|
 | Ownership and access transferred | **Not complete** | Repository, Vercel, Supabase, Resend, Google and domain/DNS must be placed under client-controlled accounts. Invitations requested in section 3.1. |
-| Source code transferred | **Partial** | Complete current source is in `github.com/fixneardev-del/ros` at commit `eb6e4ad`. Client access/ownership transfer is pending. |
+| Source code transferred | **Partial** | Complete current application source is in `github.com/fixneardev-del/ros` at commit `d9f8bd2`. Client access/ownership transfer is pending. |
 | Documentation provided | **Complete** | README, handover, local development, admin guide, test script, login details, decisions and this document are in the repository. |
 | Secrets handed over securely | **Not complete** | Secret names documented; actual values must be transferred through platform access or a secure vault and rotated after transfer. |
 | Database access confirmed | **Not complete** | Hosted Supabase project is live, but client Owner/Admin access and billing control must be confirmed. |
