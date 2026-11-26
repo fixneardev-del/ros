@@ -200,12 +200,7 @@ test.describe("acceptance matrix", () => {
     await page.getByRole("button", { name: "Switch to Find help" }).click();
     await expect(page).toHaveURL(/\/search$/);
 
-    await page.setViewportSize({ width: 900, height: 900 });
-    await page
-      .locator("header.dash-header")
-      .first()
-      .getByLabel("Open dashboard menu")
-      .click();
+    await page.goto("/account");
     await page.getByRole("button", { name: "Switch to Provide services" }).click();
     await expect(page).toHaveURL(/\/provide$/);
 
