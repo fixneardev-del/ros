@@ -406,12 +406,12 @@
 }
 
 .dash-action-primary {
-  background: var(--d-green);
+  background: var(--d-dark);
   color: #ffffff;
 }
 
 .dash-action-primary:hover {
-  background: var(--d-green-strong);
+  background: #2a2a31;
 }
 
 .dash-action-light {
@@ -1008,7 +1008,7 @@ a.dash-kpi:hover {
   padding: 0 16px;
   border: 0;
   border-radius: 999px;
-  background: var(--d-green);
+  background: var(--d-dark);
   color: #ffffff;
   font-size: 12px;
   font-weight: 600;
@@ -1019,7 +1019,7 @@ a.dash-kpi:hover {
 }
 
 .dash-search-submit:hover {
-  background: var(--d-green-strong);
+  background: #2a2a31;
 }
 
 .dash-search-submit:active {
@@ -1257,12 +1257,12 @@ a.dash-kpi:hover {
 }
 
 .dash .btn[data-variant="primary"] {
-  background: var(--d-green);
+  background: var(--d-dark);
   color: #ffffff;
 }
 
 .dash .btn[data-variant="primary"]:hover:not(:disabled) {
-  background: var(--d-green-strong);
+  background: #2a2a31;
 }
 
 .dash .btn[data-variant="secondary"] {

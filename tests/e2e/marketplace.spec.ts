@@ -451,7 +451,7 @@ test.describe("search", () => {
       await page.goto("/jobs");
       await expect(
         page.getByRole("link", { name: "Post a job", exact: true }),
-      ).toHaveCSS("background-color", "rgb(39, 174, 104)");
+      ).toHaveCSS("background-color", "rgb(24, 24, 29)");
 
       await page
         .getByLabel("Search your jobs by title, service or postcode")
